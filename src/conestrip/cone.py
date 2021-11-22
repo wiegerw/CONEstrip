@@ -344,7 +344,7 @@ def conestrip4a(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[
         print(constraints_4)
 
     # Solve the problem with additional constraint 'goal >= value')
-    def solve(value: float) -> Optional[Tuple[float, Any, Any, Any]]:
+    def solve(value: float) -> Optional[Tuple[Any, Any, Any, Any]]:
         constraints_1 = [goal >= value]
         # print('solve', constraints_1)
 
@@ -367,26 +367,26 @@ def conestrip4a(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[
         assert isinstance(value, RatNumRef)
         return value.numerator_as_long() / value.denominator_as_long()
 
-    min_value = 1.0
-    max_value = float(len(lambda_))  # the maximum possible value of goal
-    print(f'interval: [{min_value, max_value}]')
+    min_value = RealVal(1)
+    max_value = RealVal(len(lambda_))  # the maximum possible value of goal
+    print(f'interval: [{min_value.as_decimal(50), max_value.as_decimal(50)}]')
     solution = solve(1)
     if not solution:
         return None
-    min_value = as_float(solution[0])
-    while min_value < max_value:
-        print(f'interval: [{min_value, max_value}]')
+    min_value = solution[0]
+    while as_float(min_value) < as_float(max_value):
+        print(f'interval: [{min_value.as_decimal(50), max_value.as_decimal(50)}]')
         value = (min_value + max_value) / 2
         sol = solve(value)
         if sol:
-            min_value = as_float(sol[0])
+            min_value = sol[0]
             solution = sol
         else:
-            max_value = as_float(sol[0])
+            max_value = sol[0]
 
     if verbose:
         print('--- solution ---')
-        print('goal =', min_value)
+        print('goal =', min_value.as_decimal(50))
         print('lambda =', solution[1])
         print('mu =', solution[2])
         print('sigma =', solution[3])
