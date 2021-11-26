@@ -4,32 +4,36 @@
 
 from more_itertools import collapse
 from more_itertools.recipes import flatten
+from typing import List
 from z3 import *
-from gambles import *
+from gambles import Cone, Gamble, parse_cone, parse_gamble
 from utility import product, sum_rows
+
+
+def is_valid_conestrip_input(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> bool:
+    # check that Omega_Gamma and Omega_Delta are a partition of { 0, ..., |f0|-1 }
+    # check that the gambles in R0 have the correct length
+    return set(Omega_Gamma).isdisjoint(set(Omega_Delta)) and \
+           set(list(range(len(f0)))) == set(Omega_Gamma) | set(Omega_Delta) and \
+           all(len(x) == len(f0) for x in flatten(R0))
 
 
 def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> bool:
     """
     An implementation of formula (1) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
-
-    # check that Omega_Gamma and Omega_Delta are a partition of { 0, ..., |f0|-1 }
-    assert(set(Omega_Gamma).isdisjoint(set(Omega_Delta)))
-    assert(set(list(range(len(f0)))) == set(Omega_Gamma) | set(Omega_Delta))
-    # check that the gambles in R0 have the correct length
-    assert(all(len(x) == len(f0) for x in flatten(R0)))
+    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
 
     # variables
-    lambda_ = [Real(f'lambda{k}') for k in range(len(R0))]
-    nu = [[Real(f'nu{k}_{i}') for i in range(len(R0[k]))] for k in range(len(R0))]
+    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
+    nu = [[Real(f'nu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
 
     # constants
-    g = [[[RealVal(R0[k][i][j]) for j in range(len(R0[k][i]))] for i in range(len(R0[k]))] for k in range(len(R0))]
+    g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
     f = [RealVal(f0[j]) for j in range(len(f0))]
 
     # intermediate expressions
-    h = sum_rows(list(product(lambda_[k], sum_rows([product(nu[k][i], g[k][i]) for i in range(len(R0[k]))])) for k in range(len(R0))))
+    h = sum_rows(list(product(lambda_[d], sum_rows([product(nu[d][i], g[d][i]) for i in range(len(R0[d]))])) for d in range(len(R0))))
 
     # 0 <= lambda <= 1
     lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
@@ -63,8 +67,8 @@ def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         model = solver.model()
         if verbose:
             print('--- solution ---')
-            print('lambda =', [model.evaluate(lambda_[k]) for k in range(len(R0))])
-            print('nu =', [[model.evaluate(nu[k][i]) for i in range(len(R0[k]))] for k in range(len(R0))])
+            print('lambda =', [model.evaluate(lambda_[d]) for d in range(len(R0))])
+            print('nu =', [[model.evaluate(nu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))])
         return True
     else:
         return False
@@ -74,24 +78,19 @@ def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
     """
     An implementation of formula (2) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
-
-    # check that Omega_Gamma and Omega_Delta are a partition of { 0, ..., |f0|-1 }
-    assert(set(Omega_Gamma).isdisjoint(set(Omega_Delta)))
-    assert(set(list(range(len(f0)))) == set(Omega_Gamma) | set(Omega_Delta))
-    # check that the gambles in R0 have the correct length
-    assert(all(len(x) == len(f0) for x in flatten(R0)))
+    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
 
     # variables
-    lambda_ = [Real(f'lambda{k}') for k in range(len(R0))]
-    tau = [[Real(f'tau{k}_{i}') for i in range(len(R0[k]))] for k in range(len(R0))]
+    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
+    tau = [[Real(f'tau{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
     sigma = Real('sigma')
 
     # constants
-    g = [[[RealVal(R0[k][i][j]) for j in range(len(R0[k][i]))] for i in range(len(R0[k]))] for k in range(len(R0))]
+    g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
     f = [RealVal(f0[j]) for j in range(len(f0))]
 
     # intermediate expressions
-    h = sum_rows(list(product(lambda_[k], sum_rows([product(tau[k][i], g[k][i]) for i in range(len(R0[k]))])) for k in range(len(R0))))
+    h = sum_rows(list(product(lambda_[d], sum_rows([product(tau[d][i], g[d][i]) for i in range(len(R0[d]))])) for d in range(len(R0))))
 
     # 0 <= lambda <= 1
     lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
@@ -130,8 +129,8 @@ def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         model = solver.model()
         if verbose:
             print('--- solution ---')
-            print('lambda =', [model.evaluate(lambda_[k]) for k in range(len(R0))])
-            print('tau =', [[model.evaluate(tau[k][i]) for i in range(len(R0[k]))] for k in range(len(R0))])
+            print('lambda =', [model.evaluate(lambda_[d]) for d in range(len(R0))])
+            print('tau =', [[model.evaluate(tau[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))])
             print('sigma =', model.evaluate(sigma))
         return True
     else:
@@ -142,24 +141,19 @@ def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
     """
     An implementation of formula (3) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
-
-    # check that Omega_Gamma and Omega_Delta are a partition of { 0, ..., |f0|-1 }
-    assert(set(Omega_Gamma).isdisjoint(set(Omega_Delta)))
-    assert(set(list(range(len(f0)))) == set(Omega_Gamma) | set(Omega_Delta))
-    # check that the gambles in R0 have the correct length
-    assert(all(len(x) == len(f0) for x in flatten(R0)))
+    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
 
     # variables
-    lambda_ = [Real(f'lambda{k}') for k in range(len(R0))]
-    mu = [[Real(f'mu{k}_{i}') for i in range(len(R0[k]))] for k in range(len(R0))]
+    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
+    mu = [[Real(f'mu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
     sigma = Real('sigma')
 
     # constants
-    g = [[[RealVal(R0[k][i][j]) for j in range(len(R0[k][i]))] for i in range(len(R0[k]))] for k in range(len(R0))]
+    g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
     f = [RealVal(f0[j]) for j in range(len(f0))]
 
     # intermediate expressions
-    h = sum_rows(list(sum_rows([product(mu[k][i], g[k][i]) for i in range(len(R0[k]))]) for k in range(len(R0))))
+    h = sum_rows(list(sum_rows([product(mu[d][i], g[d][i]) for i in range(len(R0[d]))]) for d in range(len(R0))))
 
     # 0 <= lambda <= 1
     lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
@@ -174,7 +168,7 @@ def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
     constraints_1 = [simplify(sum(lambda_)) >= 1]
     constraints_2 = [h[omega] <= sigma * f[omega] for omega in Omega_Gamma]
     constraints_3 = [h[omega] >= sigma * f[omega] for omega in Omega_Delta]
-    constraints_4 = list(collapse([[And(lambda_[k] <= mu[k][i], mu[k][i] <= lambda_[k] * mu[k][i]) for i in range(len(R0[k]))] for k in range(len(R0))]))
+    constraints_4 = list(collapse([[And(lambda_[d] <= mu[d][i], mu[d][i] <= lambda_[d] * mu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]))
 
     if verbose:
         print('--- variables ---')
@@ -200,8 +194,8 @@ def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         model = solver.model()
         if verbose:
             print('--- solution ---')
-            print('lambda =', [model.evaluate(lambda_[k]) for k in range(len(R0))])
-            print('mu =', [[model.evaluate(mu[k][i]) for i in range(len(R0[k]))] for k in range(len(R0))])
+            print('lambda =', [model.evaluate(lambda_[d]) for d in range(len(R0))])
+            print('mu =', [[model.evaluate(mu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))])
             print('sigma =', model.evaluate(sigma))
         return True
     else:
