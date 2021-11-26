@@ -4,7 +4,7 @@
 
 from more_itertools import collapse
 from more_itertools.recipes import flatten
-from typing import List
+from typing import Any, List, Optional, Tuple
 from z3 import *
 from gambles import Cone, Gamble, parse_cone, parse_gamble
 from utility import product, sum_rows
@@ -18,7 +18,7 @@ def is_valid_conestrip_input(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega
            all(len(x) == len(f0) for x in flatten(R0))
 
 
-def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> bool:
+def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any]]:
     """
     An implementation of formula (1) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -39,12 +39,14 @@ def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
     lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
 
     # nu > 0
-    nu_constraints = [0 < x for x in collapse(nu)]
+    nu_constraints = [x > 0 for x in collapse(nu)]
 
     # main constraints
     constraints_1 = [simplify(sum(lambda_)) == 1]
     constraints_2 = [h[omega] <= f[omega] for omega in Omega_Gamma]
     constraints_3 = [h[omega] >= f[omega] for omega in Omega_Delta]
+
+    constraints = lambda_constraints + nu_constraints + constraints_1 + constraints_2 + constraints_3
 
     if verbose:
         print('--- variables ---')
@@ -53,6 +55,7 @@ def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         print('--- constants ---')
         print('g =', g)
         print('f =', f)
+        print('--- intermediate expressions ---')
         print('h =', h)
         print('--- constraints ---')
         print(lambda_constraints)
@@ -62,19 +65,21 @@ def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         print(constraints_3)
 
     solver = Solver()
-    solver.add(lambda_constraints + nu_constraints + constraints_1 + constraints_2 + constraints_3)
+    solver.add(constraints)
     if solver.check() == sat:
         model = solver.model()
+        lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R0))]
+        nu_solution = [[model.evaluate(nu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]
         if verbose:
             print('--- solution ---')
-            print('lambda =', [model.evaluate(lambda_[d]) for d in range(len(R0))])
-            print('nu =', [[model.evaluate(nu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))])
-        return True
+            print('lambda =', lambda_solution)
+            print('nu =', nu_solution)
+        return lambda_solution, nu_solution
     else:
-        return False
+        return None
 
 
-def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> bool:
+def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of formula (2) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -106,6 +111,8 @@ def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
     constraints_2 = [h[omega] <= sigma * f[omega] for omega in Omega_Gamma]
     constraints_3 = [h[omega] >= sigma * f[omega] for omega in Omega_Delta]
 
+    constraints = lambda_constraints + tau_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3
+
     if verbose:
         print('--- variables ---')
         print(lambda_)
@@ -114,6 +121,7 @@ def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         print('--- constants ---')
         print('g =', g)
         print('f =', f)
+        print('--- intermediate expressions ---')
         print('h =', h)
         print('--- constraints ---')
         print(lambda_constraints)
@@ -124,20 +132,23 @@ def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         print(constraints_3)
 
     solver = Solver()
-    solver.add(lambda_constraints + tau_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3)
+    solver.add(constraints)
     if solver.check() == sat:
         model = solver.model()
+        lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R0))]
+        tau_solution = [[model.evaluate(tau[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]
+        sigma_solution = model.evaluate(sigma)
         if verbose:
             print('--- solution ---')
-            print('lambda =', [model.evaluate(lambda_[d]) for d in range(len(R0))])
-            print('tau =', [[model.evaluate(tau[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))])
-            print('sigma =', model.evaluate(sigma))
-        return True
+            print('lambda =', lambda_solution)
+            print('tau =', tau_solution)
+            print('sigma =', sigma_solution)
+        return lambda_solution, tau_solution, sigma_solution
     else:
-        return False
+        return None
 
 
-def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> bool:
+def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of formula (3) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -170,6 +181,8 @@ def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
     constraints_3 = [h[omega] >= sigma * f[omega] for omega in Omega_Delta]
     constraints_4 = list(collapse([[And(lambda_[d] <= mu[d][i], mu[d][i] <= lambda_[d] * mu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]))
 
+    constraints = lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4
+
     if verbose:
         print('--- variables ---')
         print(lambda_)
@@ -178,6 +191,7 @@ def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         print('--- constants ---')
         print('g =', g)
         print('f =', f)
+        print('--- intermediate expressions ---')
         print('h =', h)
         print('--- constraints ---')
         print(lambda_constraints)
@@ -189,17 +203,20 @@ def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         print(constraints_4)
 
     solver = Solver()
-    solver.add(lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4)
+    solver.add(constraints)
     if solver.check() == sat:
         model = solver.model()
+        lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R0))]
+        mu_solution = [[model.evaluate(mu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]
+        sigma_solution = model.evaluate(sigma)
         if verbose:
             print('--- solution ---')
-            print('lambda =', [model.evaluate(lambda_[d]) for d in range(len(R0))])
-            print('mu =', [[model.evaluate(mu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))])
-            print('sigma =', model.evaluate(sigma))
-        return True
+            print('lambda =', lambda_solution)
+            print('tau =', mu_solution)
+            print('sigma =', sigma_solution)
+        return lambda_solution, mu_solution, sigma_solution
     else:
-        return False
+        return None
 
 
 if __name__ == "__main__":
@@ -217,19 +234,10 @@ if __name__ == "__main__":
     f = parse_gamble('2 5 8')
     Omega_Gamma = [0, 1]
     Omega_Delta = [2]
-    print('==================')
-    print('=== conestrip1 ===')
-    print('==================')
     result1 = conestrip1(R, f, Omega_Gamma, Omega_Delta, verbose=True)
-
-    print('==================')
-    print('=== conestrip2 ===')
-    print('==================')
     result2 = conestrip2(R, f, Omega_Gamma, Omega_Delta, verbose=True)
-
-    print('==================')
-    print('=== conestrip3 ===')
-    print('==================')
     result3 = conestrip3(R, f, Omega_Gamma, Omega_Delta, verbose=True)
 
-    print('results:', result1, result2, result3, '\n')
+    print('result1:', result1)
+    print('result2:', result2)
+    print('result3:', result3)

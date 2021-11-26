@@ -32,7 +32,7 @@ def conestrip_solutions(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delt
     # 0 <= lambda <= 1
     lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
 
-    # tau >= 1
+    # mu >= 0
     mu_constraints = [x >= 0 for x in collapse(mu)]
 
     # sigma >= 1
@@ -52,6 +52,7 @@ def conestrip_solutions(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delt
         print('--- constants ---')
         print('g =', g)
         print('f =', f)
+        print('--- intermediate expressions ---')
         print('h =', h)
         print('--- constraints ---')
         print(lambda_constraints)
@@ -75,10 +76,9 @@ def conestrip_solutions(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delt
             print('lambda =', lambda_solution)
             print('mu =', mu_solution)
             print('sigma =', sigma_solution)
-        print('goal =', model.evaluate(goal))
+            print('goal =', model.evaluate(goal))
         return lambda_solution, mu_solution, sigma_solution
     else:
-        print("failed to solve")
         return None
 
 
@@ -110,9 +110,6 @@ if __name__ == "__main__":
     Omega_Gamma = [0, 1]
     Omega_Delta = [2]
 
-    print('==================')
-    print('=== conestrip4 ===')
-    print('==================')
     lambda_solution, mu_solution, sigma_solution = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=True)
     print('lambda =', lambda_solution)
     print('mu =', mu_solution)
