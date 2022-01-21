@@ -1,12 +1,12 @@
+import inspect
 import cdd
-
 
 #------------------------------------------------------------------------#
 #                     test_adjacency_list.py
 #------------------------------------------------------------------------#
 
 def test_make_vertex_adjacency_list(number_type):
-    print('--- test_make_vertex_adjacency_list ---')
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
 
     # The following lines test that poly.get_adjacency_list()
     # returns the correct adjacencies.
@@ -47,7 +47,7 @@ def test_make_vertex_adjacency_list(number_type):
 
 
 def test_make_facet_adjacency_list(number_type):
-    print('--- test_make_facet_adjacency_list ---')
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
 
     # This matrix is the same as in vtest_vo.ine
     mat = cdd.Matrix([[0, 0, 0, 1],
@@ -79,7 +79,7 @@ def test_make_facet_adjacency_list(number_type):
 #------------------------------------------------------------------------#
 
 def test_vertex_incidence_cube(number_type):
-    print('--- test_vertex_incidence_cube ---')
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
 
     # The following lines test that poly.get_vertex_incidence()
     # returns the correct incidences.
@@ -120,7 +120,7 @@ def test_vertex_incidence_cube(number_type):
 
 
 def test_vertex_incidence_vtest_vo(number_type):
-    print('--- test_vertex_incidence_vtest_vo ---')
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
 
     # This matrix is the same as in vtest_vo.ine
     mat = cdd.Matrix([[0, 0, 0, 1],
@@ -152,7 +152,7 @@ def test_vertex_incidence_vtest_vo(number_type):
 
 
 def test_facet_incidence_cube(number_type):
-    print('--- test_facet_incidence_cube ---')
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
 
     # We start with the H-representation for a cube
     mat = cdd.Matrix([[1, 1, 0 ,0],
@@ -190,6 +190,7 @@ def test_facet_incidence_cube(number_type):
 
 
 def test_facet_incidence_vtest_vo(number_type):
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
     # This matrix is the same as in vtest_vo.ine
     mat = cdd.Matrix([[0, 0, 0, 1],
                       [5, -4, -2, 1],
@@ -221,6 +222,7 @@ def test_facet_incidence_vtest_vo(number_type):
 #------------------------------------------------------------------------#
 
 def test_lp2(number_type):
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
     mat = cdd.Matrix([['4/3',-2,-1],['2/3',0,-1],[0,1,0],[0,0,1]],
                      number_type=number_type)
     mat.obj_type = cdd.LPObjType.MAX
@@ -234,6 +236,7 @@ def test_lp2(number_type):
 
 
 def test_another(number_type):
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
     mat = cdd.Matrix([[1,-1,-1,-1],[-1,1,1,1],[0,1,0,0],[0,0,1,0],[0,0,0,1]], number_type=number_type)
     mat.obj_type = cdd.LPObjType.MIN
     mat.obj_func = (0,1,2,3)
@@ -258,6 +261,7 @@ def test_another(number_type):
 #------------------------------------------------------------------------#
 
 def test_sampleh1(number_type):
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
     mat = cdd.Matrix([[2,-1,-1,0],[0,1,0,0],[0,0,1,0]],
                      number_type=number_type)
     mat.rep_type = cdd.RepType.INEQUALITY
@@ -275,8 +279,8 @@ def test_sampleh1(number_type):
 
 
 def test_testcdd2(number_type):
-    mat = cdd.Matrix([[7,-3,-0],[7,0,-3],[1,1,0],[1,0,1]],
-                     number_type=number_type)
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+    mat = cdd.Matrix([[7,-3,-0],[7,0,-3],[1,1,0],[1,0,1]], number_type=number_type)
     mat.rep_type = cdd.RepType.INEQUALITY
     print(mat)
 
@@ -302,6 +306,40 @@ def test_testcdd2(number_type):
     assert list(gen2) == [(1, -1, 2), (1, 0, cdd.Fraction(7, 3))]
 
 
+#------------------------------------------------------------------------#
+#                     documentation examples (Solving Linear Programs)
+#------------------------------------------------------------------------#
+
+def doc_example1():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+    mat = cdd.Matrix([['4/3',-2,-1],['2/3',0,-1],[0,1,0],[0,0,1]], number_type='fraction')
+    mat.obj_type = cdd.LPObjType.MAX
+    mat.obj_func = (0,3,4)
+    print(mat)
+    print(mat.obj_func)
+    lp = cdd.LinProg(mat)
+    lp.solve()
+    assert lp.status == cdd.LPStatusType.OPTIMAL
+    print(lp.obj_value)
+    print(" ".join("{0}".format(val) for val in lp.primal_solution))
+    print(" ".join("{0}".format(val) for val in lp.dual_solution))
+
+
+def doc_example2():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+    mat = cdd.Matrix([[2,-1,-1,0],[0,1,0,0],[0,0,1,0]], number_type='fraction')
+    mat.rep_type = cdd.RepType.INEQUALITY
+    print(mat)
+
+    poly = cdd.Polyhedron(mat)
+    print(poly)
+
+    ext = poly.get_generators()
+    print(ext)
+
+    print(list(ext.lin_set)) # note: first row is 0, so fourth row is 3 [3]
+
+
 test_make_vertex_adjacency_list("fraction")
 test_make_facet_adjacency_list("fraction")
 test_vertex_incidence_cube("fraction")
@@ -312,3 +350,5 @@ test_lp2("fraction")
 test_another("fraction")
 test_sampleh1("fraction")
 test_testcdd2("fraction")
+doc_example1()
+doc_example2()
