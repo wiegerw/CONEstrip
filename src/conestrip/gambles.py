@@ -3,15 +3,16 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 import re
+from fractions import Fraction
 from typing import List
 
-Gamble = List[float]
+Gamble = List[Fraction]
 
 Cone = List[List[Gamble]]
 
 
 def parse_gamble(text: str) -> Gamble:
-    return list(map(float, text.strip().split()))
+    return [Fraction(s) for s in text.strip().split()]
 
 
 def parse_gambles(text: str) -> List[Gamble]:

@@ -1,4 +1,5 @@
 import random
+from fractions import Fraction
 from typing import List
 import cdd
 from conestrip.polyhedron import Polyhedron
@@ -7,9 +8,9 @@ from conestrip.gambles import Gamble, Cone
 
 def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
     n = len(gambles[0])
-    origin = [0.0] * n
+    origin = [Fraction(0)] * n
     A = [origin] + gambles
-    A = [[1.0] + x for x in A]
+    A = [[Fraction(1)] + x for x in A]
     mat = cdd.Matrix(A)
     mat.rep_type = cdd.RepType.GENERATOR
     mat.canonicalize()
@@ -24,18 +25,18 @@ def random_floats_summing_to_one(n: int) -> List[float]:
     return [x / s for x in values]
 
 
-def random_rationals_summing_to_one(n: int) -> List[float]:
+def random_rationals_summing_to_one(n: int) -> List[Fraction]:
     values = random_floats_summing_to_one(n)
     v = [int(round(1000*x)) / 1000 for x in values]
     v = v[:-1]
     v.append(1 - sum(v))
-    return v
+    return [Fraction(vi) for vi in v]
 
 
-def convex_combination(lambda_: List[float], gambles: List[Gamble]) -> Gamble:
+def convex_combination(lambda_: List[Fraction], gambles: List[Gamble]) -> Gamble:
     m = len(gambles)
     n = len(gambles[0])
-    result = [0] * n
+    result = [Fraction(0)] * n
     for i in range(m):
         g = gambles[i]
         for j in range(n):
