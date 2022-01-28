@@ -82,26 +82,12 @@ class Polyhedron(cdd.Polyhedron):
 
     # prints some information about the polyhedron
     def info(self):
-        print('- list the vertices')
-        print(self.vertices())
-
-        print('- list the faces')
-        print(list(map(str, self.faces())))
-
-        print('- list the generators')
-        print(self.generators())
-
-        print('- list the inequalities')
-        print(self.inequalities())
-
-        print('- for each face, list adjacent faces')
-        print(self.face_face_adjacencies())
-
-        print('- for each face, list adjacent vertices')
-        print(self.face_vertex_adjacencies())
-
-        print('- for each vertex, list adjacent vertices')
-        print(self.vertex_vertex_adjacencies())
-
-        print('- for each vertex, list adjacent faces')
-        print(self.vertex_face_adjacencies())
+        print('representation:', 'H' if self.is_H() else 'V')
+        print('generators:', self.generators())
+        print('inequalities:', self.inequalities())
+        print('vertices:', self.vertices())
+        print('faces:', f'[{", ".join(list(map(str, self.faces())))}]')
+        print('for each face, list adjacent faces:', self.face_face_adjacencies())
+        print('for each face, list adjacent vertices:', self.face_vertex_adjacencies())
+        print('for each vertex, list adjacent vertices:', self.vertex_vertex_adjacencies())
+        print('for each vertex, list adjacent faces:', self.vertex_face_adjacencies())

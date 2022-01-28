@@ -66,5 +66,19 @@ def example2():
     poly = Polyhedron(mat)
     poly.info()
 
+
+def example3():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+    mat = cdd.Matrix([[-2,  1,  0],
+                      [-1,  0,  1],
+                      [ 6,  -1, -2]],
+                     number_type="fraction")
+    mat.rep_type = cdd.RepType.INEQUALITY
+    poly = cdd.Polyhedron(mat)
+    generators = poly.get_generators()
+    print(generators.__class__)
+
+
 example1()
 example2()
+example3()
