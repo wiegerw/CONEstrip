@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
-from gambles import GeneralCone, Gamble, parse_general_cone, parse_gamble
+from cones import GeneralCone, Gamble, parse_general_cone, parse_gamble
 from utility import product, sum_rows
 
 

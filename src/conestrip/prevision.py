@@ -4,7 +4,7 @@
 
 from typing import Optional
 from z3 import *
-from gambles import *
+from cones import *
 from utility import product, sum_rows
 
 

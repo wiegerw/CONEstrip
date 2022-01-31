@@ -4,7 +4,7 @@
 
 import inspect
 from typing import List
-from conestrip.gambles import parse_general_cone, Gamble, gambles_to_polyhedron, random_border_cone, add_random_border_cones
+from conestrip.cones import parse_general_cone, Gamble, gambles_to_polyhedron, random_border_cone, add_random_border_cones
 from conestrip.utility import pretty_print
 
 

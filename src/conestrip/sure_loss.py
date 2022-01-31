@@ -3,7 +3,7 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from z3 import *
-from gambles import *
+from cones import *
 from utility import product, sum_rows
 
 
