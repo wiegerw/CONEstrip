@@ -4,8 +4,8 @@
 
 from typing import Optional
 from z3 import *
-from cones import *
-from utility import product, sum_rows
+from conestrip.cones import *
+from conestrip.utility import product, sum_rows
 
 
 def calculate_lower_prevision(g0: List[Gamble], f0: Gamble, verbose: bool = False) -> Optional[float]:
@@ -92,14 +92,3 @@ def calculate_lower_prevision_with_slack(g0: List[Gamble], f0: Gamble, verbose: 
     else:
         print("failed to solve")
         return None
-
-
-if __name__ == "__main__":
-    g = parse_cone_generator('''
-      1 0
-      0 1
-    ''')
-    f = parse_gamble('2 5')
-    alpha1 = calculate_lower_prevision(g, f, verbose=True)
-    alpha2 = calculate_lower_prevision_with_slack(g, f, verbose=True)
-    print(alpha1, alpha2)

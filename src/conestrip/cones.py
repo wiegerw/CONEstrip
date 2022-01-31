@@ -5,18 +5,37 @@
 import random
 import re
 from fractions import Fraction
-from typing import List
+from typing import Dict, List, Tuple
 import cdd
-from polyhedron import Polyhedron
-from utility import random_rationals_summing_to_one, pretty_print
+from conestrip.polyhedron import Polyhedron
+from conestrip.utility import random_rationals_summing_to_one, pretty_print
 
 
 Gamble = List[Fraction]
 
 
+def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
+    """
+    Defines a cone that encloses a list of gambles
+    @param gambles:
+    @return:
+    """
+    # N.B. gambles are treated as directions
+    A = [[Fraction(0)] + x for x in gambles]
+    mat = cdd.Matrix(A, linear=False)
+    mat.rep_type = cdd.RepType.GENERATOR
+    mat.canonicalize()
+    poly = Polyhedron(mat)
+    poly.to_V()
+    return poly
+
+
 class ConeGenerator(object):
     def __init__(self, gambles: List[Gamble]):
         self.gambles = gambles
+        poly = gambles_to_polyhedron(gambles)
+        self.facets: List[Tuple[int]] = poly.face_vertex_adjacencies()
+        self.facet_map: Dict[int, ConeGenerator] = {i: [] for i in range(len(self.facets))}  # maps facets to the generators contained in it
 
     def __getitem__(self, item):
         return self.gambles[item]
@@ -31,8 +50,6 @@ class ConeGenerator(object):
 class GeneralCone(object):
     def __init__(self, generators: List[ConeGenerator]):
         self.generators = generators
-        # self.facets =
-        # self.border_cones =
 
     def __getitem__(self, item):
         return self.generators[item]
@@ -58,17 +75,6 @@ def parse_general_cone(text: str) -> GeneralCone:
     return GeneralCone(list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip()))))
 
 
-def gambles_to_polyhedron(cone: ConeGenerator) -> Polyhedron:
-    # N.B. gambles are treated as directions
-    A = [[Fraction(0)] + x for x in cone.gambles]
-    mat = cdd.Matrix(A, linear=False)
-    mat.rep_type = cdd.RepType.GENERATOR
-    mat.canonicalize()
-    poly = Polyhedron(mat)
-    poly.to_V()
-    return poly
-
-
 def convex_combination(lambda_: List[Fraction], gambles: List[Gamble]) -> Gamble:
     m = len(gambles)
     n = len(gambles[0])
@@ -81,7 +87,7 @@ def convex_combination(lambda_: List[Fraction], gambles: List[Gamble]) -> Gamble
 
 
 def random_border_cone(R: ConeGenerator) -> ConeGenerator:
-    poly = gambles_to_polyhedron(R)
+    poly = gambles_to_polyhedron(R.gambles)
     vertices = poly.vertices()
 
     # converts indices to points
@@ -104,5 +110,5 @@ def add_random_border_cones(R: GeneralCone, n: int) -> None:
     for i in range(n):
         R1 = [r for r in R.generators if len(r.gambles) >= 2]
         r = random.choice(R1)
-        cone = random_border_cone(r)
-        R.generators.append(cone)
+        generator = random_border_cone(r)
+        R.generators.append(generator)

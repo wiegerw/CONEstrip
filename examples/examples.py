@@ -4,7 +4,11 @@
 
 import inspect
 import cdd
+from conestrip.cones import parse_general_cone, parse_gamble, parse_cone_generator
+from conestrip.conestrip import conestrip1, conestrip2, conestrip3, conestrip
 from conestrip.polyhedron import Polyhedron
+from conestrip.prevision import calculate_lower_prevision, calculate_lower_prevision_with_slack
+from conestrip.sure_loss import avoids_sure_loss, avoids_sure_loss_with_slack
 
 
 # Example 1: consider a rectangle with corners (0,0), (3,0), (3,2) and (0,2). It can be defined using the equations:
@@ -83,6 +87,83 @@ def example3():
     print(generators.__class__)
 
 
+def example_conestrip1():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+
+    R = parse_general_cone('''
+      4 0 0
+      0 5 0
+      0 0 6
+
+      1 0 1
+      0 7 7
+
+      1 2 3
+      2 4 6
+    ''')
+    f = parse_gamble('2 5 8')
+    Omega_Gamma = [0, 1]
+    Omega_Delta = [2]
+    result1 = conestrip1(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+    result2 = conestrip2(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+    result3 = conestrip3(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+
+    print('result1:', result1)
+    print('result2:', result2)
+    print('result3:', result3)
+
+
+def example_conestrip2():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+
+    R = parse_general_cone('''
+      4 0 0
+      0 5 0
+      0 0 6
+
+      1 0 1
+      0 7 7
+
+      1 2 3
+      2 4 6
+    ''')
+    f = parse_gamble('2 5 8')
+    Omega_Gamma = [0, 1]
+    Omega_Delta = [2]
+
+    lambda_solution, mu_solution, sigma_solution = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+    print('lambda =', lambda_solution)
+    print('mu =', mu_solution)
+    print('sigma =', sigma_solution)
+
+
+def example_sure_loss():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+    generator = parse_cone_generator('''
+      1 0 -3
+      -2 1 1
+      1 -4 1
+    ''')
+    result1 = avoids_sure_loss(generator.gambles, verbose=True)
+    result2 = avoids_sure_loss_with_slack(generator.gambles, verbose=True)
+    print(result1, result2)
+
+
+def example_prevision():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+    generator = parse_cone_generator('''
+      1 0
+      0 1
+    ''')
+    f = parse_gamble('2 5')
+    alpha1 = calculate_lower_prevision(generator.gambles, f, verbose=True)
+    alpha2 = calculate_lower_prevision_with_slack(generator.gambles, f, verbose=True)
+    print(alpha1, alpha2)
+
+
 example1()
 example2()
 example3()
+example_conestrip1()
+example_conestrip2()
+example_sure_loss()

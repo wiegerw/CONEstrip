@@ -3,8 +3,8 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from z3 import *
-from cones import *
-from utility import product, sum_rows
+from conestrip.cones import *
+from conestrip.utility import product, sum_rows
 
 
 def avoids_sure_loss(g0: List[Gamble], verbose: bool = False) -> bool:
@@ -86,15 +86,3 @@ def avoids_sure_loss_with_slack(g0: List[Gamble], verbose: bool = False) -> bool
     else:
         print("failed to solve")
         return True
-
-
-if __name__ == "__main__":
-    gambles = parse_cone_generator('''
-      1 0 -3
-      -2 1 1
-      1 -4 1
-    ''')
-    result1 = avoids_sure_loss(gambles, verbose=True)
-    result2 = avoids_sure_loss_with_slack(gambles, verbose=True)
-    print(result1, result2)
-

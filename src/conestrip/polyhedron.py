@@ -3,7 +3,7 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 import cdd
-from utility import pretty_print
+from conestrip.utility import pretty_print
 
 
 class InEquality(object):

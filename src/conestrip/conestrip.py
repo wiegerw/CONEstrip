@@ -6,8 +6,8 @@ from typing import Any, List, Optional, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
-from cones import GeneralCone, Gamble, parse_general_cone, parse_gamble
-from utility import product, sum_rows
+from conestrip.cones import GeneralCone, Gamble, parse_general_cone, parse_gamble
+from conestrip.utility import product, sum_rows
 
 
 def is_valid_conestrip_input(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> bool:
@@ -301,49 +301,3 @@ def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: L
         if all(x == 0 for x in collapse(mu[d] for d in Q)):
             return Lambda
         R = [R_d for d, R_d in enumerate(R) if d not in Q]
-
-
-if __name__ == "__main__":
-    R = parse_general_cone('''
-      4 0 0
-      0 5 0
-      0 0 6
-
-      1 0 1
-      0 7 7
-
-      1 2 3
-      2 4 6
-    ''')
-    f = parse_gamble('2 5 8')
-    Omega_Gamma = [0, 1]
-    Omega_Delta = [2]
-    result1 = conestrip1(R, f, Omega_Gamma, Omega_Delta, verbose=True)
-    result2 = conestrip2(R, f, Omega_Gamma, Omega_Delta, verbose=True)
-    result3 = conestrip3(R, f, Omega_Gamma, Omega_Delta, verbose=True)
-
-    print('result1:', result1)
-    print('result2:', result2)
-    print('result3:', result3)
-
-    ##################################################
-
-    R = parse_general_cone('''
-      4 0 0
-      0 5 0
-      0 0 6
-
-      1 0 1
-      0 7 7
-
-      1 2 3
-      2 4 6
-    ''')
-    f = parse_gamble('2 5 8')
-    Omega_Gamma = [0, 1]
-    Omega_Delta = [2]
-
-    lambda_solution, mu_solution, sigma_solution = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=True)
-    print('lambda =', lambda_solution)
-    print('mu =', mu_solution)
-    print('sigma =', sigma_solution)

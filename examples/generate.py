@@ -18,7 +18,7 @@ def example1():
       1 1 1
     ''')
 
-    poly = gambles_to_polyhedron(R.generators[0])
+    poly = gambles_to_polyhedron(R.generators[0].gambles)
     vertices = poly.vertices()
 
     # converts indices to points
@@ -56,6 +56,7 @@ def example3():
 
     add_random_border_cones(R, 5)
     print(R)
+
 
 example1()
 example2()

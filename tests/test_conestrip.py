@@ -3,7 +3,8 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from unittest import TestCase
-from conestrip.cone import parse_general_cone
+from conestrip.cones import parse_general_cone
+
 
 class Test(TestCase):
     def stub(self):
