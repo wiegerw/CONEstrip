@@ -1,6 +1,6 @@
 import inspect
 from typing import List
-from conestrip.gambles import parse_cone, Gamble
+from conestrip.gambles import parse_cone, Gamble, print_cone
 from conestrip.utility import pretty_print
 from conestrip.make_test_cases import gambles_to_polyhedron, random_border_cone, add_random_border_cones
 
@@ -16,8 +16,6 @@ def example1():
     ''')
 
     poly = gambles_to_polyhedron(R[0])
-    # poly.info()
-
     vertices = poly.vertices()
 
     # converts indices to points
@@ -26,7 +24,7 @@ def example1():
 
     faces = [make_face(face) for face in poly.face_vertex_adjacencies()]
 
-    print(faces)
+    print_cone(faces)
 
 
 def example2():
@@ -54,7 +52,7 @@ def example3():
     ''')
 
     add_random_border_cones(R, 5)
-    print(pretty_print(R))
+    print_cone(R)
 
 example1()
 example2()

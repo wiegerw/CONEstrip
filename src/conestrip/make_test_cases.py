@@ -50,7 +50,6 @@ def random_border_cone(R: List[Gamble]) -> List[Gamble]:
     def make_face(indices: List[int]) -> List[Gamble]:
         return [vertices[i] for i in indices]
 
-    poly.info()
     border_faces = [make_face(face) for face in poly.face_vertex_adjacencies()]
     border_face = random.choice(border_faces)
 

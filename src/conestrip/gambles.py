@@ -5,6 +5,8 @@
 import re
 from fractions import Fraction
 from typing import List
+from conestrip.utility import pretty_print
+
 
 Gamble = List[Fraction]
 
@@ -21,3 +23,12 @@ def parse_gambles(text: str) -> List[Gamble]:
 
 def parse_cone(text: str) -> Cone:
     return list(map(parse_gambles, re.split(r'\n\s*\n', text.strip())))
+
+
+def print_cone(cone: Cone) -> None:
+    if not cone:
+        print("[]")
+    else:
+        print("[")
+        print(", \n".join([' ' + pretty_print(x) for x in cone]))
+        print("]")
