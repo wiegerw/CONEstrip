@@ -7,11 +7,9 @@ from conestrip.gambles import Gamble, Cone
 
 
 def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
-    n = len(gambles[0])
-    origin = [Fraction(0)] * n
-    A = [origin] + gambles
-    A = [[Fraction(1)] + x for x in A]
-    mat = cdd.Matrix(A)
+    # N.B. gambles are treated as directions
+    A = [[Fraction(0)] + x for x in gambles]
+    mat = cdd.Matrix(A, linear=False)
     mat.rep_type = cdd.RepType.GENERATOR
     mat.canonicalize()
     poly = Polyhedron(mat)
@@ -52,16 +50,17 @@ def random_border_cone(R: List[Gamble]) -> List[Gamble]:
     def make_face(indices: List[int]) -> List[Gamble]:
         return [vertices[i] for i in indices]
 
-    border_faces = [make_face(face) for face in poly.face_vertex_adjacencies() if 0 in face]
+    poly.info()
+    border_faces = [make_face(face) for face in poly.face_vertex_adjacencies()]
     border_face = random.choice(border_faces)
-    border_cone = border_face[1:]  # remove the origin
+    print('border_face', border_face)
 
-    # generate a cone that is contained in border_cone
-    m = len(border_cone)
+    # generate a cone that is contained in border_face
+    m = len(border_face)
     result = []
     for i in range(m):
         lambda_ = random_rationals_summing_to_one(m)
-        result.append(convex_combination(lambda_, border_cone))
+        result.append(convex_combination(lambda_, border_face))
 
     return result
 
