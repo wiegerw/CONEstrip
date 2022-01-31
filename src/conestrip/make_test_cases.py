@@ -53,7 +53,6 @@ def random_border_cone(R: List[Gamble]) -> List[Gamble]:
     poly.info()
     border_faces = [make_face(face) for face in poly.face_vertex_adjacencies()]
     border_face = random.choice(border_faces)
-    print('border_face', border_face)
 
     # generate a cone that is contained in border_face
     m = len(border_face)

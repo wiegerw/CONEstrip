@@ -1,6 +1,7 @@
 import inspect
 from typing import List
 from conestrip.gambles import parse_cone, Gamble
+from conestrip.utility import pretty_print
 from conestrip.make_test_cases import gambles_to_polyhedron, random_border_cone, add_random_border_cones
 
 
@@ -39,7 +40,7 @@ def example2():
     ''')
 
     cone = random_border_cone(R[0])
-    print(cone)
+    pretty_print([cone])
 
 
 def example3():
@@ -53,7 +54,7 @@ def example3():
     ''')
 
     add_random_border_cones(R, 5)
-    print(R)
+    print(pretty_print(R))
 
 example1()
 example2()

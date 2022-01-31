@@ -21,3 +21,9 @@ def inner_product(x: List[Any], y: List[Any]) -> Any:
     return sum(x[i] * y[i] for i in range(len(x)))
 
 
+def pretty_print(x) -> str:
+    if isinstance(x, list):
+        if x and not isinstance(x[0], list):
+            return f"[{', '.join(map(str, x))}]"
+        return f"[{', '.join(map(pretty_print, x))}]"
+    return str(x)
