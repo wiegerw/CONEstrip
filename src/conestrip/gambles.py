@@ -6,10 +6,9 @@ import random
 import re
 from fractions import Fraction
 from typing import List
-from conestrip.utility import pretty_print
 import cdd
-from conestrip.polyhedron import Polyhedron
-from conestrip.utility import random_rationals_summing_to_one
+from polyhedron import Polyhedron
+from utility import random_rationals_summing_to_one, pretty_print
 
 
 Gamble = List[Fraction]
@@ -18,6 +17,12 @@ Gamble = List[Fraction]
 class ConeGenerator(object):
     def __init__(self, gambles: List[Gamble]):
         self.gambles = gambles
+
+    def __getitem__(self, item):
+        return self.gambles[item]
+
+    def __len__(self):
+        return len(self.gambles)
 
     def __str__(self):
         return pretty_print(self.gambles)
@@ -28,6 +33,12 @@ class GeneralCone(object):
         self.generators = generators
         # self.facets =
         # self.border_cones =
+
+    def __getitem__(self, item):
+        return self.generators[item]
+
+    def __len__(self):
+        return len(self.generators)
 
     def __str__(self):
         generators = ', \n'.join([' ' + pretty_print(x) for x in self.generators])

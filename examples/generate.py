@@ -1,3 +1,7 @@
+# Copyright 2022 Wieger Wesselink.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
 import inspect
 from typing import List
 from conestrip.gambles import parse_general_cone, Gamble, gambles_to_polyhedron, random_border_cone, add_random_border_cones
