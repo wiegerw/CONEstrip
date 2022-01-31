@@ -10,15 +10,24 @@ from conestrip.utility import pretty_print
 
 Gamble = List[Fraction]
 
-Cone = List[List[Gamble]]
+
+class ConeElement(object):
+    def __init__(self, gambles: List[Gamble]):
+        self.gambles = gambles
+
+    def __str__(self):
+        return pretty_print(self.gambles)
+
+
+Cone = List[ConeElement]
 
 
 def parse_gamble(text: str) -> Gamble:
     return [Fraction(s) for s in text.strip().split()]
 
 
-def parse_gambles(text: str) -> List[Gamble]:
-    return list(map(parse_gamble, text.strip().split('\n')))
+def parse_gambles(text: str) -> ConeElement:
+    return ConeElement(list(map(parse_gamble, text.strip().split('\n'))))
 
 
 def parse_cone(text: str) -> Cone:
