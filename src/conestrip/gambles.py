@@ -11,7 +11,7 @@ from conestrip.utility import pretty_print
 Gamble = List[Fraction]
 
 
-class ConeElement(object):
+class ConeGenerator(object):
     def __init__(self, gambles: List[Gamble]):
         self.gambles = gambles
 
@@ -19,25 +19,23 @@ class ConeElement(object):
         return pretty_print(self.gambles)
 
 
-Cone = List[ConeElement]
+class GeneralCone(object):
+    def __init__(self, generators: List[ConeGenerator]):
+        self.generators = generators
+
+    def __str__(self):
+        generators = ', \n'.join([' ' + pretty_print(x) for x in self.generators])
+        return f"[\n{generators}\n]"
 
 
 def parse_gamble(text: str) -> Gamble:
     return [Fraction(s) for s in text.strip().split()]
 
 
-def parse_gambles(text: str) -> ConeElement:
-    return ConeElement(list(map(parse_gamble, text.strip().split('\n'))))
+def parse_cone_generator(text: str) -> ConeGenerator:
+    gambles = list(map(parse_gamble, text.strip().split('\n')))
+    return ConeGenerator(gambles)
 
 
-def parse_cone(text: str) -> Cone:
-    return list(map(parse_gambles, re.split(r'\n\s*\n', text.strip())))
-
-
-def print_cone(cone: Cone) -> None:
-    if not cone:
-        print("[]")
-    else:
-        print("[")
-        print(", \n".join([' ' + pretty_print(x) for x in cone]))
-        print("]")
+def parse_general_cone(text: str) -> GeneralCone:
+    return GeneralCone(list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip()))))

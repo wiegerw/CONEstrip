@@ -95,7 +95,7 @@ def calculate_lower_prevision_with_slack(g0: List[Gamble], f0: Gamble, verbose: 
 
 
 if __name__ == "__main__":
-    g = parse_gambles('''
+    g = parse_cone_generator('''
       1 0
       0 1
     ''')

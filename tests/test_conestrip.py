@@ -3,11 +3,11 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from unittest import TestCase
-from conestrip.cone import parse_cone
+from conestrip.cone import parse_general_cone
 
 class Test(TestCase):
     def stub(self):
-        R = parse_cone('''
+        R = parse_general_cone('''
           1 0 0
           0 1 0
           0 0 1

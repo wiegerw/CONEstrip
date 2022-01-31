@@ -6,11 +6,11 @@ from more_itertools import collapse
 from more_itertools.recipes import flatten
 from typing import Any, List, Optional, Tuple
 from z3 import *
-from gambles import Cone, Gamble, parse_cone, parse_gamble
+from gambles import GeneralCone, Gamble, parse_general_cone, parse_gamble
 from utility import product, sum_rows
 
 
-def is_valid_conestrip_input(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> bool:
+def is_valid_conestrip_input(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> bool:
     # check that Omega_Gamma and Omega_Delta are a partition of { 0, ..., |f0|-1 }
     # check that the gambles in R0 have the correct length
     return set(Omega_Gamma).isdisjoint(set(Omega_Delta)) and \
@@ -18,7 +18,7 @@ def is_valid_conestrip_input(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega
            all(len(x) == len(f0) for x in flatten(R0))
 
 
-def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any]]:
+def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any]]:
     """
     An implementation of formula (1) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -79,7 +79,7 @@ def conestrip1(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         return None
 
 
-def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of formula (2) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -148,7 +148,7 @@ def conestrip2(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
         return None
 
 
-def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of formula (3) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -220,7 +220,7 @@ def conestrip3(R0: Cone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[i
 
 
 if __name__ == "__main__":
-    R = parse_cone('''
+    R = parse_general_cone('''
       4 0 0
       0 5 0
       0 0 6

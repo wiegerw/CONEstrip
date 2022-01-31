@@ -89,7 +89,7 @@ def avoids_sure_loss_with_slack(g0: List[Gamble], verbose: bool = False) -> bool
 
 
 if __name__ == "__main__":
-    gambles = parse_gambles('''
+    gambles = parse_cone_generator('''
       1 0 -3
       -2 1 1
       1 -4 1
