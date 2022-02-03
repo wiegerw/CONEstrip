@@ -3,7 +3,9 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from unittest import TestCase
-from conestrip.cones import parse_gamble, parse_general_cone, parse_cone_generator, random_cone_generator, print_gamble
+from conestrip.cones import GeneralCone, parse_gamble, parse_general_cone, parse_cone_generator, random_cone_generator, print_gamble, add_random_border_cones
+from conestrip.utility import remove_spaces
+from conestrip.conestrip import conestrip1
 
 
 class Test(TestCase):
@@ -23,20 +25,37 @@ class Test(TestCase):
                 self.assertTrue(-20 <= gi <= 20)
         print(cone)
 
-    def stub(self):
-        R = parse_general_cone('''
-          1 0 0
-          0 1 0
-          0 0 1
+    def test_parse_print(self):
+        text = '''
+          4 0 0
+          0 5 0
+          0 0 6
+    
           1 0 1
-          0 1 1
-          1 1 0
-        ''')
+          0 7 7
+    
+          1 2 3
+          2 4 6
+        '''
+        cone = parse_general_cone(text)
+        self.assertEqual(remove_spaces(text), str(cone))
 
-        for g in R[0]:
-            print(g)
-
-        self.assertTrue(True)
+    def test_conestrip(self):
+        text = '''
+          1 0
+          0 1
+        '''
+        R = parse_general_cone(text)
+        add_random_border_cones(R, 1)
+        print('R')
+        print(R)
+        R1 = R.generators[1]
+        Omega_Gamma = [0, 1]
+        Omega_Delta = []
+        for f in R1.vertices:
+            print('f', f)
+            result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+            self.assertIsNone(result)
 
 
 if __name__ == '__main__':

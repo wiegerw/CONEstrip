@@ -38,3 +38,8 @@ def random_rationals_summing_to_one(n: int) -> List[Fraction]:
     v = v[:-1]
     v.append(1 - sum(v))
     return [Fraction(vi) for vi in v]
+
+
+def remove_spaces(txt: str) -> str:
+    lines = txt.strip().split('\n')
+    return '\n'.join(line.strip() for line in lines)

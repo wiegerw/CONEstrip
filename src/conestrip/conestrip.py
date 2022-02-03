@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
-from conestrip.cones import GeneralCone, Gamble, parse_general_cone, parse_gamble
+from conestrip.cones import GeneralCone, Gamble
 from conestrip.utility import product, sum_rows
 
 
@@ -291,7 +291,15 @@ def conestrip_solutions(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Ome
         return None
 
 
-def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> Optional[Tuple[Any, Any, Any]]:
+    """
+    An implementation of the CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
+    @param R:
+    @param f0:
+    @param Omega_Gamma:
+    @param Omega_Delta:
+    @return: A solution (lambda, mu, sigma) to the CONEstrip optimization problem (4), or None if no solution exists
+    """
     while True:
         Lambda = conestrip_solutions(R, f0, Omega_Gamma, Omega_Delta)
         if not Lambda:
