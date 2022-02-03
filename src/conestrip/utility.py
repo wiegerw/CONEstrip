@@ -19,16 +19,11 @@ def sum_rows(A: List[List[Any]]) -> List[Any]:
 
 
 def inner_product(x: List[Any], y: List[Any]) -> Any:
-    assert(len(x) == len(y)), str(x) + str(y)
-    return sum(x[i] * y[i] for i in range(len(x)))
+    return sum(xi * yi for xi, yi in zip(x, y))
 
 
-def pretty_print(x) -> str:
-    if isinstance(x, list):
-        if x and not isinstance(x[0], list):
-            return f"[{', '.join(map(str, x))}]"
-        return f"[{', '.join(map(pretty_print, x))}]"
-    return str(x)
+def print_list(x: List[Any]) -> str:
+    return f"[{', '.join(str(xi) for xi in x)}"
 
 
 def random_floats_summing_to_one(n: int) -> List[float]:

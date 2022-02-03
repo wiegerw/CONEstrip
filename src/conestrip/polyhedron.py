@@ -3,7 +3,7 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 import cdd
-from conestrip.utility import pretty_print
+from conestrip.utility import print_list
 
 
 class InEquality(object):
@@ -88,9 +88,9 @@ class Polyhedron(cdd.Polyhedron):
     # prints some information about the polyhedron
     def info(self):
         print('representation:', 'H' if self.is_H() else 'V')
-        print('generators:', pretty_print(self.generators()))
-        print('inequalities:', pretty_print(self.inequalities()))
-        print('vertices:', pretty_print(self.vertices()))
+        print('generators:', print_list(self.generators()))
+        print('inequalities:', print_list(self.inequalities()))
+        print('vertices:', print_list(self.vertices()))
         print('faces:', f'[{", ".join(list(map(str, self.faces())))}]')
         print('for each face, list adjacent faces:', self.face_face_adjacencies())
         print('for each face, list adjacent vertices:', self.face_vertex_adjacencies())
