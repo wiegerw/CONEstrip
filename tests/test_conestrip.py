@@ -2,6 +2,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
+from fractions import Fraction
 from unittest import TestCase
 from conestrip.cones import GeneralCone, parse_gamble, parse_general_cone, parse_cone_generator, random_cone_generator, print_gamble, add_random_border_cones
 from conestrip.utility import remove_spaces
@@ -40,7 +41,51 @@ class Test(TestCase):
         cone = parse_general_cone(text)
         self.assertEqual(remove_spaces(text), str(cone))
 
-    def test_conestrip(self):
+    def test_conestrip1(self):
+        text = '''
+          1 0
+          0 1
+        '''
+        R = parse_general_cone(text)
+        Omega_Gamma = [0, 1]
+        Omega_Delta = []
+
+        f = parse_gamble('1 0')
+        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        self.assertIsNone(result)
+
+        f = parse_gamble('1/2 0')
+        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        self.assertIsNone(result)
+
+        f = parse_gamble('0 1')
+        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        self.assertIsNone(result)
+
+        f = parse_gamble('1 1')
+        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        self.assertIsNotNone(result)
+
+        f = parse_gamble('0 0')
+        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        self.assertIsNone(result)
+
+    def test_conestrip2(self):
+        text = '''
+          1 0
+          0 1
+          
+          1 0
+        '''
+        R = parse_general_cone(text)
+        Omega_Gamma = [0, 1]
+        Omega_Delta = []
+
+        f = parse_gamble('1 0')
+        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        self.assertIsNotNone(result)
+
+    def test_conestrip3(self):
         text = '''
           1 0
           0 1
