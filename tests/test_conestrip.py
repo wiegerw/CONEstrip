@@ -2,9 +2,9 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
-from fractions import Fraction
 from unittest import TestCase
-from conestrip.cones import GeneralCone, parse_gamble, parse_general_cone, parse_cone_generator, random_cone_generator, print_gamble, add_random_border_cones
+from conestrip.cones import parse_gamble, parse_general_cone, print_gamble
+from conestrip.random_cones import random_cone_generator, add_random_border_cones
 from conestrip.utility import remove_spaces
 from conestrip.conestrip import conestrip1
 
@@ -92,15 +92,12 @@ class Test(TestCase):
         '''
         R = parse_general_cone(text)
         add_random_border_cones(R, 1)
-        print('R')
-        print(R)
         R1 = R.generators[1]
         Omega_Gamma = [0, 1]
         Omega_Delta = []
         for f in R1.vertices:
-            print('f', f)
             result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
-            self.assertIsNone(result)
+            self.assertIsNotNone(result)
 
 
 if __name__ == '__main__':
