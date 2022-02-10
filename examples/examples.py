@@ -131,7 +131,7 @@ def example_conestrip2():
     Omega_Gamma = [0, 1]
     Omega_Delta = [2]
 
-    lambda_solution, mu_solution, sigma_solution = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+    lambda_solution, mu_solution, sigma_solution = conestrip(R, f, Omega_Gamma, Omega_Delta)
     print('lambda =', lambda_solution)
     print('mu =', mu_solution)
     print('sigma =', sigma_solution)

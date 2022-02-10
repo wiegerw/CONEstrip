@@ -4,8 +4,8 @@
 
 import inspect
 from typing import List
-from conestrip.cones import parse_general_cone, Gamble, gambles_to_polyhedron, random_border_cone, add_random_border_cones
-from conestrip.utility import pretty_print
+from conestrip.cones import parse_general_cone, Gamble, gambles_to_polyhedron
+from conestrip.random_cones import add_random_border_cone, add_random_border_cones
 
 
 def example1():
@@ -40,8 +40,10 @@ def example2():
       1 1 1
     ''')
 
-    cone = random_border_cone(R.generators[0])
-    pretty_print([cone])
+    generator = R.generators[0]
+    print(f'generator:\n{generator}')
+    generator1 = add_random_border_cone(generator)
+    print(f'generator1:\n{generator1}')
 
 
 def example3():
