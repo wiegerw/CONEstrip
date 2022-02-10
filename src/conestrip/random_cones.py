@@ -32,7 +32,7 @@ def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:
         lambda_ = random_rationals_summing_to_one(m)
         result.append(linear_combination(lambda_, border_facet.gambles))
     generator = ConeGenerator(result)
-    R.facet_adjacencies[facet_index].append(generator)
+    generator.parent = (R, facet_index)
     return generator
 
 

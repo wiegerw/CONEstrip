@@ -2,10 +2,11 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
+from collections import defaultdict
 import random
 import re
 from fractions import Fraction
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import cdd
 from conestrip.polyhedron import Polyhedron
 from conestrip.utility import random_rationals_summing_to_one, inner_product
@@ -46,7 +47,8 @@ class ConeGenerator(object):
         self.vertices: List[List[Fraction]] = poly.vertices()  # Note that the vertices may be in a different order than the gambles
         facets: List[Tuple[int]] = poly.face_vertex_adjacencies()
         self.facets = [tuple(sorted(facet)) for facet in facets]
-        self.facet_adjacencies: Dict[int, List[ConeGenerator]] = {i: [] for i in range(len(self.facets))}  # maps facets to the generators contained in it
+        self.parent: Optional[Tuple[ConeGenerator, int]] = None
+        # If self.parent == (R, i), then this generator is contained in the i-th facet of R.
 
     def __getitem__(self, item):
         return self.gambles[item]
@@ -85,3 +87,16 @@ def parse_general_cone(text: str) -> GeneralCone:
     return GeneralCone(list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip()))))
 
 
+def find_generator_dependencies(cone: GeneralCone) -> Dict[Tuple[ConeGenerator, int], List[ConeGenerator]]:
+    """
+    if ((R, i), R') is in result, then R' is contained in the i-th facet of R
+    @param cone: A general cone
+    @return: A mapping from generators to child generators that are contained in one of their border facets
+    """
+    dependencies = defaultdict(lambda: [])
+
+    for R in cone.generators:
+        if R.parent:
+            dependencies[R.parent].append(R)
+
+    return dependencies

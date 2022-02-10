@@ -4,7 +4,7 @@
 
 import inspect
 from typing import List
-from conestrip.cones import parse_general_cone, Gamble, gambles_to_polyhedron
+from conestrip.cones import parse_general_cone, Gamble, gambles_to_polyhedron, find_generator_dependencies
 from conestrip.random_cones import add_random_border_cone, add_random_border_cones
 
 
@@ -58,6 +58,9 @@ def example3():
 
     add_random_border_cones(R, 5)
     print(R)
+
+    dependencies = find_generator_dependencies(R)
+    print(dependencies)
 
 
 example1()
