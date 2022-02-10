@@ -3,10 +3,10 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from unittest import TestCase
-from conestrip.cones import parse_gamble, parse_general_cone, print_gamble
-from conestrip.random_cones import random_cone_generator, add_random_border_cones
-from conestrip.utility import remove_spaces
-from conestrip.conestrip import conestrip1
+from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone
+from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point
+from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
+from conestrip.conestrip import conestrip1, is_in_general_cone
 
 
 class Test(TestCase):
@@ -98,6 +98,52 @@ class Test(TestCase):
         for f in R1.vertices:
             result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
             self.assertIsNotNone(result)
+
+    def test_random_numbers(self):
+        n = 10
+        for _ in range(100):
+            v = random_nonzero_rationals_summing_to_one(n)
+            self.assertEqual(n, len(v))
+            self.assertEqual(1, sum(v))
+
+    def test_random_points(self):
+        text = '''
+           1  1  2
+          -1  1  2
+           1 -1  2
+          -1 -1  2 
+        '''
+        R = parse_cone_generator(text)
+        g1 = random_border_point(R)
+        print('g1', g1)
+        g2 = random_inside_point(R)
+        self.assertFalse(is_in_general_cone(GeneralCone([R]), g1))
+        self.assertTrue(is_in_general_cone(GeneralCone([R]), g2))
+
+    def test_in_cone1(self):
+        text = '''
+           1  0
+           0  1
+        '''
+        R = parse_cone_generator(text)
+        r1 = parse_gamble('1 0')
+        r2 = parse_gamble('0 1')
+        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r1))
+        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r2))
+
+    def test_in_cone2(self):
+        text = '''
+           1  2
+           2  1
+        '''
+        R = parse_cone_generator(text)
+        r1 = parse_gamble('1 2')
+        r2 = parse_gamble('2 1')
+        sol = is_in_general_cone(GeneralCone([R]), r1)
+        print('sol', sol)
+        self.assertIsNone(sol)
+        # self.assertIsNone(is_in_general_cone(GeneralCone([R]), r1))
+        # self.assertIsNone(is_in_general_cone(GeneralCone([R]), r2))
 
 
 if __name__ == '__main__':

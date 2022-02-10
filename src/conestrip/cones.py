@@ -47,8 +47,10 @@ class ConeGenerator(object):
         self.vertices: List[List[Fraction]] = poly.vertices()  # Note that the vertices may be in a different order than the gambles
         facets: List[Tuple[int]] = poly.face_vertex_adjacencies()
         self.facets = [tuple(sorted(facet)) for facet in facets]
-        self.parent: Optional[Tuple[ConeGenerator, int]] = None
+
         # If self.parent == (R, i), then this generator is contained in the i-th facet of R.
+        self.parent: Optional[Tuple[ConeGenerator, int]] = None
+        self.children: Dict[int, List[ConeGenerator]] = {i: [] for i in range(len(self.facets))}  # maps facets to the generators contained in it
 
     def __getitem__(self, item):
         return self.gambles[item]
@@ -87,7 +89,7 @@ def parse_general_cone(text: str) -> GeneralCone:
     return GeneralCone(list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip()))))
 
 
-def find_generator_dependencies(cone: GeneralCone) -> Dict[Tuple[ConeGenerator, int], List[ConeGenerator]]:
+def find_child_dependencies(cone: GeneralCone) -> Dict[Tuple[ConeGenerator, int], List[ConeGenerator]]:
     """
     if ((R, i), R') is in result, then R' is contained in the i-th facet of R
     @param cone: A general cone

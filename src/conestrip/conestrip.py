@@ -309,3 +309,10 @@ def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: L
         if all(x == 0 for x in collapse(mu[d] for d in Q)):
             return Lambda
         R = [R_d for d, R_d in enumerate(R) if d not in Q]
+
+
+def is_in_general_cone(cone: GeneralCone, g: Gamble) -> Any:
+    n = len(g)
+    Omega_Gamma = list(range(n))
+    Omega_Delta = []
+    return conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=True)

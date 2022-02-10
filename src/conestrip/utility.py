@@ -40,6 +40,19 @@ def random_rationals_summing_to_one(n: int) -> List[Fraction]:
     return [Fraction(vi) for vi in v]
 
 
+def random_nonzero_rationals_summing_to_one(n: int) -> List[Fraction]:
+    values = random_floats_summing_to_one(n)
+    v = [Fraction(max(1, round(1000*x)), 1000) for x in values]
+    assert all(x > 0 for x in v)
+    s = sum(v) - 1
+    I = [i for i in range(n) if v[i] > s]
+    i0 = random.choice(I)
+    v[i0] -= s
+    v = [Fraction(vi) for vi in v]
+    assert sum(v) == 1
+    return v
+
+
 def remove_spaces(txt: str) -> str:
     lines = txt.strip().split('\n')
     return '\n'.join(line.strip() for line in lines)
