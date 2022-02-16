@@ -139,11 +139,8 @@ class Test(TestCase):
         R = parse_cone_generator(text)
         r1 = parse_gamble('1 2')
         r2 = parse_gamble('2 1')
-        sol = is_in_general_cone(GeneralCone([R]), r1)
-        print('sol', sol)
-        self.assertIsNone(sol)
-        # self.assertIsNone(is_in_general_cone(GeneralCone([R]), r1))
-        # self.assertIsNone(is_in_general_cone(GeneralCone([R]), r2))
+        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r1))
+        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r2))
 
 
 if __name__ == '__main__':

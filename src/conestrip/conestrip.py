@@ -11,10 +11,9 @@ from conestrip.utility import product, sum_rows
 
 
 def is_valid_conestrip_input(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> bool:
-    # check that Omega_Gamma and Omega_Delta are a partition of { 0, ..., |f0|-1 }
+    # check that the union of Omega_Gamma and Omega_Delta equals { 0, ..., |f0|-1 }
     # check that the gambles in R0 have the correct length
-    return set(Omega_Gamma).isdisjoint(set(Omega_Delta)) and \
-           set(list(range(len(f0)))) == set(Omega_Gamma) | set(Omega_Delta) and \
+    return set(list(range(len(f0)))) == set(Omega_Gamma) | set(Omega_Delta) and \
            all(len(x) == len(f0) for x in flatten(R0))
 
 
@@ -314,5 +313,5 @@ def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: L
 def is_in_general_cone(cone: GeneralCone, g: Gamble) -> Any:
     n = len(g)
     Omega_Gamma = list(range(n))
-    Omega_Delta = []
+    Omega_Delta = list(range(n))
     return conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=True)
