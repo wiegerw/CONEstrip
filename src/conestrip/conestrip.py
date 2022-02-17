@@ -27,7 +27,10 @@ def omega_constraints(f: Any, h: Any, Omega_Gamma: List[int], Omega_Delta: List[
     return constraints_1, constraints_2, constraints_3
 
 
-def conestrip1_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], lambda_: List[Any], nu: List[Any], verbose: bool = False) -> List[Any]:
+def conestrip1_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False) -> List[Any]:
+    # variables
+    lambda_, nu = variables
+
     # constants
     g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
     f = [RealVal(f0[j]) for j in range(len(f0))]
@@ -75,7 +78,7 @@ def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
     lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
 
-    constraints = conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, lambda_, nu, verbose)
+    constraints = conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, nu), verbose)
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -91,16 +94,9 @@ def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         return None
 
 
-def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
-    """
-    An implementation of formula (2) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
-    """
-    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
-
+def conestrip2_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> List[Any]:
     # variables
-    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
-    tau = [[Real(f'tau{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
-    sigma = Real('sigma')
+    lambda_, tau, sigma = variables
 
     # constants
     g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
@@ -142,6 +138,20 @@ def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         print(constraints_3)
         print(constraints_4)
 
+    return constraints
+
+def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+    """
+    An implementation of formula (2) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
+    """
+    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
+
+    # variables
+    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
+    tau = [[Real(f'tau{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
+    sigma = Real('sigma')
+
+    constraints = conestrip2_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, tau, sigma), verbose)
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -159,16 +169,9 @@ def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         return None
 
 
-def conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
-    """
-    An implementation of formula (3) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
-    """
-    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
-
+def conestrip3_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> List[Any]:
     # variables
-    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
-    mu = [[Real(f'mu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
-    sigma = Real('sigma')
+    lambda_, mu, sigma = variables
 
     # constants
     g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
@@ -212,6 +215,22 @@ def conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         print(constraints_4)
         print(constraints_5)
 
+    return constraints
+
+
+def conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+    """
+    An implementation of formula (3) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
+    """
+    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
+
+    # variables
+    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
+    mu = [[Real(f'mu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
+    sigma = Real('sigma')
+
+
+    constraints = conestrip3_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -229,16 +248,9 @@ def conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         return None
 
 
-def conestrip_solutions(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
-    """
-    An implementation of formula (4) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
-    """
-    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
-
+def conestrip_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> List[Any]:
     # variables
-    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
-    mu = [[Real(f'mu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
-    sigma = Real('sigma')
+    lambda_, mu, sigma = variables
 
     # constants
     g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
@@ -283,6 +295,24 @@ def conestrip_solutions(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Ome
         print(constraints_4)
         print(constraints_5)
 
+    return constraints
+
+
+def conestrip_solutions(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+    """
+    An implementation of formula (4) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
+    """
+    assert is_valid_conestrip_input(R0, f0, Omega_Gamma, Omega_Delta)
+
+    # variables
+    lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
+    mu = [[Real(f'mu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
+    sigma = Real('sigma')
+
+    # expressions
+    goal = simplify(sum(lambda_))
+
+    constraints = conestrip_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)
     optimizer = Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
