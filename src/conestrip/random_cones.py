@@ -58,13 +58,11 @@ def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:
     # generate a cone that is contained in border_face
     m = len(border_facet.gambles)
     result = []
-    coefficients = []
     for i in range(m):
         g, lambda_ = random_inside_point(border_facet)
         result.append(g)
-        coefficients.append(lambda_)
     generator = ConeGenerator(result)
-    generator.parent = (R, facet_index, coefficients)
+    generator.parent = (R, facet_index)
     R.children[facet_index].append(generator)
     return generator
 

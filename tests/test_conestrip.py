@@ -3,10 +3,10 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from unittest import TestCase
-from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone
+from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone, Gamble
 from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
-from conestrip.conestrip import conestrip1, is_in_general_cone
+from conestrip.conestrip import conestrip, conestrip1, conestrip2, conestrip3, is_in_general_cone
 
 
 class Test(TestCase):
@@ -48,7 +48,7 @@ class Test(TestCase):
         '''
         R = parse_general_cone(text)
         Omega_Gamma = [0, 1]
-        Omega_Delta = []
+        Omega_Delta = [0, 1]
 
         f = parse_gamble('1 0')
         result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
@@ -70,7 +70,35 @@ class Test(TestCase):
         result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
+    def check_conestrip(self, R: GeneralCone, f_text: str, expected_result=False):
+        f = parse_gamble(f_text)
+        n = len(f)
+        Omega_Gamma = list(range(n))
+        Omega_Delta = list(range(n))
+        result1 = conestrip1(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+        result2 = conestrip2(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+        result3 = conestrip3(R, f, Omega_Gamma, Omega_Delta, verbose=True)
+        result4 = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=False)
+        self.assertEqual(expected_result, result1 is not None)
+        self.assertEqual(expected_result, result2 is not None)
+        self.assertEqual(expected_result, result3 is not None)
+        self.assertEqual(expected_result, result4 is not None)
+
     def test_conestrip2(self):
+        text = '''
+          1 0
+          0 1
+        '''
+        R = parse_general_cone(text)
+        self.check_conestrip(R, '1/2 1/3', True)
+        self.check_conestrip(R, '2 4', True)
+        self.check_conestrip(R, '1 0', False)
+        self.check_conestrip(R, '2 0', False)
+        self.check_conestrip(R, '0 1', False)
+        self.check_conestrip(R, '0 2', False)
+
+
+    def test_conestrip3(self):
         text = '''
           1 0
           0 1
@@ -78,26 +106,27 @@ class Test(TestCase):
           1 0
         '''
         R = parse_general_cone(text)
-        Omega_Gamma = [0, 1]
-        Omega_Delta = [0, 1]
+        self.check_conestrip(R, '1/2 1/3', True)
+        self.check_conestrip(R, '2 4', True)
+        self.check_conestrip(R, '1 0', True)
+        self.check_conestrip(R, '2 0', True)
+        self.check_conestrip(R, '0 1', False)
+        self.check_conestrip(R, '0 2', False)
 
-        f = parse_gamble('1 0')
-        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
-        self.assertIsNotNone(result)
-
-    def test_conestrip3(self):
+    def test_conestrip4(self):
         text = '''
-          1 0
-          0 1
+          4 0 0
+          0 5 0
+          0 0 6
+
+          1 0 1
+          0 7 7
+
+          1 2 3
+          2 4 6
         '''
         R = parse_general_cone(text)
-        add_random_border_cones(R, 1)
-        R1 = R.generators[1]
-        Omega_Gamma = [0, 1]
-        Omega_Delta = []
-        for f in R1.vertices:
-            result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
-            self.assertIsNotNone(result)
+        self.check_conestrip(R, '2 5 8', True)
 
     def test_random_numbers(self):
         n = 10

@@ -332,7 +332,7 @@ def conestrip_solutions(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Ome
         return None
 
 
-def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of the CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     @param R:
@@ -342,7 +342,7 @@ def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: L
     @return: A solution (lambda, mu, sigma) to the CONEstrip optimization problem (4), or None if no solution exists
     """
     while True:
-        Lambda = conestrip_solutions(R, f0, Omega_Gamma, Omega_Delta)
+        Lambda = conestrip_solutions(R, f0, Omega_Gamma, Omega_Delta, verbose)
         if not Lambda:
             return None
         lambda_, mu, _ = Lambda

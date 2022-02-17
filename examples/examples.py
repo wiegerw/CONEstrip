@@ -102,8 +102,8 @@ def example_conestrip1():
       2 4 6
     ''')
     f = parse_gamble('2 5 8')
-    Omega_Gamma = [0, 1]
-    Omega_Delta = [2]
+    Omega_Gamma = [0, 1, 2]
+    Omega_Delta = [0, 1, 2]
     result1 = conestrip1(R, f, Omega_Gamma, Omega_Delta, verbose=True)
     result2 = conestrip2(R, f, Omega_Gamma, Omega_Delta, verbose=True)
     result3 = conestrip3(R, f, Omega_Gamma, Omega_Delta, verbose=True)
@@ -128,8 +128,8 @@ def example_conestrip2():
       2 4 6
     ''')
     f = parse_gamble('2 5 8')
-    Omega_Gamma = [0, 1]
-    Omega_Delta = [2]
+    Omega_Gamma = [0, 1, 2]
+    Omega_Delta = [0, 1, 2]
 
     lambda_solution, mu_solution, sigma_solution = conestrip(R, f, Omega_Gamma, Omega_Delta)
     print('lambda =', lambda_solution)

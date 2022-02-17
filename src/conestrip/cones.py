@@ -50,7 +50,7 @@ class ConeGenerator(object):
         self.facets = [tuple(sorted(facet)) for facet in facets]
 
         # If self.parent == (R, i), then this generator is contained in the i-th facet of R.
-        self.parent: Optional[Tuple[ConeGenerator, int, List[ConvexCombination]]] = None
+        self.parent: Optional[Tuple[ConeGenerator, int]] = None
         self.children: Dict[int, List[ConeGenerator]] = {i: [] for i in range(len(self.facets))}  # maps facets to the generators contained in it
 
     def __getitem__(self, item):
@@ -88,18 +88,3 @@ def parse_cone_generator(text: str) -> ConeGenerator:
 
 def parse_general_cone(text: str) -> GeneralCone:
     return GeneralCone(list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip()))))
-
-
-def find_child_dependencies(cone: GeneralCone) -> Dict[Tuple[ConeGenerator, int], List[ConeGenerator]]:
-    """
-    if ((R, i), R') is in result, then R' is contained in the i-th facet of R
-    @param cone: A general cone
-    @return: A mapping from generators to child generators that are contained in one of their border facets
-    """
-    dependencies = defaultdict(lambda: [])
-
-    for R in cone.generators:
-        if R.parent:
-            dependencies[R.parent].append(R)
-
-    return dependencies
