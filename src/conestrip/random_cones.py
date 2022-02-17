@@ -1,8 +1,10 @@
 import random
 from fractions import Fraction
 from typing import List, Tuple
+from z3 import *
 from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination
-from conestrip.utility import random_rationals_summing_to_one, random_nonzero_rationals_summing_to_one, inner_product
+from conestrip.utility import random_nonzero_rationals_summing_to_one, inner_product
+from conestrip.conestrip import conestrip1_constraints
 
 
 def linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
@@ -42,16 +44,6 @@ def random_border_point(R: ConeGenerator) -> Tuple[Gamble, ConvexCombination]:
     facet = random.choice(R.facets)
     border_facet = make_facet(facet)
     return random_inside_point(border_facet)
-
-
-# pre: R.parent != None
-# returns a point that is in
-def random_between_point(R: ConeGenerator) -> Gamble:
-    """
-    Generates a point that is contained in R.parent, but not in R.
-    @precondition R.parent != None
-    @param R: A cone generator
-    """
 
 
 def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:

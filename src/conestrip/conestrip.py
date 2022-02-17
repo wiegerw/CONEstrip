@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Set, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
-from conestrip.cones import GeneralCone, Gamble
+from conestrip.cones import GeneralCone, Gamble, ConeGenerator
 from conestrip.utility import product, sum_rows
 
 
@@ -27,7 +27,7 @@ def omega_constraints(f: Any, h: Any, Omega_Gamma: List[int], Omega_Delta: List[
     return constraints_1, constraints_2, constraints_3
 
 
-def conestrip1_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False) -> List[Any]:
+def conestrip1_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False, with_border: bool = False) -> List[Any]:
     # variables
     lambda_, nu = variables
 
@@ -42,7 +42,7 @@ def conestrip1_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
     lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
 
     # nu > 0
-    nu_constraints = [x > 0 for x in collapse(nu)]
+    nu_constraints = [x >= 0 for x in collapse(nu)] if with_border else [x > 0 for x in collapse(nu)]
 
     # main constraints
     constraints_1 = [simplify(sum(lambda_)) == 1]
@@ -68,7 +68,7 @@ def conestrip1_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
     return lambda_constraints + nu_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4
 
 
-def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any]]:
+def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False, with_border: bool = False) -> Optional[Tuple[Any, Any]]:
     """
     An implementation of formula (1) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -78,7 +78,7 @@ def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
     lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
 
-    constraints = conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, nu), verbose)
+    constraints = conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, nu), verbose, with_border)
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -357,3 +357,49 @@ def is_in_general_cone(cone: GeneralCone, g: Gamble) -> Any:
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
     return conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=True)
+
+
+def random_between_point(R1: ConeGenerator) -> Optional[Gamble]:
+    """
+    Generates a point that is contained in R.parent, but not in R.
+    @precondition R.parent != None
+    @param R: A cone generator
+    """
+
+    verbose = False
+
+    R0, facet_index, coefficients = R1.parent
+
+    n = len(R1.gambles[0])
+    Omega_Gamma = list(range(n))
+    Omega_Delta = list(range(n))
+
+    # variables
+    f = [Real(f'f{d}') for d in range(n)]
+    lambda0 = [Real(f'lambda0{d}') for d in range(len(R1))]
+    nu0 = [[Real(f'nu0_{d}_{i}') for i in range(len(R1[d]))] for d in range(len(R1))]
+    lambda1 = [Real(f'lambda1{d}') for d in range(len(R1))]
+    nu1 = [[Real(f'nu1_{d}_{i}') for i in range(len(R1[d]))] for d in range(len(R1))]
+
+    # f is inside R0, and not inside R1
+    constraints0 = conestrip1_constraints(GeneralCone([R0]), f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)
+    constraint1 = Not(And(conestrip1_constraints(GeneralCone([R1]), f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True)))
+    constraints = constraints0 + [constraint1]
+
+    solver = Solver()
+    solver.add(constraints)
+    if solver.check() == sat:
+        model = solver.model()
+        lambda0_solution = [model.evaluate(lambda0[d]) for d in range(len(R0))]
+        lambda1_solution = [model.evaluate(lambda0[d]) for d in range(len(R1))]
+        nu0_solution = [[model.evaluate(nu0[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]
+        nu1_solution = [[model.evaluate(nu1[d][i]) for i in range(len(R1[d]))] for d in range(len(R1))]
+        f = [model.evaluate(f[d]) for d in range(len(f))]
+        if verbose:
+            print('--- solution ---')
+            print('lambda0 =', lambda0_solution)
+            print('nu0 =', nu0_solution)
+            print('lambda1 =', lambda1_solution)
+            print('nu1 =', nu1_solution)
+        return f
+    return None

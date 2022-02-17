@@ -79,7 +79,7 @@ class Test(TestCase):
         '''
         R = parse_general_cone(text)
         Omega_Gamma = [0, 1]
-        Omega_Delta = []
+        Omega_Delta = [0, 1]
 
         f = parse_gamble('1 0')
         result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
