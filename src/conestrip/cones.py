@@ -13,7 +13,8 @@ from conestrip.utility import random_rationals_summing_to_one, inner_product
 
 
 Gamble = List[Fraction]
-
+ConvexCombination = List[Fraction]  # positive values that sum to one
+PositiveCombination = List[Fraction]  # positive values
 
 def print_gamble(g: Gamble) -> str:
     return ' '.join(map(str, g))
@@ -49,7 +50,7 @@ class ConeGenerator(object):
         self.facets = [tuple(sorted(facet)) for facet in facets]
 
         # If self.parent == (R, i), then this generator is contained in the i-th facet of R.
-        self.parent: Optional[Tuple[ConeGenerator, int]] = None
+        self.parent: Optional[Tuple[ConeGenerator, int, List[ConvexCombination]]] = None
         self.children: Dict[int, List[ConeGenerator]] = {i: [] for i in range(len(self.facets))}  # maps facets to the generators contained in it
 
     def __getitem__(self, item):

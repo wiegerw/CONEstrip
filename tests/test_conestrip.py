@@ -114,9 +114,9 @@ class Test(TestCase):
           -1 -1  2 
         '''
         R = parse_cone_generator(text)
-        g1 = random_border_point(R)
+        g1, lambda1 = random_border_point(R)
         print('g1', g1)
-        g2 = random_inside_point(R)
+        g2, lambda2 = random_inside_point(R)
         self.assertFalse(is_in_general_cone(GeneralCone([R]), g1))
         self.assertTrue(is_in_general_cone(GeneralCone([R]), g2))
 
