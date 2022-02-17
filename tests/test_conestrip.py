@@ -119,6 +119,23 @@ class Test(TestCase):
 
     def test_conestrip4(self):
         text = '''
+          1 2
+          2 1
+
+          1 2
+        '''
+        R = parse_general_cone(text)
+        self.check_conestrip(R, '1 1', True)
+        self.check_conestrip(R, '10 10', True)
+        self.check_conestrip(R, '1 2', True)
+        self.check_conestrip(R, '2 4', True)
+        self.check_conestrip(R, '2 1', False)
+        self.check_conestrip(R, '4 2', False)
+        self.check_conestrip(R, '1 3', False)
+        self.check_conestrip(R, '3 1', False)
+
+    def test_conestrip5(self):
+        text = '''
           4 0 0
           0 5 0
           0 0 6

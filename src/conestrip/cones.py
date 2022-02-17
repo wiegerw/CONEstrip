@@ -2,14 +2,11 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
-from collections import defaultdict
-import random
 import re
 from fractions import Fraction
 from typing import Dict, List, Tuple, Optional
 import cdd
 from conestrip.polyhedron import Polyhedron
-from conestrip.utility import random_rationals_summing_to_one, inner_product
 
 
 Gamble = List[Fraction]
