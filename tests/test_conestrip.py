@@ -4,9 +4,9 @@
 
 from unittest import TestCase
 from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone, Gamble
-from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point
+from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
-from conestrip.conestrip import conestrip, conestrip1, conestrip2, conestrip3, is_in_general_cone
+from conestrip.conestrip import conestrip, conestrip1, conestrip2, conestrip3, is_in_general_cone, is_in_cone_generator
 
 
 class Test(TestCase):
@@ -191,6 +191,38 @@ class Test(TestCase):
         r2 = parse_gamble('2 1')
         self.assertIsNone(is_in_general_cone(GeneralCone([R]), r1))
         self.assertIsNone(is_in_general_cone(GeneralCone([R]), r2))
+
+    def test_random_cone_generator(self):
+        cone_size = 1
+        dimension = 3
+        generator_size = 3
+        bound = 10
+        R = random_general_cone(cone_size, dimension, generator_size, bound)
+        add_random_border_cones(R, 2, False)
+        print(R)
+
+        R0 = R[0]
+        R1 = R[1]
+        R2 = R[2]
+
+        # x, lamba_ = random_inside_point(R2)
+        # self.assertIsNotNone(is_in_general_cone(R, x))
+
+        x, lambda_ = random_border_point(R2)
+        print('--- R2 ---')
+        print(R2)
+        print('\nx =', print_gamble(x))
+        self.check_conestrip(GeneralCone([R2]), print_gamble(x), False)
+        self.assertIsNone(is_in_cone_generator(R2, x))
+        # self.assertIsNone(is_in_general_cone(R, x))
+
+    def test_conestrip6(self):
+        text = '''
+            -118867/62500 -856601/125000 118867/62500
+            -238661/125000 -1715983/250000 238661/125000
+        '''
+        R = parse_general_cone(text)
+        self.check_conestrip(R, '-1908361/1000000 -13725083/2000000 1908361/1000000', False)
 
 
 if __name__ == '__main__':

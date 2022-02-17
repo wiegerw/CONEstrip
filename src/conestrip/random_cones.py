@@ -4,7 +4,6 @@ from typing import List, Tuple
 from z3 import *
 from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination
 from conestrip.utility import random_nonzero_rationals_summing_to_one, inner_product
-from conestrip.conestrip import conestrip1_constraints
 
 
 def linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
@@ -68,8 +67,18 @@ def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:
 
 
 def add_random_border_cones(R: GeneralCone, n: int, allow_multiple_children: bool = False) -> None:
+    def is_allowed(r: ConeGenerator) -> bool:
+        if len(r.gambles) < 2:
+            return False
+        if allow_multiple_children:
+            return True
+        for i, successors in enumerate(r.children):
+            if not successors:
+                return True
+        return False
+
     for i in range(n):
-        R1 = [r for r in R.generators if len(r.gambles) >= 2]
+        R1 = [r for r in R.generators if is_allowed(r)]
         r = random.choice(R1)
         generator = add_random_border_cone(r)
         R.generators.append(generator)
@@ -81,6 +90,14 @@ def random_vector(n: int, bound: int) -> List[Fraction]:
 
 
 def random_cone_generator(dimension: int, generator_size: int, bound: int, normal=None) -> ConeGenerator:
+    """
+    Generates a random cone generator.
+    @param dimension: The size of the gambles in the cone generator.
+    @param generator_size: The number of gambles in the cone generator.
+    @param bound: The largest absolute value of the coordinates.
+    @param normal: The normal vector of a half space (optional).
+    @return: The generated cone generator.
+    """
     n = dimension
 
     if not normal:
