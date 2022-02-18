@@ -382,7 +382,7 @@ def is_in_general_cone(cone: GeneralCone, g: Gamble) -> Any:
     n = len(g)
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
-    return conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=True)
+    return conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
 
 
 def random_between_point(R1: ConeGenerator) -> Optional[Gamble]:

@@ -215,18 +215,23 @@ class Test(TestCase):
         for r in R.generators:
             if not r.parent:
                 continue
+            r_parent, _ = r.parent
 
-            print('r =', r, '\n')
+            print('r =\n', r, '\n')
+            print('r_parent =\n', r_parent, '\n')
             x1, lambda1 = random_inside_point(r)
             x2, lambda2 = random_border_point(r)
             x3 = random_between_point(r)
-            print('x1', print_gamble(x1))
-            print('x2', print_gamble(x2))
-            print('x3', print_gamble(x3))
+            print('x1 =', print_gamble(x1), 'lambda =', print_gamble(lambda1))
+            print('x2 =', print_gamble(x2), 'lambda =', print_gamble(lambda2))
+            print('x3 =', print_gamble(x3))
             self.assertTrue(is_in_cone_generator(r, x1))
             self.assertTrue(is_in_cone_generator_border(r, x2))
             self.assertFalse(is_in_cone_generator(r, x3))
             self.assertFalse(is_in_cone_generator(r, x3, with_border=True))
+            self.assertTrue(is_in_cone_generator(r_parent, x3))
+            self.assertTrue(is_in_general_cone(R, x1))
+            print()
 
 
 if __name__ == '__main__':
