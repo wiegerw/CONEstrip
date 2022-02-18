@@ -23,24 +23,31 @@ def random_border_point(R: ConeGenerator) -> Tuple[Gamble, ConvexCombination]:
     @param R:
     @return:
     """
+    n = len(R.gambles[0])
+
     if len(R.gambles) == 1:
-        n = len(R.gambles[0])
         return [Fraction(0)] * n, [Fraction(0)]
 
     # converts indices to points
     def make_facet(indices: Tuple[int]) -> ConeGenerator:
         return ConeGenerator([R.vertices[i] for i in indices])
 
-    facet = random.choice(R.facets)
+    facet = random.choice(R.facets)  # contains the indices of the vertices
     border_facet = make_facet(facet)
+    facet = list(facet)
 
     # if the border facet has the same dimension, remove a random vertex
     if len(border_facet.gambles) == len(R.gambles):
         m = len(border_facet.gambles)
         i = random.randint(0, m - 1)
+        facet.pop(i)
         border_facet.gambles.pop(i)
 
-    return random_inside_point(border_facet)
+    x, lambda_ = random_inside_point(border_facet)
+    coefficients = [Fraction(0)] * len(R.gambles)
+    for i, j in enumerate(facet):
+        coefficients[j] = lambda_[i]
+    return x, coefficients
 
 
 def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:
