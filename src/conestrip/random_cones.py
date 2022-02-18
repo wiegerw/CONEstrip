@@ -45,6 +45,13 @@ def random_border_point(R: ConeGenerator) -> Tuple[Gamble, ConvexCombination]:
 
     facet = random.choice(R.facets)
     border_facet = make_facet(facet)
+
+    # if the border facet has the same dimension, remove a random vertex
+    if len(border_facet.gambles) == len(R.gambles):
+        m = len(border_facet.gambles)
+        i = random.randint(0, m - 1)
+        border_facet.gambles.pop(i)
+
     return random_inside_point(border_facet)
 
 

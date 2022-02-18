@@ -216,6 +216,7 @@ class Test(TestCase):
             if not r.parent:
                 continue
 
+            print('r =', r, '\n')
             x1, lambda1 = random_inside_point(r)
             x2, lambda2 = random_border_point(r)
             x3 = random_between_point(r)
