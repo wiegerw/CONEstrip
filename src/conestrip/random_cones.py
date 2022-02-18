@@ -35,6 +35,9 @@ def random_border_point(R: ConeGenerator) -> Tuple[Gamble, ConvexCombination]:
     @param R:
     @return:
     """
+    if len(R.gambles) == 1:
+        n = len(R.gambles[0])
+        return [Fraction(0)] * n, [Fraction(0)]
 
     # converts indices to points
     def make_facet(indices: Tuple[int]) -> ConeGenerator:
@@ -72,7 +75,7 @@ def add_random_border_cones(R: GeneralCone, n: int, allow_multiple_children: boo
             return False
         if allow_multiple_children:
             return True
-        for i, successors in enumerate(r.children):
+        for _, successors in enumerate(r.children):
             if not successors:
                 return True
         return False
