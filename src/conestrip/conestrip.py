@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Set, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
-from conestrip.cones import GeneralCone, Gamble, ConeGenerator
+from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination
 from conestrip.utility import product, sum_rows
 
 
@@ -385,14 +385,12 @@ def is_in_general_cone(cone: GeneralCone, g: Gamble) -> Any:
     return conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
 
 
-def random_between_point(R1: ConeGenerator) -> Optional[Gamble]:
+def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[Tuple[Gamble, ConvexCombination]]:
     """
     Generates a point that is contained in R1.parent, but not in R1.
     @precondition R1.parent != None
     @param R1: A cone generator
     """
-
-    verbose = False
 
     R0, facet_index = R1.parent
 
@@ -427,5 +425,7 @@ def random_between_point(R1: ConeGenerator) -> Optional[Gamble]:
             print('nu0 =', nu0_solution)
             print('lambda1 =', lambda1_solution)
             print('nu1 =', nu1_solution)
-        return f
+        coefficients = [simplify(x) for x in lambda0_solution]
+        return f, coefficients
     return None
+

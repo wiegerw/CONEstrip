@@ -11,7 +11,18 @@ from conestrip.polyhedron import Polyhedron
 
 Gamble = List[Fraction]
 ConvexCombination = List[Fraction]  # positive values that sum to one
-PositiveCombination = List[Fraction]  # positive values
+
+
+def linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
+    m = len(gambles)
+    n = len(gambles[0])
+    result = [Fraction(0)] * n
+    for i in range(m):
+        g = gambles[i]
+        for j in range(n):
+            result[j] += lambda_[i] * g[j]
+    return result
+
 
 def print_gamble(g: Gamble) -> str:
     return ' '.join(map(str, g))

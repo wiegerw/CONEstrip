@@ -1,20 +1,8 @@
 import random
-from fractions import Fraction
 from typing import List, Tuple
 from z3 import *
-from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination
+from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination, linear_combination
 from conestrip.utility import random_nonzero_rationals_summing_to_one, inner_product
-
-
-def linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
-    m = len(gambles)
-    n = len(gambles[0])
-    result = [Fraction(0)] * n
-    for i in range(m):
-        g = gambles[i]
-        for j in range(n):
-            result[j] += lambda_[i] * g[j]
-    return result
 
 
 def random_inside_point(R: ConeGenerator) -> Tuple[Gamble, ConvexCombination]:

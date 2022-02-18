@@ -217,14 +217,14 @@ class Test(TestCase):
                 continue
             r_parent, _ = r.parent
 
-            print('r =\n', r, '\n')
             print('r_parent =\n', r_parent, '\n')
+            print('r =\n', r, '\n')
             x1, lambda1 = random_inside_point(r)
             x2, lambda2 = random_border_point(r)
-            x3 = random_between_point(r)
+            x3, lambda3 = random_between_point(r)
             print('x1 =', print_gamble(x1), 'lambda =', print_gamble(lambda1))
             print('x2 =', print_gamble(x2), 'lambda =', print_gamble(lambda2))
-            print('x3 =', print_gamble(x3))
+            print('x3 =', print_gamble(x3), 'lambda =', print_gamble(lambda3))
             self.assertTrue(is_in_cone_generator(r, x1))
             self.assertTrue(is_in_cone_generator_border(r, x2))
             self.assertFalse(is_in_cone_generator(r, x3))
