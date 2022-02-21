@@ -398,26 +398,29 @@ def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[T
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
 
+    cone0 = GeneralCone([R0])
+    cone1 = GeneralCone([R1])
+
     # variables
     f = [Real(f'f{d}') for d in range(n)]
-    lambda0 = [Real(f'lambda0{d}') for d in range(len(R0))]
-    nu0 = [[Real(f'nu0_{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
-    lambda1 = [Real(f'lambda1{d}') for d in range(len(R1))]
-    nu1 = [[Real(f'nu1_{d}_{i}') for i in range(len(R1[d]))] for d in range(len(R1))]
+    lambda0 = [Real(f'lambda0{d}') for d in range(len(cone0))]
+    nu0 = [[Real(f'nu0_{d}_{i}') for i in range(len(cone0[d]))] for d in range(len(cone0))]
+    lambda1 = [Real(f'lambda1{d}') for d in range(len(cone1))]
+    nu1 = [[Real(f'nu1_{d}_{i}') for i in range(len(cone1[d]))] for d in range(len(cone1))]
 
     # f is inside R0, and not inside R1
-    constraints0 = conestrip1_constraints_aux(GeneralCone([R0]), f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)
-    constraint1 = Not(And(conestrip1_constraints_aux(GeneralCone([R1]), f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True)))
+    constraints0 = conestrip1_constraints_aux(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)
+    constraint1 = ForAll(lambda1 + list(flatten(nu1)), Not(And(conestrip1_constraints_aux(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True))))
     constraints = constraints0 + [constraint1]
 
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
         model = solver.model()
-        lambda0_solution = [model.evaluate(lambda0[d]) for d in range(len(R0))]
-        lambda1_solution = [model.evaluate(lambda0[d]) for d in range(len(R1))]
-        nu0_solution = [[model.evaluate(nu0[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]
-        nu1_solution = [[model.evaluate(nu1[d][i]) for i in range(len(R1[d]))] for d in range(len(R1))]
+        lambda0_solution = [model.evaluate(lambda0[d]) for d in range(len(cone0))]
+        lambda1_solution = [model.evaluate(lambda1[d]) for d in range(len(cone1))]
+        nu0_solution = [[model.evaluate(nu0[d][i]) for i in range(len(cone0[d]))] for d in range(len(cone0))]
+        nu1_solution = [[model.evaluate(nu1[d][i]) for i in range(len(cone1[d]))] for d in range(len(cone1))]
         f = [model.evaluate(f[d]) for d in range(len(f))]
         if verbose:
             print('--- solution ---')
@@ -425,7 +428,7 @@ def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[T
             print('nu0 =', nu0_solution)
             print('lambda1 =', lambda1_solution)
             print('nu1 =', nu1_solution)
-        coefficients = [simplify(x) for x in lambda0_solution]
+        coefficients = [simplify(x) for x in nu0_solution[0]]
         return f, coefficients
     return None
 
