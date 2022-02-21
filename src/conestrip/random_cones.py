@@ -111,7 +111,8 @@ def random_cone_generator(dimension: int, generator_size: int, bound: int, norma
     """
     n = dimension
 
-    if not normal:
+    normal = None
+    while not normal:
         normal = random_vector(n, bound)
 
     # randomly generate x such that inner_product(normal, x) > 0
