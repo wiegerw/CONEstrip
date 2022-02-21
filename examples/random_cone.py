@@ -26,9 +26,9 @@ for _ in range(1000):
         x1, lambda1 = random_inside_point(r)
         x2, lambda2 = random_border_point(r)
         x3, lambda3 = random_between_point(r)
-        print('x1 =', print_gamble(x1), 'lambda =', print_gamble(lambda1))
-        print('x2 =', print_gamble(x2), 'lambda =', print_gamble(lambda2))
-        print('x3 =', print_gamble(x3), 'lambda =', print_gamble(lambda3))
+        print('x1 =', print_gamble(x1), 'lambda1 =', print_gamble(lambda1))
+        print('x2 =', print_gamble(x2), 'lambda2 =', print_gamble(lambda2))
+        print('x3 =', print_gamble(x3), 'lambda3 =', print_gamble(lambda3))
         assert x1 == linear_combination(lambda1, r.vertices)
         assert x2 == linear_combination(lambda2, r.vertices)
         assert x3 == [simplify(x) for x in linear_combination(lambda3, r_parent.vertices)]

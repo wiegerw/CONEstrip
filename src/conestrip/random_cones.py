@@ -1,8 +1,13 @@
 import random
-from typing import List, Tuple
+from typing import Any, List, Tuple
 from z3 import *
-from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination, linear_combination, gambles_to_polyhedron
+from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination, linear_combination, gambles_to_polyhedron, print_gamble
 from conestrip.utility import random_nonzero_rationals_summing_to_one, inner_product
+
+
+def remove_redundant_vertices(vertices: List[Gamble]) -> List[Gamble]:
+    poly = gambles_to_polyhedron(vertices)
+    return poly.vertices()
 
 
 def random_inside_point(R: ConeGenerator) -> Tuple[Gamble, ConvexCombination]:
@@ -66,11 +71,7 @@ def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:
         g, lambda_ = random_inside_point(border_facet)
         result.append(g)
 
-    # remove redundancy
-    poly = gambles_to_polyhedron(result)
-    result = poly.vertices()
-
-    generator = ConeGenerator(result)
+    generator = ConeGenerator(remove_redundant_vertices(result))
     generator.parent = (R, facet_index)
     R.children[facet_index].append(generator)
     return generator
@@ -121,7 +122,12 @@ def random_cone_generator(dimension: int, generator_size: int, bound: int, norma
                 return x
 
     # generate size points in { x \in R^n | inner_product(normal, x) > 0 }
-    return ConeGenerator([generate() for _ in range(generator_size)])
+    vertices = []
+    while len(vertices) < generator_size:
+        vertices = vertices + [generate() for _ in range(generator_size - len(vertices))]
+        vertices = remove_redundant_vertices(vertices)
+
+    return ConeGenerator(vertices)
 
 
 def random_general_cone(cone_size: int, dimension: int, generator_size: int, bound: int) -> GeneralCone:

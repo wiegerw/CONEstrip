@@ -17,7 +17,7 @@ def is_valid_conestrip_input(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int]
            all(len(x) == len(f0) for x in flatten(R0))
 
 
-def omega_constraints(f: Any, h: Any, Omega_Gamma: List[int], Omega_Delta: List[int]) -> Tuple[Any, Any, Any]:
+def make_omega_constraints(f: Any, h: Any, Omega_Gamma: List[int], Omega_Delta: List[int]) -> Tuple[Any, Any, Any]:
     less_equal = set(Omega_Gamma) - set(Omega_Delta)
     greater_equal = set(Omega_Delta) - set(Omega_Gamma)
     equal = set(Omega_Gamma) & set(Omega_Delta)
@@ -27,7 +27,7 @@ def omega_constraints(f: Any, h: Any, Omega_Gamma: List[int], Omega_Delta: List[
     return constraints_1, constraints_2, constraints_3
 
 
-def omega_sigma_constraints(f: Any, h: Any, sigma: Any, Omega_Gamma: List[int], Omega_Delta: List[int]) -> Tuple[Any, Any, Any]:
+def make_omega_sigma_constraints(f: Any, h: Any, sigma: Any, Omega_Gamma: List[int], Omega_Delta: List[int]) -> Tuple[Any, Any, Any]:
     less_equal = set(Omega_Gamma) - set(Omega_Delta)
     greater_equal = set(Omega_Delta) - set(Omega_Gamma)
     equal = set(Omega_Gamma) & set(Omega_Delta)
@@ -37,7 +37,7 @@ def omega_sigma_constraints(f: Any, h: Any, sigma: Any, Omega_Gamma: List[int], 
     return constraints_1, constraints_2, constraints_3
 
 
-def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False, with_border: bool = False) -> List[Any]:
+def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False, with_border: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, nu = variables
 
@@ -52,14 +52,16 @@ def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int]
     h = sum_rows(list(product(lambda_[d], sum_rows([product(nu[d][i], g[d][i]) for i in range(len(R0[d]))])) for d in range(len(R0))))
 
     # 0 <= lambda <= 1
-    lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
+    lambda_constraints0 = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
+
+    # sum(lambda) == 1
+    lambda_constraints1 = [simplify(sum(lambda_)) == 1]
 
     # nu > 0
     nu_constraints = [x >= 0 for x in collapse(nu)] if with_border else [x > 0 for x in collapse(nu)]
 
-    # main constraints
-    constraints_1 = [simplify(sum(lambda_)) == 1]
-    constraints_2, constraints_3, constraints_4 = omega_constraints(f, h, Omega_Gamma, Omega_Delta)
+    # omega constraints
+    constraints_2, constraints_3, constraints_4 = make_omega_constraints(f, h, Omega_Gamma, Omega_Delta)
 
     if verbose:
         print('--- variables ---')
@@ -71,14 +73,14 @@ def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int]
         print('--- intermediate expressions ---')
         print('h =', h)
         print('--- constraints ---')
-        print(lambda_constraints)
+        print(lambda_constraints0)
+        print(lambda_constraints1)
         print(nu_constraints)
-        print(constraints_1)
         print(constraints_2)
         print(constraints_3)
         print(constraints_4)
 
-    return lambda_constraints + nu_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4
+    return lambda_constraints0 + lambda_constraints1 + nu_constraints, constraints_2 + constraints_3 + constraints_4
 
 
 def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False, with_border: bool = False) -> Optional[Tuple[Any, Any]]:
@@ -91,7 +93,7 @@ def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
     lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
 
-    constraints = conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, nu), verbose, with_border)
+    constraints = list(flatten(conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, nu), verbose, with_border)))
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -107,7 +109,7 @@ def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         return None
 
 
-def conestrip2_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> List[Any]:
+def conestrip2_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, tau, sigma = variables
 
@@ -129,7 +131,7 @@ def conestrip2_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
 
     # main constraints
     constraints_1 = [simplify(sum(lambda_)) >= 1]
-    constraints_2, constraints_3, constraints_4 = omega_sigma_constraints(f, h, sigma, Omega_Gamma, Omega_Delta)
+    constraints_2, constraints_3, constraints_4 = make_omega_sigma_constraints(f, h, sigma, Omega_Gamma, Omega_Delta)
     constraints = lambda_constraints + tau_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4
 
     if verbose:
@@ -165,7 +167,7 @@ def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
     tau = [[Real(f'tau{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
     sigma = Real('sigma')
 
-    constraints = conestrip2_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, tau, sigma), verbose)
+    constraints = list(flatten(conestrip2_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, tau, sigma), verbose)))
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -183,7 +185,7 @@ def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         return None
 
 
-def conestrip3_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> List[Any]:
+def conestrip3_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, mu, sigma = variables
 
@@ -205,7 +207,7 @@ def conestrip3_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
 
     # main constraints
     constraints_1 = [simplify(sum(lambda_)) >= 1]
-    constraints_2, constraints_3, constraints_4 = omega_sigma_constraints(f, h, sigma, Omega_Gamma, Omega_Delta)
+    constraints_2, constraints_3, constraints_4 = make_omega_sigma_constraints(f, h, sigma, Omega_Gamma, Omega_Delta)
     constraints_5 = list(collapse([[And(lambda_[d] <= mu[d][i], mu[d][i] <= lambda_[d] * mu[d][i]) for i in range(len(R0[d]))] for d in range(len(R0))]))
     constraints = lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4 + constraints_5
 
@@ -243,8 +245,7 @@ def conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
     mu = [[Real(f'mu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
     sigma = Real('sigma')
 
-
-    constraints = conestrip3_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)
+    constraints = list(flatten(conestrip3_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)))
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -262,7 +263,7 @@ def conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta:
         return None
 
 
-def conestrip_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> List[Any]:
+def conestrip_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, mu, sigma = variables
 
@@ -285,7 +286,7 @@ def conestrip_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], O
 
     # main constraints
     constraints_1 = [goal >= 1]
-    constraints_2, constraints_3, constraints_4 = omega_sigma_constraints(f, h, sigma, Omega_Gamma, Omega_Delta)
+    constraints_2, constraints_3, constraints_4 = make_omega_sigma_constraints(f, h, sigma, Omega_Gamma, Omega_Delta)
     constraints_5 = list(collapse([[lambda_[d] <= mu[d][i] for i in range(len(R0[d]))] for d in range(len(R0))]))
     constraints = lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4 + constraints_5
 
@@ -326,7 +327,7 @@ def conestrip_solutions(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Ome
     # expressions
     goal = simplify(sum(lambda_))
 
-    constraints = conestrip_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)
+    constraints = list(flatten(conestrip_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)))
     optimizer = Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
@@ -409,8 +410,9 @@ def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[T
     nu1 = [[Real(f'nu1_{d}_{i}') for i in range(len(cone1[d]))] for d in range(len(cone1))]
 
     # f is inside R0, and not inside R1
-    constraints0 = conestrip1_constraints(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)
-    constraint1 = ForAll(lambda1 + list(flatten(nu1)), Not(And(conestrip1_constraints(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True))))
+    constraints0 = list(flatten(conestrip1_constraints(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)))
+    lambda_nu_constraints, omega_constraints = conestrip1_constraints(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True)
+    constraint1 = ForAll(lambda1 + list(flatten(nu1)), Implies(And(lambda_nu_constraints), Not(And(omega_constraints))))
     constraints = constraints0 + [constraint1]
 
     solver = Solver()
