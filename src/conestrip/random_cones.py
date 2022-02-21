@@ -1,7 +1,7 @@
 import random
 from typing import List, Tuple
 from z3 import *
-from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination, linear_combination
+from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination, linear_combination, gambles_to_polyhedron
 from conestrip.utility import random_nonzero_rationals_summing_to_one, inner_product
 
 
@@ -65,6 +65,11 @@ def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:
     for i in range(m):
         g, lambda_ = random_inside_point(border_facet)
         result.append(g)
+
+    # remove redundancy
+    poly = gambles_to_polyhedron(result)
+    result = poly.vertices()
+
     generator = ConeGenerator(result)
     generator.parent = (R, facet_index)
     R.children[facet_index].append(generator)
