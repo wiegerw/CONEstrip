@@ -37,12 +37,16 @@ def omega_sigma_constraints(f: Any, h: Any, sigma: Any, Omega_Gamma: List[int], 
     return constraints_1, constraints_2, constraints_3
 
 
-def conestrip1_constraints_aux(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False, with_border: bool = False) -> List[Any]:
+def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False, with_border: bool = False) -> List[Any]:
     # variables
     lambda_, nu = variables
 
     # constants
     g = [[[RealVal(R0[d][i][j]) for j in range(len(R0[d][i]))] for i in range(len(R0[d]))] for d in range(len(R0))]
+
+    # if f contains elements of type ArithRef, then they are already in Z3 format
+    if not isinstance(f[0], ArithRef):
+        f = [RealVal(f[j]) for j in range(len(f))]
 
     # intermediate expressions
     h = sum_rows(list(product(lambda_[d], sum_rows([product(nu[d][i], g[d][i]) for i in range(len(R0[d]))])) for d in range(len(R0))))
@@ -75,11 +79,6 @@ def conestrip1_constraints_aux(R0: GeneralCone, f: List[Any], Omega_Gamma: List[
         print(constraints_4)
 
     return lambda_constraints + nu_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4
-
-
-def conestrip1_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False, with_border: bool = False) -> List[Any]:
-    f = [RealVal(f0[j]) for j in range(len(f0))]
-    return conestrip1_constraints_aux(R0, f, Omega_Gamma, Omega_Delta, variables, verbose, with_border)
 
 
 def conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False, with_border: bool = False) -> Optional[Tuple[Any, Any]]:
@@ -153,6 +152,7 @@ def conestrip2_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
         print(constraints_4)
 
     return constraints
+
 
 def conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
@@ -409,8 +409,8 @@ def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[T
     nu1 = [[Real(f'nu1_{d}_{i}') for i in range(len(cone1[d]))] for d in range(len(cone1))]
 
     # f is inside R0, and not inside R1
-    constraints0 = conestrip1_constraints_aux(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)
-    constraint1 = ForAll(lambda1 + list(flatten(nu1)), Not(And(conestrip1_constraints_aux(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True))))
+    constraints0 = conestrip1_constraints(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)
+    constraint1 = ForAll(lambda1 + list(flatten(nu1)), Not(And(conestrip1_constraints(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True))))
     constraints = constraints0 + [constraint1]
 
     solver = Solver()
