@@ -379,11 +379,11 @@ def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
     return not is_in_cone_generator(R, g) and is_in_cone_generator(R, g, with_border=True)
 
 
-def is_in_general_cone(cone: GeneralCone, g: Gamble) -> Any:
+def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=conestrip1_solution) -> Any:
     n = len(g)
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
-    return conestrip1_solution(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
+    return solver(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
 
 
 def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[Tuple[Gamble, ConvexCombination]]:
