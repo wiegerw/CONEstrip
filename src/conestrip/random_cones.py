@@ -78,6 +78,15 @@ def add_random_border_cone(R: ConeGenerator) -> ConeGenerator:
 
 
 def add_random_border_cones(R: GeneralCone, n: int, allow_multiple_children: bool = False) -> None:
+    """
+    Adds randomly generated border cones to a general cone. The algorithm randomly selects a border facet of a cone
+    generator, and then generates a new facet that is included in this border facet. The new facet is added to the
+    general cone. This process is repeated a number of times.
+    @param R: a general cone
+    @param n: the number of border cones that is added
+    @param allow_multiple_children: if true, a border facet can be selected multiple times
+    @return:
+    """
     def is_allowed(r: ConeGenerator) -> bool:
         if len(r.gambles) < 2:
             return False
