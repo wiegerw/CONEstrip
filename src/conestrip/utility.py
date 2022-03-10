@@ -56,3 +56,18 @@ def random_nonzero_rationals_summing_to_one(n: int) -> List[Fraction]:
 def remove_spaces(txt: str) -> str:
     lines = txt.strip().split('\n')
     return '\n'.join(line.strip() for line in lines)
+
+
+class StopWatch(object):
+    def __init__(self):
+        import time
+        self.start = time.perf_counter()
+
+    def seconds(self):
+        import time
+        end = time.perf_counter()
+        return end - self.start
+
+    def restart(self):
+        import time
+        self.start = time.perf_counter()
