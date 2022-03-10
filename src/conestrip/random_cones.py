@@ -1,7 +1,7 @@
 import random
-from typing import Any, List, Tuple
+from typing import List, Tuple
 from z3 import *
-from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination, linear_combination, gambles_to_polyhedron, print_gamble
+from conestrip.cones import ConeGenerator, Gamble, GeneralCone, ConvexCombination, linear_combination, gambles_to_polyhedron
 from conestrip.utility import random_nonzero_rationals_summing_to_one, inner_product
 
 

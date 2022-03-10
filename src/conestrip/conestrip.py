@@ -434,3 +434,7 @@ def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[T
         return f, coefficients
     return None
 
+
+def simplified_linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
+    result = linear_combination(lambda_, gambles)
+    return [simplify(x) for x in result]

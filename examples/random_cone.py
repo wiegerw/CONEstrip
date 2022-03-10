@@ -5,7 +5,7 @@
 from z3 import simplify
 from conestrip.cones import print_gamble, linear_combination
 from conestrip.random_cones import add_random_border_cones, random_border_point, random_inside_point, random_general_cone
-from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
+from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, simplified_linear_combination
 
 for _ in range(1000):
     cone_size = 1
@@ -31,7 +31,7 @@ for _ in range(1000):
         print('x3 =', print_gamble(x3), 'lambda3 =', print_gamble(lambda3))
         assert x1 == linear_combination(lambda1, r.vertices)
         assert x2 == linear_combination(lambda2, r.vertices)
-        assert x3 == [simplify(x) for x in linear_combination(lambda3, r_parent.vertices)]
+        assert x3 == simplified_linear_combination(lambda3, r_parent.vertices)
         assert is_in_cone_generator(r, x1)
         assert is_in_cone_generator_border(r, x2)
         assert not is_in_cone_generator(r, x3)
