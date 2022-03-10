@@ -7,7 +7,7 @@ from unittest import TestCase
 from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone, Gamble
 from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
-from conestrip.conestrip import conestrip, conestrip1, conestrip2, conestrip3, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
+from conestrip.conestrip import conestrip, conestrip1_solution, conestrip2_solution, conestrip3_solution, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
 
 
 class Test(TestCase):
@@ -52,23 +52,23 @@ class Test(TestCase):
         Omega_Delta = [0, 1]
 
         f = parse_gamble('1 0')
-        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
         f = parse_gamble('1/2 0')
-        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
         f = parse_gamble('0 1')
-        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
         f = parse_gamble('1 1')
-        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNotNone(result)
 
         f = parse_gamble('0 0')
-        result = conestrip1(R, f, Omega_Gamma, Omega_Delta)
+        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
     def check_conestrip(self, R: GeneralCone, f_text: str, expected_result=False, verbose=True):
@@ -76,9 +76,9 @@ class Test(TestCase):
         n = len(f)
         Omega_Gamma = list(range(n))
         Omega_Delta = list(range(n))
-        result1 = conestrip1(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
-        result2 = conestrip2(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
-        result3 = conestrip3(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+        result1 = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+        result2 = conestrip2_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+        result3 = conestrip3_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         result4 = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=False)
         print('result1', result1)
         print('result2', result2)
