@@ -67,7 +67,7 @@ def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, bor
         print(f'is_in_general_cone(R, x1): {watch.seconds()}s')
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip_cdd)
-        print(f'is_in_general_cone(R, x1): {watch.seconds()}s')
+        print(f'is_in_general_cone(R, x1, solver=conestrip_cdd): {watch.seconds()}s')
         print()
 
 

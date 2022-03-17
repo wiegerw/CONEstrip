@@ -35,14 +35,14 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     # To make this easier we use [b A] for constraints of the type Ax + b >= 0
 
     # lambda_i >= 0
-    for i in range(n):
+    for i in range(n_lambda):
         a = [Fraction(0)] * N
         a[i] = Fraction(1)
         b = Fraction(0)
         less_equal_constraints.append([b] + a)
 
     # lambda_i <= 1, hence -lambda_i + 1 >= 0
-    for i in range(n):
+    for i in range(n_lambda):
         a = [Fraction(0)] * N
         a[i] = Fraction(-1)
         b = Fraction(1)
@@ -91,7 +91,13 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
         b = Fraction(0)
         equal_constraints.append([b] + a)
 
-    return less_equal_constraints, equal_constraints
+    # object function
+    object_function = [Fraction(0)] * N
+    for i in range(n_lambda):
+        object_function[i] = Fraction(1)
+    object_function = [Fraction(0)] + object_function
+
+    return less_equal_constraints, equal_constraints, object_function
 
 
 def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
@@ -107,21 +113,42 @@ def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
     n_lambda = len(R0.generators)
     n_mu = [len(r.gambles) for r in R0.generators]
 
-    if verbose:
-        all_variables = lambda_variables + list(flatten(mu_variables)) + [sigma]
-        print('variables:', ' '.join(all_variables))
-
-    less_equal_constraints, equal_constraints = conestrip_cdd_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_variables, mu_variables, sigma))
+    less_equal_constraints, equal_constraints, object_function = conestrip_cdd_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_variables, mu_variables, sigma))
     constraints = less_equal_constraints + equal_constraints
     n_less_equal = len(less_equal_constraints)
     n_equal = len(equal_constraints)
     mat = cdd.Matrix(constraints)
     mat.rep_type = cdd.RepType.INEQUALITY
-    mat.obj_type = cdd.LPObjType.MAX  # TODO: is it possible to just solve instead of minimize/maximize?
+    mat.obj_func = object_function
+    mat.obj_type = cdd.LPObjType.MAX
     mat.lin_set = frozenset(range(n_less_equal, n_less_equal + n_equal))
+
     if verbose:
+        all_variables = lambda_variables + list(flatten(mu_variables)) + [sigma]
         print(mat)
         print('lin_set =', mat.lin_set)
+        print('obj =', object_function)
+        constraints = []
+        for i, row in enumerate(mat):
+            a = [-x for x in row[1:]]
+            b = row[0]
+            lhs = ' + '.join(f'{a[j]}*{all_variables[j]}' for j in range(len(a)) if a[j])
+            op = ('==' if i in mat.lin_set else '<=')
+            constraints.append(f'{lhs} {op} {b}')
+        constraints = ',\n  '.join(constraints)
+        goal = ' + '.join(f'{c_j}*{all_variables[j]}' for (j, c_j) in enumerate(object_function[1:]))
+        print('------------------------------------------------------------')
+        print('from z3 import *')
+        for v in all_variables:
+            print(f"{v} = Real('{v}')")
+        print(f'constraints = [\n  {constraints}]')
+        print('optimizer = Optimize()')
+        print('optimizer.add(constraints)')
+        print(f'goal = simplify({goal})')
+        print(f'optimizer.maximize(goal)')
+        print('print(optimizer.check() == sat)')
+        print('------------------------------------------------------------')
+
 
     lp = cdd.LinProg(mat)
     lp.solve()
