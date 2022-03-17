@@ -44,4 +44,21 @@ def example_conestrip1():
     check_conestrip(R, '1 3', False)
     check_conestrip(R, '3 1', False)
 
+
+def example_conestrip2():
+    print(f'--- {inspect.currentframe().f_code.co_name} ---')
+    text = '''
+      1 0
+      0 1
+    '''
+    R = parse_general_cone(text)
+    check_conestrip(R, '1/2 1/3', True)
+    check_conestrip(R, '2 4', True)
+    check_conestrip(R, '1 0', False)
+    check_conestrip(R, '2 0', False)
+    check_conestrip(R, '0 1', False)
+    check_conestrip(R, '0 2', False)
+
+
 example_conestrip1()
+example_conestrip2()

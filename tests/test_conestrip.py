@@ -5,6 +5,7 @@
 from fractions import Fraction
 from unittest import TestCase
 from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone, Gamble
+from conestrip.conestrip_cdd import conestrip_cdd_solution
 from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
 from conestrip.conestrip import conestrip, conestrip1_solution, conestrip2_solution, conestrip3_solution, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
@@ -80,14 +81,17 @@ class Test(TestCase):
         result2 = conestrip2_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         result3 = conestrip3_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         result4 = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=False)
+        result5 = conestrip_cdd_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         print('result1', result1)
         print('result2', result2)
         print('result3', result3)
         print('result4', result4)
+        print('result5', result5)
         self.assertEqual(expected_result, result1 is not None)
         self.assertEqual(expected_result, result2 is not None)
         self.assertEqual(expected_result, result3 is not None)
         self.assertEqual(expected_result, result4 is not None)
+        self.assertEqual(expected_result, result5 is not None)
 
     def test_conestrip2(self):
         text = '''
