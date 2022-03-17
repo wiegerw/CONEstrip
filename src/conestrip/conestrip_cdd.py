@@ -116,9 +116,12 @@ def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
     n_less_equal = len(less_equal_constraints)
     n_equal = len(equal_constraints)
     mat = cdd.Matrix(constraints)
+    mat.rep_type = cdd.RepType.INEQUALITY
     mat.obj_type = cdd.LPObjType.MAX  # TODO: is it possible to just solve instead of minimize/maximize?
-    mat.lin_set = { range(n_less_equal, n_less_equal + n_equal) }
-    print(mat)
+    mat.lin_set = frozenset(range(n_less_equal, n_less_equal + n_equal))
+    if verbose:
+        print(mat)
+        print('lin_set =', mat.lin_set)
 
     lp = cdd.LinProg(mat)
     lp.solve()
