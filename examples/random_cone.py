@@ -6,6 +6,7 @@ import argparse
 from conestrip.cones import print_gamble, linear_combination
 from conestrip.random_cones import add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, simplified_linear_combination, conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip
+from conestrip.conestrip_cdd import conestrip_cdd
 from conestrip.utility import StopWatch
 
 
@@ -63,6 +64,9 @@ def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, bor
         print(f'is_in_general_cone3(R, x1): {watch.seconds()}s')
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip)
+        print(f'is_in_general_cone(R, x1): {watch.seconds()}s')
+        watch.restart()
+        assert is_in_general_cone(R, x1, solver=conestrip_cdd)
         print(f'is_in_general_cone(R, x1): {watch.seconds()}s')
         print()
 

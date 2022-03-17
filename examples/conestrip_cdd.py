@@ -4,7 +4,7 @@
 
 import inspect
 import cdd
-from conestrip.cones import parse_general_cone, parse_gamble, parse_cone_generator
+from conestrip.cones import parse_general_cone, parse_gamble, parse_cone_generator, GeneralCone
 from conestrip.conestrip import conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip
 from conestrip.polyhedron import Polyhedron
 from conestrip.prevision import calculate_lower_prevision, calculate_lower_prevision_with_slack
@@ -12,25 +12,41 @@ from conestrip.sure_loss import avoids_sure_loss, avoids_sure_loss_with_slack
 from conestrip.conestrip_cdd import conestrip_cdd_solution
 
 
+def check_conestrip(R: GeneralCone, f_text: str, expected_result=False, verbose=True):
+    f = parse_gamble(f_text)
+    n = len(f)
+    Omega_Gamma = list(range(n))
+    Omega_Delta = list(range(n))
+    # result1 = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+    # result2 = conestrip2_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+    # result3 = conestrip3_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+    result4 = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+    result5 = conestrip_cdd_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+    # print('result1', result1)
+    # print('result2', result2)
+    # print('result3', result3)
+    print('result4', result4)
+    print('result5', result5)
+
+
 def example_conestrip1():
     print(f'--- {inspect.currentframe().f_code.co_name} ---')
 
-    R = parse_general_cone('''
-      4 0 0
-      0 5 0
-      0 0 6
+    text = '''
+      1 2
+      2 1
 
-      1 0 1
-      0 7 7
-
-      1 2 3
-      2 4 6
-    ''')
-    f = parse_gamble('2 5 8')
-    Omega_Gamma = [0, 1, 2]
-    Omega_Delta = [0, 1, 2]
-    result1 = conestrip_cdd_solution(R, f, Omega_Gamma, Omega_Delta)
-    # print('result1:', result1)
-
+      1 2
+    '''
+    R = parse_general_cone(text)
+    check_conestrip(R, '1 1', True)
+    return
+    check_conestrip(R, '10 10', True)
+    check_conestrip(R, '1 2', True)
+    check_conestrip(R, '2 4', True)
+    check_conestrip(R, '2 1', False)
+    check_conestrip(R, '4 2', False)
+    check_conestrip(R, '1 3', False)
+    check_conestrip(R, '3 1', False)
 
 example_conestrip1()

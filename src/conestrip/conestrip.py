@@ -364,7 +364,7 @@ def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: L
         Q = [d for d, lambda_d in enumerate(lambda_) if lambda_d == 0]
         if all(x == 0 for x in collapse(mu[d] for d in Q)):
             return Lambda
-        R = [R_d for d, R_d in enumerate(R) if d not in Q]
+        R = GeneralCone([R_d for d, R_d in enumerate(R) if d not in Q])
 
 
 def is_in_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False, verbose: bool = False) -> Any:
