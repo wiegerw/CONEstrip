@@ -16,7 +16,7 @@ from conestrip.conestrip import conestrip_constraints, is_valid_conestrip_input
 
 def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any]):
     less_equal_constraints = []
-    equality_constraints = []
+    equal_constraints = []
 
     # variables
     lambda_, mu, sigma = variables
@@ -68,17 +68,6 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     b = Fraction(-1)
     less_equal_constraints.append([b] + a)
 
-    # main constraints: sum d: mu_d g_d - sigma * f = 0
-    for k in range(n):
-        a = [Fraction(0)] * N
-        index = n_lambda
-        for G_d in G:
-            for G_dg in G_d:
-                a[index] = G_dg[k]
-                index += 1
-        b = -f0[k]
-        equality_constraints.append([b] + a)
-
     # lambda_d <= mu_d,g, hence -lambda_d + mu_d,g >= 0
     mu_index = n_lambda
     for d, G_d in enumerate(G):
@@ -90,13 +79,19 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
             b = Fraction(0)
             less_equal_constraints.append([b] + a)
 
-    # object function
-    # object_function = [Fraction(0)] * N
-    # for i in range(n_lambda):
-    #     object_function[i] = Fraction(1)
-    # object_function = [Fraction(0)] + object_function
+    # main constraints: sum d: mu_d g_d - f * sigma = 0
+    for k in range(n):
+        a = [Fraction(0)] * N
+        index = n_lambda
+        for G_d in G:
+            for G_dg in G_d:
+                a[index] = G_dg[k]
+                index += 1
+        a[-1] = -f0[k]
+        b = Fraction(0)
+        equal_constraints.append([b] + a)
 
-    return less_equal_constraints, equality_constraints
+    return less_equal_constraints, equal_constraints
 
 
 def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
@@ -116,11 +111,13 @@ def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
         all_variables = lambda_variables + list(flatten(mu_variables)) + [sigma]
         print('variables:', ' '.join(all_variables))
 
-    less_equal_constraints, equality_constraints = conestrip_cdd_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_variables, mu_variables, sigma))
-    constraints = less_equal_constraints + equality_constraints
+    less_equal_constraints, equal_constraints = conestrip_cdd_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_variables, mu_variables, sigma))
+    constraints = less_equal_constraints + equal_constraints
+    n_less_equal = len(less_equal_constraints)
+    n_equal = len(equal_constraints)
     mat = cdd.Matrix(constraints)
-    mat.obj_type = cdd.LPObjType.MAX
-    mat.lin_set = {range(n_lambda, n_lambda + sum(n_mu))}
+    mat.obj_type = cdd.LPObjType.MAX  # TODO: is it possible to just solve instead of minimize/maximize?
+    mat.lin_set = { range(n_less_equal, n_less_equal + n_equal) }
     print(mat)
 
     lp = cdd.LinProg(mat)

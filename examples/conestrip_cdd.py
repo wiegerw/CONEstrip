@@ -3,12 +3,8 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 import inspect
-import cdd
-from conestrip.cones import parse_general_cone, parse_gamble, parse_cone_generator, GeneralCone
+from conestrip.cones import parse_general_cone, parse_gamble, GeneralCone
 from conestrip.conestrip import conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip
-from conestrip.polyhedron import Polyhedron
-from conestrip.prevision import calculate_lower_prevision, calculate_lower_prevision_with_slack
-from conestrip.sure_loss import avoids_sure_loss, avoids_sure_loss_with_slack
 from conestrip.conestrip_cdd import conestrip_cdd_solution
 
 
@@ -39,14 +35,13 @@ def example_conestrip1():
       1 2
     '''
     R = parse_general_cone(text)
-    check_conestrip(R, '1 1', True)
-    return
-    check_conestrip(R, '10 10', True)
-    check_conestrip(R, '1 2', True)
-    check_conestrip(R, '2 4', True)
+    # check_conestrip(R, '1 1', True)
+    # check_conestrip(R, '10 10', True)
+    # check_conestrip(R, '1 2', True)
+    # check_conestrip(R, '2 4', True)
     check_conestrip(R, '2 1', False)
-    check_conestrip(R, '4 2', False)
-    check_conestrip(R, '1 3', False)
-    check_conestrip(R, '3 1', False)
+    # check_conestrip(R, '4 2', False)
+    # check_conestrip(R, '1 3', False)
+    # check_conestrip(R, '3 1', False)
 
 example_conestrip1()
