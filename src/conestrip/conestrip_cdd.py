@@ -33,41 +33,42 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     G = list(flatten(r.gambles for r in R0.generators))  # a flat list of all the gambles in R0
     assert len(G) == n_mu
 
-    # Constraints are stored in the format [b -A]
+    # Constraints are stored in the format [b -A] for constraints of the type Ax <= b
+    # To make this easier we use [b A] for constraints of the type Ax + b >= 0
 
-    # -lambda <= 0
+    # lambda_i >= 0
+    for i in range(n):
+        a = [Fraction(0)] * N
+        a[i] = Fraction(1)
+        b = Fraction(0)
+        less_equal_constraints.append([b] + a)
+
+    # lambda_i <= 1, hence -lambda_i + 1 >= 0
     for i in range(n):
         a = [Fraction(0)] * N
         a[i] = Fraction(-1)
-        b = Fraction(0)
-        less_equal_constraints.append([b] + minus(a))
-
-    # lambda <= 1
-    for i in range(n):
-        a = [Fraction(0)] * N
-        a[i] = Fraction(1)
         b = Fraction(1)
-        less_equal_constraints.append([b] + minus(a))
+        less_equal_constraints.append([b] + a)
 
-    # -mu <= 0
+    # mu >= 0
     for i in range(n_mu):
         a = [Fraction(0)] * N
-        a[n_lambda + i] = Fraction(-1)
+        a[n_lambda + i] = Fraction(1)
         b = Fraction(0)
-        less_equal_constraints.append([b] + minus(a))
+        less_equal_constraints.append([b] + a)
 
-    # -sigma <= -1
+    # sigma >= 1, hence sigma - 1 >= 0
     a = [Fraction(0)] * N
-    a[n_lambda + n_mu] = Fraction(-1)
+    a[-1] = Fraction(1)
     b = Fraction(-1)
-    less_equal_constraints.append([b] + minus(a))
+    less_equal_constraints.append([b] + a)
 
-    # sum(lambda) <= 1
+    # sum(lambda_i) >= 1, hence sum(lambda_i) - 1 >= 0
     a = [Fraction(0)] * N
     for i in range(n_lambda):
         a[i] = Fraction(1)
-    b = Fraction(1)
-    less_equal_constraints.append([b] + minus(a))
+    b = Fraction(-1)
+    less_equal_constraints.append([b] + a)
 
     # main constraints: sum d: mu_d g_d - sigma * f = 0
     for j in range(n):
@@ -75,7 +76,7 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
         for i in range(n_mu):
             a[n_lambda + i] = G[i][j]
         b = f0[j]
-        equality_constraints.append([b] + minus(a))
+        equality_constraints.append([b] + a)
 
     # object function
     object_function = [Fraction(0)] * N
