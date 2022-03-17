@@ -15,9 +15,6 @@ from conestrip.conestrip import conestrip_constraints, is_valid_conestrip_input
 
 
 def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any]):
-    def minus(a: List[Fraction]) -> List[Fraction]:
-        return [-x for x in a]
-
     less_equal_constraints = []
     equality_constraints = []
 
@@ -30,8 +27,9 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     n_sigma = 1
     N = n_lambda + n_mu + n_sigma    # the total number of variables
 
-    G = list(flatten(r.gambles for r in R0.generators))  # a flat list of all the gambles in R0
-    assert len(G) == n_mu
+    # G = list(flatten(r.gambles for r in R0.generators))  # a flat list of all the gambles in R0
+    # assert len(G) == n_mu
+    G = [r.gambles for r in R0.generators]
 
     # Constraints are stored in the format [b -A] for constraints of the type Ax <= b
     # To make this easier we use [b A] for constraints of the type Ax + b >= 0
@@ -71,20 +69,34 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     less_equal_constraints.append([b] + a)
 
     # main constraints: sum d: mu_d g_d - sigma * f = 0
-    for j in range(n):
+    for k in range(n):
         a = [Fraction(0)] * N
-        for i in range(n_mu):
-            a[n_lambda + i] = G[i][j]
-        b = f0[j]
+        index = n_lambda
+        for G_d in G:
+            for G_dg in G_d:
+                a[index] = G_dg[k]
+                index += 1
+        b = -f0[k]
         equality_constraints.append([b] + a)
 
-    # object function
-    object_function = [Fraction(0)] * N
-    for i in range(n_lambda):
-        object_function[i] = Fraction(1)
-    object_function = [Fraction(0)] + object_function
+    # lambda_d <= mu_d,g, hence -lambda_d + mu_d,g >= 0
+    mu_index = n_lambda
+    for d, G_d in enumerate(G):
+        for G_dg in G_d:
+            a = [Fraction(0)] * N
+            a[d] = Fraction(-1)
+            a[mu_index] = Fraction(1)
+            mu_index += 1
+            b = Fraction(0)
+            less_equal_constraints.append([b] + a)
 
-    return less_equal_constraints, equality_constraints, object_function
+    # object function
+    # object_function = [Fraction(0)] * N
+    # for i in range(n_lambda):
+    #     object_function[i] = Fraction(1)
+    # object_function = [Fraction(0)] + object_function
+
+    return less_equal_constraints, equality_constraints
 
 
 def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
@@ -104,11 +116,10 @@ def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
         all_variables = lambda_variables + list(flatten(mu_variables)) + [sigma]
         print('variables:', ' '.join(all_variables))
 
-    less_equal_constraints, equality_constraints, object_function = conestrip_cdd_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_variables, mu_variables, sigma))
+    less_equal_constraints, equality_constraints = conestrip_cdd_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_variables, mu_variables, sigma))
     constraints = less_equal_constraints + equality_constraints
     mat = cdd.Matrix(constraints)
     mat.obj_type = cdd.LPObjType.MAX
-    mat.obj_func = object_function
     mat.lin_set = {range(n_lambda, n_lambda + sum(n_mu))}
     print(mat)
 
