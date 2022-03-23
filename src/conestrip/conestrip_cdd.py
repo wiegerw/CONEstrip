@@ -164,7 +164,7 @@ def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
         return lambda_, mu, sigma
 
 
-def conestrip_cdd(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip_cdd_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of the CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     @param R:

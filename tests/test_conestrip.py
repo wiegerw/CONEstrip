@@ -5,10 +5,10 @@
 from fractions import Fraction
 from unittest import TestCase
 from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone, Gamble
-from conestrip.conestrip_cdd import conestrip_cdd_solution
+from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
-from conestrip.conestrip import conestrip, conestrip1_solution, conestrip2_solution, conestrip3_solution, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
+from conestrip.conestrip import conestrip_algorithm, conestrip1_solution, conestrip2_solution, conestrip3_solution, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
 
 
 class Test(TestCase):
@@ -80,8 +80,8 @@ class Test(TestCase):
         result1 = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         result2 = conestrip2_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         result3 = conestrip3_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
-        result4 = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=False)
-        result5 = conestrip_cdd_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+        result4 = conestrip_algorithm(R, f, Omega_Gamma, Omega_Delta, verbose=False)
+        result5 = conestrip_cdd_algorithm(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         print('result1', result1)
         print('result2', result2)
         print('result3', result3)

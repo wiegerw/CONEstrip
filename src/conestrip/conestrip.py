@@ -347,7 +347,7 @@ def conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omeg
         return None
 
 
-def conestrip(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of the CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     @param R:
@@ -379,7 +379,7 @@ def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
     return not is_in_cone_generator(R, g) and is_in_cone_generator(R, g, with_border=True)
 
 
-def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=conestrip1_solution) -> Any:
+def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=conestrip_solution) -> Any:
     n = len(g)
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))

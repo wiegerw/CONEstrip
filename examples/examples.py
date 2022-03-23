@@ -5,7 +5,7 @@
 import inspect
 import cdd
 from conestrip.cones import parse_general_cone, parse_gamble, parse_cone_generator
-from conestrip.conestrip import conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip
+from conestrip.conestrip import conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip_algorithm
 from conestrip.polyhedron import Polyhedron
 from conestrip.prevision import calculate_lower_prevision, calculate_lower_prevision_with_slack
 from conestrip.sure_loss import avoids_sure_loss, avoids_sure_loss_with_slack
@@ -131,7 +131,7 @@ def example_conestrip2():
     Omega_Gamma = [0, 1, 2]
     Omega_Delta = [0, 1, 2]
 
-    lambda_solution, mu_solution, sigma_solution = conestrip(R, f, Omega_Gamma, Omega_Delta)
+    lambda_solution, mu_solution, sigma_solution = conestrip_algorithm(R, f, Omega_Gamma, Omega_Delta)
     print('lambda =', lambda_solution)
     print('mu =', mu_solution)
     print('sigma =', sigma_solution)

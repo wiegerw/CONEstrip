@@ -4,7 +4,7 @@
 
 import inspect
 from conestrip.cones import parse_general_cone, parse_gamble, GeneralCone
-from conestrip.conestrip import conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip
+from conestrip.conestrip import conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip_algorithm
 from conestrip.conestrip_cdd import conestrip_cdd_solution
 
 
@@ -16,7 +16,7 @@ def check_conestrip(R: GeneralCone, f_text: str, expected_result=False, verbose=
     result1 = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
     result2 = conestrip2_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
     result3 = conestrip3_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
-    result4 = conestrip(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+    result4 = conestrip_cdd_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
     result5 = conestrip_cdd_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
     print('result1', result1)
     print('result2', result2)
