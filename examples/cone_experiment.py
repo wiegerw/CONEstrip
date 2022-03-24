@@ -7,11 +7,49 @@ import json
 
 from pathlib import Path
 
-from conestrip.cones import print_gamble, linear_combination
+from conestrip.cones import print_gamble, linear_combination, parse_general_cone, parse_gamble
 from conestrip.random_cones import add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, simplified_linear_combination, conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip_algorithm
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.utility import StopWatch
+
+
+def print_experiment(data):
+    cone_size = data["cone-size"]
+    gamble_size = data["gamble-size"]
+    generator_size = data["generator-size"]
+    coordinate_bound = data["coordinate-bound"]
+    border_count = data["border-count"]
+    print(f"cone-size: {cone_size}")
+    print(f"gamble-size: {gamble_size}")
+    print(f"generator-size: {generator_size}")
+    print(f"coordinate-bound: {coordinate_bound}")
+    print(f"border-count: {border_count}")
+
+    cone = parse_general_cone(data["extended-cone"])
+
+    experiments = data["experiments"]
+    for experiment in experiments:
+        r = cone.generators[experiment["cone-index"]]
+        r_parent = cone.generators[experiment["parent-index"]]
+        # facet_index = data["parent-facet-index"]
+        print('r_parent =\n', r_parent, '\n')
+        print('r =\n', r, '\n')
+
+        x1 = parse_gamble(experiment["x1"])
+        x2 = parse_gamble(experiment["x2"])
+        x3 = parse_gamble(experiment["x3"])
+        lambda1 = parse_gamble(experiment["lambda1"])
+        lambda2 = parse_gamble(experiment["lambda2"])
+        lambda3 = parse_gamble(experiment["lambda3"])
+
+        print('x1 =', print_gamble(x1), 'lambda1 =', print_gamble(lambda1))
+        print('x2 =', print_gamble(x2), 'lambda2 =', print_gamble(lambda2))
+        print('x3 =', print_gamble(x3), 'lambda3 =', print_gamble(lambda3))
+        print()
+
+        for exp, t in experiment["timings"]:
+            print(f'{exp}: {t}')
 
 
 def run_experiment(cone_size, generator_size, gamble_size, coordinate_bound, border_count):
@@ -24,10 +62,10 @@ def run_experiment(cone_size, generator_size, gamble_size, coordinate_bound, bor
     }
 
     R = random_general_cone(cone_size, gamble_size, generator_size, coordinate_bound)
-    data["initial-cone"] = str(R)
     add_random_border_cones(R, border_count, False)
     data["extended-cone"] = str(R)
 
+    experiments = []
     experiment = {}
     for index, r in enumerate(R.generators):
         if not r.parent:
@@ -40,62 +78,68 @@ def run_experiment(cone_size, generator_size, gamble_size, coordinate_bound, bor
         experiment["parent-index"] = r_parent_index
         experiment["parent-facet-index"] = facet_index
 
-        print('r_parent =\n', r_parent, '\n')
-        print('r =\n', r, '\n')
-
         x1, lambda1 = random_inside_point(r)
         x2, lambda2 = random_border_point(r)
         x3, lambda3 = random_between_point(r)
 
-        experiment["x1"] = x1
-        experiment["lambda1"] = lambda1
-        experiment["x2"] = x2
-        experiment["lambda2"] = lambda2
-        experiment["x3"] = x3
-        experiment["lambda3"] = lambda3
-
-        print('x1 =', print_gamble(x1), 'lambda1 =', print_gamble(lambda1))
-        print('x2 =', print_gamble(x2), 'lambda2 =', print_gamble(lambda2))
-        print('x3 =', print_gamble(x3), 'lambda3 =', print_gamble(lambda3))
-        print()
+        experiment["x1"] = print_gamble(x1)  # N.B. json does not support writing decimals
+        experiment["x2"] = print_gamble(x2)
+        experiment["x3"] = print_gamble(x3)
+        experiment["lambda1"] = print_gamble(lambda1)
+        experiment["lambda2"] = print_gamble(lambda2)
+        experiment["lambda3"] = print_gamble(lambda3)
 
         assert x1 == linear_combination(lambda1, r.vertices)
         assert x2 == linear_combination(lambda2, r.vertices)
         assert x3 == simplified_linear_combination(lambda3, r_parent.vertices)
 
+        timings = []
+
         watch = StopWatch()
         assert is_in_cone_generator(r, x1)
-        print(f'is_in_cone_generator(r, x1): {watch.seconds()}s')
+        timings.append(('is_in_cone_generator(r, x1)', watch.seconds()))
 
         watch.restart()
         assert is_in_cone_generator_border(r, x2)
-        print(f'is_in_cone_generator_border(r, x2): {watch.seconds()}s')
+        timings.append(('is_in_cone_generator_border(r, x2)', watch.seconds()))
+
         watch.restart()
         assert not is_in_cone_generator(r, x3)
-        print(f'is_in_cone_generator(r, x3): {watch.seconds()}s')
+        timings.append(('is_in_cone_generator(r, x3)', watch.seconds()))
+
         watch.restart()
         assert not is_in_cone_generator(r, x3, with_border=True)
-        print(f'is_in_cone_generator(r, x3, with_border=True): {watch.seconds()}s')
+        timings.append(('is_in_cone_generator(r, x3, with_border=True)', watch.seconds()))
+
         watch.restart()
         assert is_in_cone_generator(r_parent, x3)
-        print(f'is_in_cone_generator(r_parent, x3): {watch.seconds()}s')
+        timings.append(('is_in_cone_generator(r_parent, x3)', watch.seconds()))
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip1_solution)
-        print(f'is_in_general_cone(R, x1, solver=conestrip1_solution): {watch.seconds()}s')
+        timings.append(('is_in_general_cone(R, x1, solver=conestrip1_solution)', watch.seconds()))
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip2_solution)
-        print(f'is_in_general_cone(R, x1, solver=conestrip2_solution): {watch.seconds()}s')
+        timings.append(('is_in_general_cone(R, x1, solver=conestrip2_solution)', watch.seconds()))
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip3_solution)
-        print(f'is_in_general_cone(R, x1, solver=conestrip1_solution): {watch.seconds()}s')
+        timings.append(('is_in_general_cone(R, x1, solver=conestrip1_solution)', watch.seconds()))
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip_algorithm)
-        print(f'is_in_general_cone(R, x1, solver=conestrip_algorithm): {watch.seconds()}s')
+        timings.append(('is_in_general_cone(R, x1, solver=conestrip_algorithm)', watch.seconds()))
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm)
-        print(f'is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm): {watch.seconds()}s')
-        print()
+        timings.append(('is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm)', watch.seconds()))
 
+        experiment['timings'] = timings
+        experiments.append(experiment)
+
+    data["experiments"] = experiments
+    print_experiment(data)
     return data
 
 
