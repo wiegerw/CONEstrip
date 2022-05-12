@@ -14,15 +14,15 @@ from conestrip.propositional_conestrip import parse_propositional_basis, gamble_
 
 class Test(TestCase):
     def test_gamble_coefficients(self):
-        g = parse_gamble('2 3 4 5')
+        g = parse_gamble('2 3 3 2')
         Phi = parse_propositional_basis(
             '''
-              1 0 1 2
-              1 1 0 3
-              0 2 3 0
+              1 0 1 1
+              1 1 0 1
+              0 1 1 0
             ''')
         c = gamble_coefficients(g, Phi)
-        self.assertEqual([1, 1, 1], c)
+        self.assertEqual([1, 1, 2], c)
 
 
 if __name__ == '__main__':

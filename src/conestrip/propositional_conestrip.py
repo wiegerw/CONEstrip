@@ -9,7 +9,9 @@ from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombinatio
 PropositionalGamble = List[Fraction]  # the coefficients g_phi of gamble g
 PropositionalConeGenerator = List[PropositionalGamble]
 PropositionalGeneralCone = List[PropositionalConeGenerator]
-PropositionalBasis = List[Gamble]  # a list of basic functions
+
+BooleanGamble = List[Bool]
+PropositionalBasis = List[BooleanGamble]  # a list of basic functions
 
 
 def gamble_coefficients(g: Gamble, Phi: PropositionalBasis) -> PropositionalGamble:
@@ -33,6 +35,12 @@ def gamble_coefficients(g: Gamble, Phi: PropositionalBasis) -> PropositionalGamb
     return [model[xi] for xi in x]
 
 
+def parse_boolean_gamble(text: str) -> Gamble:
+    result = [Fraction(s) for s in text.strip().split()]
+    assert all(f in [0,1] for f in result)
+    return result
+
+
 def parse_propositional_basis(text: str) -> PropositionalBasis:
-    gambles = list(map(parse_gamble, text.strip().split('\n')))
+    gambles = list(map(parse_boolean_gamble, text.strip().split('\n')))
     return gambles
