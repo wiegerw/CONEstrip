@@ -13,13 +13,14 @@ from conestrip.utility import sum_rows, product
 PropositionalGamble = List[Fraction]
 PropositionalConeGenerator = List[PropositionalGamble]
 PropositionalGeneralCone = List[PropositionalConeGenerator]
-PropositionalSentence = Any
+PropositionalSentence = z3.ExprRef
 PropositionalBasis = List[PropositionalSentence]
-BooleanVariable = Any
-BooleanGamble = List[Any]
+BooleanVariable = z3.BoolRef
 
 
-def gamble_coefficients(g: Gamble, Phi: List[PropositionalSentence]) -> PropositionalGamble:
+def gamble_coefficients(g: Gamble,
+                        Phi: List[PropositionalSentence]
+                       ) -> PropositionalGamble:
     """
     Get the coefficients of gamble g with respect to the basis Phi
     @param g: a gamble
@@ -51,7 +52,11 @@ def parse_propositional_basis(text: str) -> List[PropositionalSentence]:
     return gambles
 
 
-def solve_propositional_conestrip1(psi: PropositionalSentence, Phi: PropositionalBasis, C):
+def solve_propositional_conestrip1(psi: PropositionalSentence,
+                                   B: List[BooleanVariable],  # unused, since the solution for variables in B is omitted
+                                   C: List[BooleanVariable],
+                                   Phi: PropositionalBasis
+                                  ):
     k = len(Phi)
     solver = z3.Solver()
     solver.add(psi)
@@ -62,13 +67,19 @@ def solve_propositional_conestrip1(psi: PropositionalSentence, Phi: Propositiona
     return None
 
 
-def propositional_conestrip2_constraints(R: PropositionalGeneralCone, f0: PropositionalGamble, Gamma, Delta, variables: Tuple[Any, Any, Any, Any], verbose: bool = False) -> List[Any]:
+def propositional_conestrip2_constraints(R: PropositionalGeneralCone,
+                                         f: PropositionalGamble,
+                                         Gamma: List[Any],
+                                         Delta: List[Any],
+                                         variables: Tuple[Any, Any, Any, Any],
+                                         verbose: bool = False
+                                        ) -> List[Any]:
     # variables
     lambda_, mu, sigma, kappa = variables
 
     # constants
     g = [[[z3.RealVal(R[d][i][j]) for j in range(len(R[d][i]))] for i in range(len(R[d]))] for d in range(len(R))]
-    f = [z3.RealVal(f0[j]) for j in range(len(f0))]
+    f_ = [z3.RealVal(f[j]) for j in range(len(f))]
 
     # intermediate expressions
     h = sum_rows(list(sum_rows([product(mu[d][i], g[d][i]) for i in range(len(R[d]))]) for d in range(len(R))))
@@ -85,8 +96,8 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone, f0: Propos
 
     # main constraints
     constraints_1 = [goal >= 1]
-    constraints_2 = [kappa[i] <= h[i] - sigma * f[i] for i in range(len(kappa))]
-    constraints_3 = [kappa[i] >= h[i] - sigma * f[i] for i in range(len(kappa))]
+    constraints_2 = [kappa[i] <= h[i] - sigma * f_[i] for i in range(len(kappa))]
+    constraints_3 = [kappa[i] >= h[i] - sigma * f_[i] for i in range(len(kappa))]
     constraints_4 = list(collapse([[lambda_[d] <= mu[d][i] for i in range(len(R[d]))] for d in range(len(R))]))
     constraints = lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4
 
@@ -98,7 +109,7 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone, f0: Propos
         print(kappa)
         print('--- constants ---')
         print('g =', g)
-        print('f =', f)
+        print('f =', f_)
         print('--- intermediate expressions ---')
         print('h =', h)
         print('--- constraints ---')
@@ -113,7 +124,13 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone, f0: Propos
     return constraints
 
 
-def solve_propositional_conestrip2(R: PropositionalGeneralCone, f0: PropositionalGamble, Gamma, Delta, Phi: PropositionalBasis, verbose: bool = False) -> Optional[Tuple[Any, Any, Any, Any]]:
+def solve_propositional_conestrip2(R: PropositionalGeneralCone,
+                                   f: PropositionalGamble,
+                                   Gamma,
+                                   Delta,
+                                   Phi: PropositionalBasis,
+                                   verbose: bool = False
+                                  ) -> Optional[Tuple[Any, Any, Any, Any]]:
     """
     An implementation of formula (8) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -127,7 +144,7 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone, f0: Propositiona
     # expressions
     goal = z3.simplify(sum(lambda_))
 
-    constraints = propositional_conestrip2_constraints(R, f0, Gamma, Delta, (lambda_, mu, sigma, kappa), verbose)
+    constraints = propositional_conestrip2_constraints(R, f, Gamma, Delta, (lambda_, mu, sigma, kappa), verbose)
     optimizer = z3.Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
@@ -149,7 +166,12 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone, f0: Propositiona
         return None, None, None, None
 
 
-def solve_propositional_conestrip3(psi: PropositionalSentence, kappa: List[Fraction], B, C):
+def solve_propositional_conestrip3(psi: PropositionalSentence,
+                                   kappa: List[Fraction],
+                                   B: List[BooleanVariable],  # unused, since the solution for variables in B is omitted
+                                   C: List[BooleanVariable],
+                                   Phi: PropositionalBasis
+                                  ):
     k = len(Phi)
     optimizer = z3.Optimize()
     optimizer.add(psi)
@@ -161,11 +183,19 @@ def solve_propositional_conestrip3(psi: PropositionalSentence, kappa: List[Fract
     return None
 
 
-def propositional_conestrip_algorithm(R: PropositionalGeneralCone, f0: PropositionalGamble, B, Phi: PropositionalBasis, psi: PropositionalSentence, psi_Gamma: PropositionalSentence, psi_Delta: PropositionalSentence, verbose: bool = False) -> Optional[Tuple[Any, Any, Any, Any]]:
+def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
+                                      f: PropositionalGamble,
+                                      B: List[BooleanVariable],
+                                      Phi: PropositionalBasis,
+                                      psi: PropositionalSentence,
+                                      psi_Gamma: PropositionalSentence,
+                                      psi_Delta: PropositionalSentence,
+                                      verbose: bool = False
+                                     ) -> Optional[Tuple[Any, Any, Any, Any]]:
     """
     An implementation of the Propositional CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     @param R:
-    @param f0:
+    @param f:
     @param B:
     @param Phi:
     @param psi:
@@ -178,17 +208,17 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone, f0: Propositi
     C = z3.Bools(' '.join(f'c{i}' for i in range(k)))
 
     Gamma = []
-    gamma = solve_propositional_conestrip1(z3.And(psi, psi_Gamma), Phi, C)
+    gamma = solve_propositional_conestrip1(z3.And(psi, psi_Gamma), B, C, Phi)
     if gamma:
         Gamma = [gamma]
 
     Delta = []
-    delta = solve_propositional_conestrip1(z3.And(psi, psi_Delta), Phi, C)
+    delta = solve_propositional_conestrip1(z3.And(psi, psi_Delta), B, C, Phi)
     if delta:
         Gamma = [delta]
 
     while True:
-        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f0, Gamma, Delta, Phi, verbose)
+        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose)
         if not lambda_:
             return None
 
@@ -199,11 +229,11 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone, f0: Propositi
         delta = [0] * k
 
         if Gamma:
-            gamma = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C)
+            gamma = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi)
             Gamma.append(gamma)
 
         if Delta:
-            delta = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C)
+            delta = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi)
             Delta.append(delta)
 
         if sum(kappa[i] * gamma[i] for i in range(k)) <= 0 and 0 <= sum(kappa[i] * delta[i] for i in range(k)) and all(x == 0 for x in collapse(mu[d] for d in Q)):
