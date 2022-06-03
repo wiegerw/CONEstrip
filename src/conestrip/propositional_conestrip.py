@@ -236,9 +236,9 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
             Gamma.append(gamma)
 
         if Delta:
-            delta = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi)
+            delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi)
             Delta.append(delta)
 
         if sum(kappa[i] * gamma[i] for i in range(k)) <= 0 <= sum(kappa[i] * delta[i] for i in range(k)) \
                 and all(x == 0 for x in collapse(mu[d] for d, lambda_d in enumerate(lambda_) if lambda_d == 0)):
-            return (lambda_, mu, sigma, kappa)
+            return lambda_, mu, sigma, kappa
