@@ -10,12 +10,11 @@ class PropositionalSentenceParser(tpg.Parser):
     r"""
            separator space '\s+' ;
 
-           token ID     '[a-zA-Z]' ;
+           token ID     '[a-zA-Z_]\w*' ;
            token ZERO   '0' ;
            token ONE    '1' ;
            token LPAREN '\(' ;
            token RPAREN '\)' ;
-           token EQUIV  '==' ;
            token COMMA ',' ;
 
            START/x -> Formula/x ;
