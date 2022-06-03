@@ -60,7 +60,7 @@ def solve_propositional_conestrip1(psi: PropositionalSentence,
     k = len(Phi)
     solver = z3.Solver()
     solver.add(psi)
-    solver.add(And(Phi[i] == C[i] for i in range(k)))
+    solver.add(z3.And(Phi[i] == C[i] for i in range(k)))
     if solver.check() == z3.sat:
         model = solver.model()
         return [model[c] for c in C]
@@ -71,9 +71,12 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone,
                                          f: PropositionalGamble,
                                          Gamma: List[Any],
                                          Delta: List[Any],
+                                         Phi: PropositionalBasis,
                                          variables: Tuple[Any, Any, Any, Any],
                                          verbose: bool = False
                                         ) -> List[Any]:
+    k = len(Phi)
+
     # variables
     lambda_, mu, sigma, kappa = variables
 
@@ -83,7 +86,6 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone,
 
     # intermediate expressions
     h = sum_rows(list(sum_rows([product(mu[d][i], g[d][i]) for i in range(len(R[d]))]) for d in range(len(R))))
-    goal = z3.simplify(sum(lambda_))
 
     # 0 <= lambda <= 1
     lambda_constraints = [0 <= x for x in lambda_] + [x <= 1 for x in lambda_]
@@ -95,11 +97,12 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone,
     sigma_constraints = [sigma >= 1]
 
     # main constraints
-    constraints_1 = [goal >= 1]
-    constraints_2 = [kappa[i] <= h[i] - sigma * f_[i] for i in range(len(kappa))]
-    constraints_3 = [kappa[i] >= h[i] - sigma * f_[i] for i in range(len(kappa))]
-    constraints_4 = list(collapse([[lambda_[d] <= mu[d][i] for i in range(len(R[d]))] for d in range(len(R))]))
-    constraints = lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4
+    constraints_1 = [sum(lambda_) >= 1]
+    constraints_2 = list(collapse([[lambda_[d] <= mu[d][g] for g in range(len(R[d]))] for d in range(len(R))]))
+    constraints_3 = [kappa[i] == h[i] - sigma * f_[i] for i in range(len(kappa))]
+    constraints_4 = [sum(kappa[i] * gamma[i] for i in range(k)) <= 0 for gamma in Gamma]
+    constraints_5 = [sum(kappa[i] * delta[i] for i in range(k)) >= 0 for delta in Delta]
+    constraints = lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4 + constraints_5
 
     if verbose:
         print('--- variables ---')
@@ -120,6 +123,7 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone,
         print(constraints_2)
         print(constraints_3)
         print(constraints_4)
+        print(constraints_5)
 
     return constraints
 
@@ -144,7 +148,7 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone,
     # expressions
     goal = z3.simplify(sum(lambda_))
 
-    constraints = propositional_conestrip2_constraints(R, f, Gamma, Delta, (lambda_, mu, sigma, kappa), verbose)
+    constraints = propositional_conestrip2_constraints(R, f, Gamma, Delta, Phi, (lambda_, mu, sigma, kappa), verbose)
     optimizer = z3.Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
@@ -175,7 +179,7 @@ def solve_propositional_conestrip3(psi: PropositionalSentence,
     k = len(Phi)
     optimizer = z3.Optimize()
     optimizer.add(psi)
-    optimizer.add(And(Phi[i] == C[i] for i in range(k)))
+    optimizer.add(z3.And(Phi[i] == C[i] for i in range(k)))
     optimizer.maximize(sum(kappa[i] * C[i] for i in range(k)))
     if optimizer.check() == z3.sat:
         model = optimizer.model()
@@ -222,7 +226,6 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         if not lambda_:
             return None
 
-        Q = [d for d, lambda_d in enumerate(lambda_) if lambda_d == 0]
         R = [R_d for d, R_d in enumerate(R) if lambda_[d] != 0]
 
         gamma = [0] * k
@@ -236,5 +239,6 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
             delta = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi)
             Delta.append(delta)
 
-        if sum(kappa[i] * gamma[i] for i in range(k)) <= 0 and 0 <= sum(kappa[i] * delta[i] for i in range(k)) and all(x == 0 for x in collapse(mu[d] for d in Q)):
+        if sum(kappa[i] * gamma[i] for i in range(k)) <= 0 <= sum(kappa[i] * delta[i] for i in range(k)) \
+                and all(x == 0 for x in collapse(mu[d] for d, lambda_d in enumerate(lambda_) if lambda_d == 0)):
             return (lambda_, mu, sigma, kappa)
