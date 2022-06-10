@@ -4,12 +4,12 @@
 
 import itertools
 from fractions import Fraction
-from typing import List
+from typing import List, Tuple
 
 import z3
 
 from conestrip.cones import Gamble
-from conestrip.propositional_cones import PropositionalSentence, BooleanVariable
+from conestrip.propositional_cones import PropositionalSentence, BooleanVariable, PropositionalBasis
 
 
 def sentence_to_gamble(phi: PropositionalSentence, B: List[BooleanVariable]) -> Gamble:
@@ -32,3 +32,20 @@ def gamble_to_sentence(g: Gamble, B: List[BooleanVariable]) -> PropositionalSent
             clause = z3.Or([b == z3.Not(val) for b, val in zip(B, values)])
             clauses.append(clause)
     return z3.simplify(z3.And(clauses))
+
+
+def default_basis(n: int) -> List[Gamble]:
+    result = []
+    x = [Fraction(0)] * n
+    for i in range(n):
+        y = x[:]
+        y[i] = Fraction(1)
+        result.append(y)
+    return result
+
+
+def default_propositional_basis(n: int) -> Tuple[PropositionalBasis, List[BooleanVariable]]:
+    B = z3.Bools([f'b{i}' for i in range(n)])
+    gambles = default_basis(2**n)
+    Phi = [gamble_to_sentence(g, B) for g in gambles]
+    return Phi, B

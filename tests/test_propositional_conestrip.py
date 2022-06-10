@@ -9,7 +9,8 @@ import z3
 from conestrip.cones import parse_gamble
 from conestrip.algorithms import gamble_coefficients
 from conestrip.propositional_sentence_parser import parse_propositional_sentence
-from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble
+from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble, default_basis, \
+    default_propositional_basis
 
 
 class Test(TestCase):
@@ -35,6 +36,15 @@ class Test(TestCase):
             phi = gamble_to_sentence(g, B)
             g1 = sentence_to_gamble(phi, B)
             self.assertTrue(list(g) == g1)
+
+    def test_default_basis(self):
+        B = default_basis(3)
+        self.assertEqual(len(B), 3)
+
+    def test_default_propositional_basis(self):
+        Phi, B = default_propositional_basis(3)
+        self.assertEqual(len(B), 3)
+        self.assertEqual(len(Phi), 2**3)
 
 
 if __name__ == '__main__':
