@@ -7,15 +7,8 @@ from more_itertools import collapse
 from typing import Any, List, Optional, Set, Tuple
 import z3
 from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination, parse_gamble
+from conestrip.propositional_cones import PropositionalBasis, PropositionalGamble, PropositionalSentence, PropositionalGeneralCone, PropositionalConeGenerator, BooleanVariable
 from conestrip.utility import sum_rows, product
-
-
-PropositionalGamble = List[Fraction]
-PropositionalConeGenerator = List[PropositionalGamble]
-PropositionalGeneralCone = List[PropositionalConeGenerator]
-PropositionalSentence = z3.ExprRef
-PropositionalBasis = List[PropositionalSentence]
-BooleanVariable = z3.BoolRef
 
 
 def gamble_coefficients(g: Gamble,
@@ -39,17 +32,6 @@ def gamble_coefficients(g: Gamble,
     solver.check()
     model = solver.model()
     return [model[xi] for xi in x]
-
-
-def parse_boolean_gamble(text: str) -> Gamble:
-    result = [Fraction(s) for s in text.strip().split()]
-    assert all(f in [0,1] for f in result)
-    return result
-
-
-def parse_propositional_basis(text: str) -> List[PropositionalSentence]:
-    gambles = list(map(parse_boolean_gamble, text.strip().split('\n')))
-    return gambles
 
 
 def solve_propositional_conestrip1(psi: PropositionalSentence,

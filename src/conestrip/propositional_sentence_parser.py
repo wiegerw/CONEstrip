@@ -4,6 +4,7 @@ from fractions import Fraction
 import z3
 
 import tpg
+from conestrip.propositional_cones import PropositionalBasis, PropositionalGamble, PropositionalSentence, PropositionalGeneralCone, PropositionalConeGenerator
 
 
 class PropositionalSentenceParser(tpg.Parser):
@@ -37,6 +38,11 @@ class PropositionalSentenceParser(tpg.Parser):
                       | ID/x1                                               $ x = z3.Bool(x1)
                       ;
     """
+
+
+def parse_propositional_sentence(text: str) -> PropositionalSentence:
+    parser = PropositionalSentenceParser()
+    return parser(text)
 
 
 if __name__ == "__main__":
