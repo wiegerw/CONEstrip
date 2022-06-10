@@ -35,11 +35,6 @@ def parse_boolean_gamble(text: str) -> PropositionalGamble:
     return result
 
 
-# def parse_propositional_basis(text: str) -> List[PropositionalSentence]:
-#     gambles = list(map(parse_boolean_gamble, text.strip().split('\n')))
-#     return gambles
-
-
 # convert a sentence to the corresponding gamble
 def sentence_to_gamble(phi: PropositionalSentence, B: List[BooleanVariable]) -> Gamble:
     m = len(B)

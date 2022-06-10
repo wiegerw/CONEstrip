@@ -4,34 +4,10 @@
 
 from fractions import Fraction
 from more_itertools import collapse
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, List, Optional, Tuple
 import z3
-from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination, parse_gamble
-from conestrip.propositional_cones import PropositionalBasis, PropositionalGamble, PropositionalSentence, PropositionalGeneralCone, PropositionalConeGenerator, BooleanVariable
+from conestrip.propositional_cones import PropositionalBasis, PropositionalGamble, PropositionalSentence, PropositionalGeneralCone, BooleanVariable
 from conestrip.utility import sum_rows, product
-
-
-def gamble_coefficients(g: Gamble,
-                        Phi: List[PropositionalSentence]
-                       ) -> PropositionalGamble:
-    """
-    Get the coefficients of gamble g with respect to the basis Phi
-    @param g: a gamble
-    @param Phi: a sequence of basic functions
-    """
-
-    n = len(g)
-    k = len(Phi)
-    x = z3.Reals(' '.join(f'x{i}' for i in range(k)))
-
-    solver = z3.Solver()
-    for j in range(n):
-        eqn = sum([Phi[i][j] * x[i] for i in range(k)]) == g[j]
-        solver.add(eqn)
-
-    solver.check()
-    model = solver.model()
-    return [model[xi] for xi in x]
 
 
 def solve_propositional_conestrip1(psi: PropositionalSentence,
