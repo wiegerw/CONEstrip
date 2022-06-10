@@ -9,7 +9,7 @@ import z3
 from conestrip.cones import parse_gamble
 from conestrip.algorithms import gamble_coefficients
 from conestrip.propositional_sentence_parser import parse_propositional_sentence
-from conestrip.propositional_cones import gamble_to_sentence, sentence_to_gamble
+from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble
 
 
 class Test(TestCase):
