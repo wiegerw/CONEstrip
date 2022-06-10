@@ -70,6 +70,13 @@ class Test(TestCase):
 
         self.assertTrue(f == f1)
         solution = propositional_conestrip_algorithm(R1, f1, B, Phi, psi, psi_Gamma, psi_Delta)
+        self.assertIsNotNone(solution)
+
+        lambda_, mu, sigma, kappa = solution
+        print('lambda = ', lambda_)
+        print('mu =', mu)
+        print('sigma =', sigma)
+        print('kappa =', kappa)
 
 
 if __name__ == '__main__':
