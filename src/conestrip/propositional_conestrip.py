@@ -18,7 +18,7 @@ def solve_propositional_conestrip1(psi: PropositionalSentence,
     k = len(Phi)
     solver = z3.Solver()
     solver.add(psi)
-    solver.add(z3.And(Phi[i] == C[i] for i in range(k)))
+    solver.add(z3.And([Phi[i] == C[i] for i in range(k)]))
     if solver.check() == z3.sat:
         model = solver.model()
         return [model[c] for c in C]
@@ -97,6 +97,8 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone,
     An implementation of formula (8) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
 
+    to_fraction = lambda x: Fraction(x.numerator_as_long(), x.denominator_as_long())
+
     # variables
     lambda_ = [z3.Real(f'lambda{d}') for d in range(len(R))]
     mu = [[z3.Real(f'mu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
@@ -112,17 +114,17 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone,
     optimizer.maximize(goal)
     if optimizer.check() == z3.sat:
         model = optimizer.model()
-        lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R))]
-        mu_solution = [[model.evaluate(mu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
-        sigma_solution = model.evaluate(sigma)
-        kappa_solution = [model.evaluate(kappa[d]) for d in range(len(kappa))]
+        lambda_solution = [to_fraction(model.evaluate(lambda_[d])) for d in range(len(R))]
+        mu_solution = [[to_fraction(model.evaluate(mu[d][i])) for i in range(len(R[d]))] for d in range(len(R))]
+        sigma_solution = to_fraction(model.evaluate(sigma))
+        kappa_solution = [to_fraction(model.evaluate(kappa[d])) for d in range(len(kappa))]
         if verbose:
             print('--- solution ---')
             print('lambda =', lambda_solution)
             print('mu =', mu_solution)
             print('sigma =', sigma_solution)
             print('sigma =', kappa_solution)
-            print('goal =', model.evaluate(goal))
+            print('goal =', to_fraction(model.evaluate(goal)))
         return lambda_solution, mu_solution, sigma_solution, kappa_solution
     else:
         return None, None, None, None
@@ -137,7 +139,7 @@ def solve_propositional_conestrip3(psi: PropositionalSentence,
     k = len(Phi)
     optimizer = z3.Optimize()
     optimizer.add(psi)
-    optimizer.add(z3.And(Phi[i] == C[i] for i in range(k)))
+    optimizer.add(z3.And([Phi[i] == C[i] for i in range(k)]))
     optimizer.maximize(sum(kappa[i] * C[i] for i in range(k)))
     if optimizer.check() == z3.sat:
         model = optimizer.model()

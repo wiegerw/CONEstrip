@@ -8,8 +8,10 @@ from typing import List, Tuple
 
 import z3
 
-from conestrip.cones import Gamble
-from conestrip.propositional_cones import PropositionalSentence, BooleanVariable, PropositionalBasis
+from conestrip.algorithms import gamble_coefficients
+from conestrip.cones import Gamble, GeneralCone, ConeGenerator, GambleBasis
+from conestrip.propositional_cones import PropositionalSentence, BooleanVariable, PropositionalBasis, \
+    PropositionalGeneralCone, PropositionalConeGenerator, PropositionalGamble
 
 
 def sentence_to_gamble(phi: PropositionalSentence, B: List[BooleanVariable]) -> Gamble:
@@ -34,7 +36,7 @@ def gamble_to_sentence(g: Gamble, B: List[BooleanVariable]) -> PropositionalSent
     return z3.simplify(z3.And(clauses))
 
 
-def default_basis(n: int) -> List[Gamble]:
+def default_basis(n: int) -> GambleBasis:
     result = []
     x = [Fraction(0)] * n
     for i in range(n):
@@ -49,3 +51,27 @@ def default_propositional_basis(n: int) -> Tuple[PropositionalBasis, List[Boolea
     gambles = default_basis(2**n)
     Phi = [gamble_to_sentence(g, B) for g in gambles]
     return Phi, B
+
+
+def convert_gamble(g: Gamble, Phi: GambleBasis) -> PropositionalGamble:
+    return gamble_coefficients(g, Phi)
+
+
+def convert_cone_generator(R: ConeGenerator, Phi: GambleBasis) -> PropositionalConeGenerator:
+    return [convert_gamble(g, Phi) for g in R.gambles]
+
+
+def convert_general_cone(R: GeneralCone, Phi: GambleBasis) -> PropositionalGeneralCone:
+    return [convert_cone_generator(D, Phi) for D in R.generators]
+
+
+def print_propositional_gamble(g: PropositionalGamble) -> str:
+    return ' '.join(map(str, g))
+
+
+def print_propositional_cone_generator(D: PropositionalConeGenerator) -> str:
+    return '\n'.join(print_propositional_gamble(g) for g in D)
+
+
+def print_propositional_general_cone(R: PropositionalGeneralCone) -> str:
+    return '\n\n'.join(print_propositional_cone_generator(D) for D in R)

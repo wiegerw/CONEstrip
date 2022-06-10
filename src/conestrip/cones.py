@@ -10,6 +10,7 @@ from conestrip.polyhedron import Polyhedron
 
 
 Gamble = List[Fraction]
+GambleBasis = List[Gamble]          # a list of gambles that spans the probability space
 ConvexCombination = List[Fraction]  # positive values that sum to one
 
 
@@ -26,6 +27,10 @@ def linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gam
 
 def print_gamble(g: Gamble) -> str:
     return ' '.join(map(str, g))
+
+
+def print_gambles(G: List[Gamble]) -> str:
+    return '\n'.join(print_gamble(g) for g in G)
 
 
 def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:

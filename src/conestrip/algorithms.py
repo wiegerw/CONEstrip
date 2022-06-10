@@ -5,10 +5,10 @@
 from fractions import Fraction
 from typing import List
 import z3
-from conestrip.cones import Gamble
+from conestrip.cones import Gamble, GambleBasis
 
 
-def gamble_coefficients(g: Gamble, Phi: List[Gamble]) -> List[Fraction]:
+def gamble_coefficients(g: Gamble, Phi: GambleBasis) -> List[Fraction]:
     """
     Get the coefficients of gamble g with respect to the basis Phi
     @param g: a gamble
