@@ -8,7 +8,7 @@ from conestrip.random_cones import add_random_border_cones, random_border_point,
 from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, simplified_linear_combination, conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip_algorithm
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.utility import StopWatch, is_power_of_two
-from conestrip.propositional_algorithms import propositional_conestrip_solution
+from conestrip.propositional_algorithms import propositional_conestrip_solution, is_in_propositional_cone_generator
 
 
 def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, border_count):
@@ -70,6 +70,15 @@ def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, bor
         assert is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm)
         print(f'is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm): {watch.seconds()}s')
         if is_power_of_two(gamble_size):
+            watch.restart()
+            assert is_in_propositional_cone_generator(r, x1)
+            print(f'is_in_propositional_cone_generator(r, x1): {watch.seconds()}s')
+            watch.restart()
+            assert not is_in_propositional_cone_generator(r, x3)
+            print(f'is_in_propositional_cone_generator(r, x3): {watch.seconds()}s')
+            watch.restart()
+            assert is_in_propositional_cone_generator(r_parent, x3)
+            print(f'is_in_propositional_cone_generator(r_parent, x3): {watch.seconds()}s')
             watch.restart()
             assert is_in_general_cone(R, x1, solver=propositional_conestrip_solution)
             print(f'is_in_general_cone(R, x1, solver=propositional_conestrip_solution): {watch.seconds()}s')

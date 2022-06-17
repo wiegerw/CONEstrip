@@ -79,7 +79,7 @@ def print_propositional_general_cone(R: PropositionalGeneralCone) -> str:
     return '\n\n'.join(print_propositional_cone_generator(D) for D in R)
 
 
-def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any, Any]]:
+def convert_conestrip_problem(R0: GeneralCone, f0: Gamble) -> Tuple[PropositionalGeneralCone, PropositionalGamble, List[BooleanVariable], PropositionalBasis, PropositionalSentence, PropositionalSentence, PropositionalSentence]:
     n = len(f0)
     m = int(math.log2(n))
     if 2**m != n:
@@ -92,6 +92,20 @@ def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: L
 
     R1 = convert_general_cone(R0, Phi_gambles)
     f1 = convert_gamble(f0, Phi_gambles)
-
     assert f0 == f1
+
+    return R1, f1, B, Phi, psi, psi_Gamma, psi_Delta
+
+
+def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int] = None, Omega_Delta: List[int] = None, verbose: bool = False) -> Optional[Tuple[Any, Any, Any, Any]]:
+    R1, f1, B, Phi, psi, psi_Gamma, psi_Delta = convert_conestrip_problem(R0, f0)
     return propositional_conestrip_algorithm(R1, f1, B, Phi, psi, psi_Gamma, psi_Delta)
+
+
+def is_in_propositional_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False, verbose: bool = False) -> Any:
+    return propositional_conestrip_solution(GeneralCone([R]), g)
+
+
+def is_in_propositional_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
+    return not is_in_propositional_cone_generator(R, g) and is_in_propositional_cone_generator(R, g, with_border=True)
+
