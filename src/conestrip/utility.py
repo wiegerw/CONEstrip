@@ -2,6 +2,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
+import math
 import random
 from fractions import Fraction
 from typing import Any, List
@@ -71,3 +72,8 @@ class StopWatch(object):
     def restart(self):
         import time
         self.start = time.perf_counter()
+
+
+def is_power_of_two(n):
+    m = int(math.log2(n))
+    return 2**m == n

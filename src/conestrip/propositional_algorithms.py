@@ -3,8 +3,9 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 import itertools
+import math
 from fractions import Fraction
-from typing import List, Tuple
+from typing import Any, List, Optional, Tuple
 
 import z3
 
@@ -12,6 +13,7 @@ from conestrip.algorithms import gamble_coefficients
 from conestrip.cones import Gamble, GeneralCone, ConeGenerator, GambleBasis
 from conestrip.propositional_cones import PropositionalSentence, BooleanVariable, PropositionalBasis, \
     PropositionalGeneralCone, PropositionalConeGenerator, PropositionalGamble
+from conestrip.propositional_conestrip import propositional_conestrip_algorithm
 
 
 def sentence_to_gamble(phi: PropositionalSentence, B: List[BooleanVariable]) -> Gamble:
@@ -75,3 +77,21 @@ def print_propositional_cone_generator(D: PropositionalConeGenerator) -> str:
 
 def print_propositional_general_cone(R: PropositionalGeneralCone) -> str:
     return '\n\n'.join(print_propositional_cone_generator(D) for D in R)
+
+
+def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any, Any]]:
+    n = len(f0)
+    m = int(math.log2(n))
+    if 2**m != n:
+        raise RuntimeError(f'The gamble size {n} is not a power of 2')
+    Phi, B = default_propositional_basis(m)
+    psi = True
+    psi_Gamma = True
+    psi_Delta = True
+    Phi_gambles = [sentence_to_gamble(phi, B) for phi in Phi]
+
+    R1 = convert_general_cone(R0, Phi_gambles)
+    f1 = convert_gamble(f0, Phi_gambles)
+
+    assert f0 == f1
+    return propositional_conestrip_algorithm(R1, f1, B, Phi, psi, psi_Gamma, psi_Delta)
