@@ -147,7 +147,8 @@ def solve_propositional_conestrip3(psi: PropositionalSentence,
     k = len(Phi)
     optimizer = z3.Optimize()
     optimizer.add(psi)
-    # optimizer.maximize(sum(kappa[i] * C[i] for i in range(k)))  # N.B. this doesn't work in Z3
+    for i in range(k):
+        optimizer.add(Phi[i] == C[i])
     optimizer.maximize(linear_combination(kappa, C))
     if optimizer.check() == z3.sat:
         model = optimizer.model()
