@@ -17,5 +17,14 @@ def test1():
     assert not is_in_propositional_cone_generator(r, x3, verbose=False)
 
 
+def test2():
+    r = parse_cone_generator('3 -4')
+    x3 = parse_gamble('13 -14')
+
+    assert not is_in_cone_generator(r, x3)
+    assert not is_in_propositional_cone_generator(r, x3, verbose=True)
+
+
 if __name__ == '__main__':
     test1()
+    test2()

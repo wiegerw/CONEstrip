@@ -58,8 +58,8 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone,
     constraints_1 = [sum(lambda_) >= 1]
     constraints_2 = list(collapse([[lambda_[d] <= mu[d][g] for g in range(len(R[d]))] for d in range(len(R))]))
     constraints_3 = [kappa[i] == h[i] - sigma * f_[i] for i in range(len(kappa))]
-    constraints_4 = [linear_combination(kappa, gamma) <= 0 for gamma in Gamma]
-    constraints_5 = [linear_combination(kappa, delta) >= 0 for delta in Delta]
+    constraints_4 = [z3.simplify(linear_combination(kappa, gamma)) <= 0 for gamma in Gamma]
+    constraints_5 = [z3.simplify(linear_combination(kappa, delta)) >= 0 for delta in Delta]
     constraints = lambda_constraints + mu_constraints + sigma_constraints + constraints_1 + constraints_2 + constraints_3 + constraints_4 + constraints_5
 
     if verbose:
@@ -94,7 +94,7 @@ def model_value(model, x):
 
 # C contains elements with type boolean
 def linear_combination(kappa: List[Fraction], C: List[Any]):
-    return sum(z3.If(C[i], kappa[i], z3.Real(0)) for i in range(len(kappa)))
+    return sum(z3.If(C[i], kappa[i], z3.RealVal(0)) for i in range(len(kappa)))
 
 
 def solve_propositional_conestrip2(R: PropositionalGeneralCone,
@@ -107,6 +107,9 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone,
     """
     An implementation of formula (8) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
+
+    if verbose:
+        print('=== propositional_conestrip2 ===')
 
     # variables
     lambda_ = [z3.Real(f'lambda{d}') for d in range(len(R))]
@@ -129,11 +132,7 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone,
         kappa_solution = [model_value(model, kappa[d]) for d in range(len(kappa))]
         if verbose:
             print('--- solution ---')
-            print('lambda =', lambda_solution)
-            print('mu =', mu_solution)
-            print('sigma =', sigma_solution)
-            print('sigma =', kappa_solution)
-            print('goal =', model_value(model, (goal)))
+            print(model)
         return lambda_solution, mu_solution, sigma_solution, kappa_solution
     else:
         return None, None, None, None
@@ -191,13 +190,16 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         Delta = [delta]
 
     if verbose:
+        print(f'R = {R}')
+        print(f'f = {f}')
         print(f'psi && psi_Gamma = {z3.simplify(z3.And(psi, psi_Gamma))}')
         print(f'psi && psi_Delta = {z3.simplify(z3.And(psi, psi_Delta))}')
+        print(f'B = {B}')
         print(f'Gamma = {Gamma}')
         print(f'Delta = {Delta}')
 
     while True:
-        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose)
+        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=verbose)
         if not lambda_:
             return None
 
