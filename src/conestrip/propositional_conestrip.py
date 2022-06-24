@@ -199,7 +199,7 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         print(f'Delta = {Delta}')
 
     while True:
-        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=verbose)
+        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=False)
         if not lambda_:
             return None
 
@@ -215,6 +215,20 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         if Delta:
             delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi)
             Delta.append(delta)
+
+        if verbose:
+            print('\n- iteration -')
+            print(f'lambda = {lambda_}')
+            print(f'mu = {mu}')
+            print(f'sigma = {sigma}')
+            print(f'kappa = {kappa}')
+            print(f'R = {R}')
+            if Gamma:
+                print(f'gamma = {gamma}')
+            print(f'Gamma = {Gamma}')
+            if Delta:
+                print(f'delta = {delta}')
+            print(f'Delta = {Delta}')
 
         if sum(kappa[i] * gamma[i] for i in range(k)) <= 0 <= sum(kappa[i] * delta[i] for i in range(k)) \
                 and all(x == 0 for x in collapse(mu[d] for d, lambda_d in enumerate(lambda_) if lambda_d == 0)):
