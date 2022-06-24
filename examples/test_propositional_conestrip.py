@@ -14,7 +14,7 @@ def test1():
     x3 = parse_gamble('-2 8')
 
     assert not is_in_cone_generator(r, x3)
-    assert not is_in_propositional_cone_generator(r, x3, verbose=False)
+    assert not is_in_propositional_cone_generator(r, x3, verbose=True)
 
 
 def test2():

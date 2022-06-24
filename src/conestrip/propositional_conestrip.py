@@ -189,21 +189,44 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
     if delta:
         Delta = [delta]
 
+    iteration = 0
+
     if verbose:
+        print('- inputs -')
         print(f'R = {R}')
         print(f'f = {f}')
-        print(f'psi && psi_Gamma = {z3.simplify(z3.And(psi, psi_Gamma))}')
-        print(f'psi && psi_Delta = {z3.simplify(z3.And(psi, psi_Delta))}')
+        print(f'psi = {psi}')
+        print(f'psi_Gamma = {psi_Gamma}')
+        print(f'psi_Delta = {psi_Delta}')
         print(f'B = {B}')
-        print(f'Gamma = {Gamma}')
-        print(f'Delta = {Delta}')
+
+        print(f'\n- iteration {iteration} -')
+        print(f'gamma = {gamma}')
+        print(f'delta = {delta}')
 
     while True:
+        iteration += 1
+
+        if verbose:
+            print(f'\n- iteration {iteration} -')
+            print(f'Gamma = {Gamma}')
+            print(f'Delta = {Delta}')
+
         lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=False)
+
+        if verbose:
+            print(f'lambda = {lambda_}')
+            print(f'mu = {mu}')
+            print(f'sigma = {sigma}')
+            print(f'kappa = {kappa}')
+
         if not lambda_:
             return None
 
         R = [R_d for d, R_d in enumerate(R) if lambda_[d] != 0]
+
+        if verbose:
+            print(f'R = {R}')
 
         gamma = [0] * k
         delta = [0] * k
@@ -217,18 +240,10 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
             Delta.append(delta)
 
         if verbose:
-            print('\n- iteration -')
-            print(f'lambda = {lambda_}')
-            print(f'mu = {mu}')
-            print(f'sigma = {sigma}')
-            print(f'kappa = {kappa}')
-            print(f'R = {R}')
-            if Gamma:
-                print(f'gamma = {gamma}')
-            print(f'Gamma = {Gamma}')
-            if Delta:
-                print(f'delta = {delta}')
-            print(f'Delta = {Delta}')
+            print(f'gamma = {gamma}')
+            print(f'delta = {delta}')
+            print(f'sum kappa[i] * gamma[i] = {sum(kappa[i] * gamma[i] for i in range(k))}')
+            print(f'sum kappa[i] * delta[i] = {sum(kappa[i] * delta[i] for i in range(k))}')
 
         if sum(kappa[i] * gamma[i] for i in range(k)) <= 0 <= sum(kappa[i] * delta[i] for i in range(k)) \
                 and all(x == 0 for x in collapse(mu[d] for d, lambda_d in enumerate(lambda_) if lambda_d == 0)):
