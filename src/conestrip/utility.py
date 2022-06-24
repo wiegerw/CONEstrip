@@ -24,7 +24,11 @@ def inner_product(x: List[Any], y: List[Any]) -> Any:
 
 
 def print_list(x: List[Any]) -> str:
-    return f"[{', '.join(str(xi) for xi in x)}"
+    return f"[{', '.join(str(xi) for xi in x)}]"
+
+
+def print_list_list(x: List[Any]) -> str:
+    return f"[{', '.join(print_list(xi) for xi in x)}]"
 
 
 def random_floats_summing_to_one(n: int) -> List[float]:

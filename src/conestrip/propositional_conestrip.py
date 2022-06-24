@@ -7,7 +7,7 @@ from more_itertools import collapse
 from typing import Any, List, Optional, Tuple
 import z3
 from conestrip.propositional_cones import PropositionalBasis, PropositionalGamble, PropositionalSentence, PropositionalGeneralCone, BooleanVariable
-from conestrip.utility import sum_rows, product
+from conestrip.utility import sum_rows, product, print_list, print_list_list
 
 
 def solve_propositional_conestrip1(psi: PropositionalSentence,
@@ -195,10 +195,11 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         print('- inputs -')
         print(f'R = {R}')
         print(f'f = {f}')
+        print(f'B = {B}')
+        print(f'Phi = {Phi}')
         print(f'psi = {psi}')
         print(f'psi_Gamma = {psi_Gamma}')
         print(f'psi_Delta = {psi_Delta}')
-        print(f'B = {B}')
 
         print(f'\n- iteration {iteration} -')
         print(f'gamma = {gamma}')
@@ -215,10 +216,10 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=False)
 
         if verbose:
-            print(f'lambda = {lambda_}')
-            print(f'mu = {mu}')
+            print(f'lambda = {print_list(lambda_)}')
+            print(f'mu = {print_list_list(mu)}')
             print(f'sigma = {sigma}')
-            print(f'kappa = {kappa}')
+            print(f'kappa = {print_list(kappa)}')
 
         if not lambda_:
             return None
