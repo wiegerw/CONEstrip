@@ -188,7 +188,13 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
     Delta = []
     delta = solve_propositional_conestrip1(z3.And(psi, psi_Delta), B, C, Phi)
     if delta:
-        Gamma = [delta]
+        Delta = [delta]
+
+    if verbose:
+        print(f'psi && psi_Gamma = {z3.simplify(z3.And(psi, psi_Gamma))}')
+        print(f'psi && psi_Delta = {z3.simplify(z3.And(psi, psi_Delta))}')
+        print(f'Gamma = {Gamma}')
+        print(f'Delta = {Delta}')
 
     while True:
         lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose)
