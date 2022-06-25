@@ -142,13 +142,16 @@ def solve_propositional_conestrip3(psi: PropositionalSentence,
                                    kappa: List[Fraction],
                                    B: List[BooleanVariable],  # unused, since the solution for variables in B is omitted
                                    C: List[BooleanVariable],
-                                   Phi: PropositionalBasis
+                                   Phi: PropositionalBasis,
+                                   Gamma: List[List[bool]]
                                   ):
     k = len(Phi)
     optimizer = z3.Optimize()
     optimizer.add(psi)
     for i in range(k):
         optimizer.add(Phi[i] == C[i])
+    for gamma in Gamma:
+        optimizer.add(z3.Or([C[j] != gamma[j] for j in range(len(gamma))]))
     optimizer.maximize(linear_combination(kappa, C))
     if optimizer.check() == z3.sat:
         model = optimizer.model()
@@ -216,29 +219,29 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
 
         lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=False)
 
+        if not lambda_:
+            return None
+
         if verbose:
             print(f'lambda = {print_list(lambda_)}')
             print(f'mu = {print_list_list(mu)}')
             print(f'sigma = {sigma}')
             print(f'kappa = {print_list(kappa)}')
 
-        if not lambda_:
-            return None
-
         R = [R_d for d, R_d in enumerate(R) if lambda_[d] != 0]
 
         if verbose:
             print(f'R = {R}')
 
-        gamma = [0] * k
-        delta = [0] * k
+        gamma = [False] * k
+        delta = [False] * k
 
         if Gamma:
-            gamma = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi)
+            gamma = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi, Gamma)
             Gamma.append(gamma)
 
         if Delta:
-            delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi)
+            delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi, Delta)
             Delta.append(delta)
 
         if verbose:
