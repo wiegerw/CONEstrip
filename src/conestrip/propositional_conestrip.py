@@ -244,6 +244,12 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
             delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi, Delta)
             Delta.append(delta)
 
+        if not gamma:
+            gamma = [False] * k
+
+        if not delta:
+            delta = [False] * k
+
         if verbose:
             print(f'gamma = {gamma}')
             print(f'delta = {delta}')
