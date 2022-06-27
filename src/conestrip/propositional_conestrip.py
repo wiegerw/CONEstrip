@@ -242,12 +242,14 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         if Gamma:
             gamma = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi, maximize=True)
             assert gamma is not None
-            Gamma.append(gamma)
+            if gamma not in Gamma:
+                Gamma.append(gamma)
 
         if Delta:
             delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi, maximize=False)
             assert delta is not None
-            Delta.append(delta)
+            if delta not in Delta:
+                Delta.append(delta)
 
         if verbose:
             print(f'gamma = {gamma}')
