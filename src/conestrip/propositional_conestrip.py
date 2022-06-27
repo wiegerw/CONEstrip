@@ -143,16 +143,17 @@ def solve_propositional_conestrip3(psi: PropositionalSentence,
                                    B: List[BooleanVariable],  # unused, since the solution for variables in B is omitted
                                    C: List[BooleanVariable],
                                    Phi: PropositionalBasis,
-                                   Gamma: List[List[bool]]
+                                   maximize: bool
                                   ):
     k = len(Phi)
     optimizer = z3.Optimize()
     optimizer.add(psi)
     for i in range(k):
         optimizer.add(Phi[i] == C[i])
-    for gamma in Gamma:
-        optimizer.add(z3.Or([C[j] != gamma[j] for j in range(len(gamma))]))
-    optimizer.maximize(linear_combination(kappa, C))
+    if maximize:
+        optimizer.maximize(linear_combination(kappa, C))
+    else:
+        optimizer.minimize(linear_combination(kappa, C))
     if optimizer.check() == z3.sat:
         model = optimizer.model()
         return [bool(model[c]) for c in C]
@@ -220,6 +221,8 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=False)
 
         if not lambda_:
+            if verbose:
+                print('no solution lambda, mu, sigma, kappa found')
             return None
 
         if verbose:
@@ -237,11 +240,11 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         delta = [False] * k
 
         if Gamma:
-            gamma = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi, Gamma)
+            gamma = solve_propositional_conestrip3(z3.And(psi, psi_Gamma), kappa, B, C, Phi, maximize=True)
             Gamma.append(gamma)
 
         if Delta:
-            delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi, Delta)
+            delta = solve_propositional_conestrip3(z3.And(psi, psi_Delta), kappa, B, C, Phi, maximize=False)
             Delta.append(delta)
 
         if not gamma:
