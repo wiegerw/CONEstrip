@@ -10,7 +10,9 @@ from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_co
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
-from conestrip.conestrip import conestrip_algorithm, solve_conestrip1, solve_conestrip2, solve_conestrip3, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
+from conestrip.conestrip import conestrip_algorithm, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
+    is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, \
+    is_in_closed_cone_generator
 
 
 class Test(TestCase):
@@ -234,7 +236,7 @@ class Test(TestCase):
             self.assertTrue(is_in_cone_generator(r, x1))
             self.assertTrue(is_in_cone_generator_border(r, x2))
             self.assertFalse(is_in_cone_generator(r, x3))
-            self.assertFalse(is_in_cone_generator(r, x3, with_border=True))
+            self.assertFalse(is_in_closed_cone_generator(r, x3))
             self.assertTrue(is_in_cone_generator(r_parent, x3))
             self.assertTrue(is_in_general_cone(R, x1))
             print()

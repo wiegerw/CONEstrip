@@ -39,7 +39,7 @@ def make_omega_sigma_constraints(f: Any, h: Any, sigma: Any, Omega_Gamma: List[i
     return constraints_1, constraints_2, constraints_3
 
 
-def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False, with_border: bool = False) -> Tuple[List[Any], List[Any]]:
+def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, nu = variables
 
@@ -60,7 +60,7 @@ def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int]
     lambda_constraints1 = [simplify(sum(lambda_)) == 1]
 
     # nu > 0
-    nu_constraints = [x >= 0 for x in collapse(nu)] if with_border else [x > 0 for x in collapse(nu)]
+    nu_constraints = [x > 0 for x in collapse(nu)]
 
     # omega constraints
     constraints_2, constraints_3, constraints_4 = make_omega_constraints(f, h, Omega_Gamma, Omega_Delta)
@@ -85,7 +85,7 @@ def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int]
     return lambda_constraints0 + lambda_constraints1 + nu_constraints, constraints_2 + constraints_3 + constraints_4
 
 
-def solve_conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False, with_border: bool = False) -> Optional[Tuple[Any, Any]]:
+def solve_conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any]]:
     """
     An implementation of formula (1) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -95,7 +95,7 @@ def solve_conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
     lambda_ = [Real(f'lambda{d}') for d in range(len(R0))]
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R0[d]))] for d in range(len(R0))]
 
-    constraints = list(flatten(conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, nu), verbose, with_border)))
+    constraints = list(flatten(conestrip1_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, nu), verbose)))
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
@@ -367,12 +367,12 @@ def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omeg
         R = GeneralCone([R_d for d, R_d in enumerate(R) if not lambda_[d] == 0])
 
 
-def is_in_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False, verbose: bool = False) -> Any:
+def is_in_cone_generator(R: ConeGenerator, g: Gamble, verbose: bool = False) -> Any:
     n = len(g)
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
     cone = GeneralCone([R])
-    return solve_conestrip1(cone, g, Omega_Gamma, Omega_Delta, with_border=with_border, verbose=verbose)
+    return solve_conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=verbose)
 
 
 def is_in_closed_cone_generator(R: ConeGenerator, g: Gamble) -> Any:
@@ -380,7 +380,7 @@ def is_in_closed_cone_generator(R: ConeGenerator, g: Gamble) -> Any:
 
 
 def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
-    return not is_in_cone_generator(R, g) and is_in_cone_generator(R, g, with_border=True)
+    return not is_in_cone_generator(R, g) and is_in_closed_cone_generator(R, g)
 
 
 def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=solve_conestrip4) -> Any:
@@ -415,7 +415,7 @@ def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[T
 
     # f is inside R0, and not inside R1
     constraints0 = list(flatten(conestrip1_constraints(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)))
-    lambda_nu_constraints, omega_constraints = conestrip1_constraints(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose, with_border=True)
+    lambda_nu_constraints, omega_constraints = conestrip1_constraints(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose)
     constraint1 = ForAll(lambda1 + list(flatten(nu1)), Implies(And(lambda_nu_constraints), Not(And(omega_constraints))))
     constraints = constraints0 + [constraint1]
 
