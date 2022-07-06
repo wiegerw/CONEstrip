@@ -9,7 +9,7 @@ from fractions import Fraction
 from unittest import TestCase
 import z3
 from conestrip.cones import parse_gamble, parse_general_cone, print_gambles, parse_cone_generator
-from conestrip.algorithms import gamble_coefficients, is_convex_combination
+from conestrip.algorithms import gamble_coefficients, is_convex_combination, is_positive_combination
 from conestrip.propositional_conestrip import propositional_conestrip_algorithm
 from conestrip.propositional_sentence_parser import parse_propositional_sentence
 from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble, default_basis, \
@@ -58,6 +58,7 @@ class Test(TestCase):
         ''')
         self.assertIsNotNone(is_convex_combination(f1, R.gambles))
         self.assertIsNone(is_convex_combination(f2, R.gambles))
+        self.assertIsNotNone(is_positive_combination(f2, R.gambles))
 
 
 if __name__ == '__main__':

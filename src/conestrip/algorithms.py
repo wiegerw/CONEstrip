@@ -53,3 +53,27 @@ def is_convex_combination(f: Gamble, G: List[Gamble]):
         return None
     model = solver.model()
     return [model[x] for x in lambda_]
+
+
+def is_positive_combination(f: Gamble, G: List[Gamble]):
+    """
+    Determines if f is a positive combination of the elements in G
+    @param f: a gamble
+    @param G: a sequence of gambles
+    """
+
+    n = len(f)
+    k = len(G)
+    lambda_ = z3.Reals(' '.join(f'lambda_{i}' for i in range(k)))
+
+    solver = z3.Solver()
+    for x in lambda_:
+        solver.add(0 <= x)
+    for j in range(n):
+        eqn = sum([lambda_[i] * G[i][j] for i in range(k)]) == f[j]
+        solver.add(eqn)
+
+    if solver.check() == z3.unsat:
+        return None
+    model = solver.model()
+    return [model[x] for x in lambda_]
