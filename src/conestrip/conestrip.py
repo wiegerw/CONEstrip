@@ -6,6 +6,8 @@ from typing import Any, List, Optional, Set, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
+
+from conestrip.algorithms import is_positive_combination
 from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination
 from conestrip.utility import product, sum_rows
 
@@ -371,6 +373,10 @@ def is_in_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False,
     Omega_Delta = list(range(n))
     cone = GeneralCone([R])
     return solve_conestrip1(cone, g, Omega_Gamma, Omega_Delta, with_border=with_border, verbose=verbose)
+
+
+def is_in_closed_cone_generator(R: ConeGenerator, g: Gamble) -> Any:
+    return is_positive_combination(g, R.gambles)
 
 
 def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:

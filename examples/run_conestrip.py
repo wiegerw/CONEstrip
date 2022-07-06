@@ -5,7 +5,9 @@
 import argparse
 from conestrip.cones import print_gamble, linear_combination
 from conestrip.random_cones import add_random_border_cones, random_border_point, random_inside_point, random_general_cone
-from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, conestrip_algorithm
+from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, \
+    random_between_point, simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
+    conestrip_algorithm, is_in_closed_cone_generator
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.utility import StopWatch, is_power_of_two
 from conestrip.propositional_algorithms import propositional_conestrip_solution, is_in_propositional_cone_generator
@@ -39,46 +41,60 @@ def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, bor
         assert x1 == linear_combination(lambda1, r.vertices)
         assert x2 == linear_combination(lambda2, r.vertices)
         assert x3 == simplified_linear_combination(lambda3, r_parent.vertices)
+
         watch = StopWatch()
         assert is_in_cone_generator(r, x1)
         print(f'is_in_cone_generator(r, x1): {watch.seconds():.4f}s')
+
         watch.restart()
         assert is_in_cone_generator_border(r, x2)
         print(f'is_in_cone_generator_border(r, x2): {watch.seconds():.4f}s')
+
         watch.restart()
         assert not is_in_cone_generator(r, x3)
-        print(f'is_in_cone_generator(r, x3): {watch.seconds():.4f}s')
+        print(f'not is_in_cone_generator(r, x3): {watch.seconds():.4f}s')
+
         watch.restart()
-        assert not is_in_cone_generator(r, x3, with_border=True)
-        print(f'is_in_cone_generator(r, x3, with_border=True): {watch.seconds():.4f}s')
+        assert not is_in_closed_cone_generator(r, x3)
+        print(f'not is_in_closed_cone_generator(r, x3): {watch.seconds():.4f}s')
+
         watch.restart()
         assert is_in_cone_generator(r_parent, x3)
         print(f'is_in_cone_generator(r_parent, x3): {watch.seconds():.4f}s')
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=solve_conestrip1)
         print(f'is_in_general_cone(R, x1, solver=solve_conestrip1): {watch.seconds():.4f}s')
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=solve_conestrip2)
         print(f'is_in_general_cone(R, x1, solver=solve_conestrip2): {watch.seconds():.4f}s')
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=solve_conestrip3)
         print(f'is_in_general_cone(R, x1, solver=solve_conestrip1): {watch.seconds():.4f}s')
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip_algorithm)
         print(f'is_in_general_cone(R, x1, solver=conestrip_algorithm): {watch.seconds():.4f}s')
+
         watch.restart()
         assert is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm)
         print(f'is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm): {watch.seconds():.4f}s')
+
         if is_power_of_two(gamble_size):
             watch.restart()
             assert is_in_propositional_cone_generator(r, x1)
             print(f'is_in_propositional_cone_generator(r, x1): {watch.seconds():.4f}s')
+
             watch.restart()
             assert not is_in_propositional_cone_generator(r, x3)
-            print(f'is_in_propositional_cone_generator(r, x3): {watch.seconds():.4f}s')
+            print(f'not is_in_propositional_cone_generator(r, x3): {watch.seconds():.4f}s')
+
             watch.restart()
             assert is_in_propositional_cone_generator(r_parent, x3)
             print(f'is_in_propositional_cone_generator(r_parent, x3): {watch.seconds():.4f}s')
+
             watch.restart()
             assert is_in_general_cone(R, x1, solver=propositional_conestrip_solution)
             print(f'is_in_general_cone(R, x1, solver=propositional_conestrip_solution): {watch.seconds():.4f}s')
