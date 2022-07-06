@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright 2021 Wieger Wesselink.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
@@ -8,7 +10,7 @@ from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_co
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
-from conestrip.conestrip import conestrip_algorithm, conestrip1_solution, conestrip2_solution, conestrip3_solution, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
+from conestrip.conestrip import conestrip_algorithm, solve_conestrip1, solve_conestrip2, solve_conestrip3, is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point
 
 
 class Test(TestCase):
@@ -53,23 +55,23 @@ class Test(TestCase):
         Omega_Delta = [0, 1]
 
         f = parse_gamble('1 0')
-        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
+        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
         f = parse_gamble('1/2 0')
-        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
+        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
         f = parse_gamble('0 1')
-        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
+        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
         f = parse_gamble('1 1')
-        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
+        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNotNone(result)
 
         f = parse_gamble('0 0')
-        result = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta)
+        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
         self.assertIsNone(result)
 
     def check_conestrip(self, R: GeneralCone, f_text: str, expected_result=False, verbose=True):
@@ -77,9 +79,9 @@ class Test(TestCase):
         n = len(f)
         Omega_Gamma = list(range(n))
         Omega_Delta = list(range(n))
-        result1 = conestrip1_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
-        result2 = conestrip2_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
-        result3 = conestrip3_solution(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+        result1 = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+        result2 = solve_conestrip2(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
+        result3 = solve_conestrip3(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         result4 = conestrip_algorithm(R, f, Omega_Gamma, Omega_Delta, verbose=False)
         result5 = conestrip_cdd_algorithm(R, f, Omega_Gamma, Omega_Delta, verbose=verbose)
         print('result1', result1)
