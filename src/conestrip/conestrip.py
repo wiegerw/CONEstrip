@@ -263,7 +263,7 @@ def solve_conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
         return None
 
 
-def conestrip_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
+def conestrip4_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, mu, sigma = variables
 
@@ -327,7 +327,7 @@ def solve_conestrip4(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
     # expressions
     goal = simplify(sum(lambda_))
 
-    constraints = conestrip_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)
+    constraints = conestrip4_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_, mu, sigma), verbose)
     optimizer = Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
@@ -344,7 +344,7 @@ def solve_conestrip4(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
             print('goal =', model.evaluate(goal))
         return lambda_solution, mu_solution, sigma_solution
     else:
-        return None
+        return None, None, None
 
 
 def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
@@ -357,14 +357,12 @@ def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omeg
     @return: A solution (lambda, mu, sigma) to the CONEstrip optimization problem (4), or None if no solution exists
     """
     while True:
-        Lambda = solve_conestrip4(R, f0, Omega_Gamma, Omega_Delta, verbose)
-        if not Lambda:
+        lambda_, mu, sigma = solve_conestrip4(R, f0, Omega_Gamma, Omega_Delta, verbose)
+        if not lambda_:
             return None
-        lambda_, mu, _ = Lambda
-        Q = [d for d, lambda_d in enumerate(lambda_) if lambda_d == 0]
-        if all(x == 0 for x in collapse(mu[d] for d in Q)):
-            return Lambda
-        R = GeneralCone([R_d for d, R_d in enumerate(R) if d not in Q])
+        if all(x == 0 for x in collapse(mu[d] for d, lambda_d in enumerate(lambda_) if lambda_d == 0)):
+            return lambda_, mu, sigma
+        R = GeneralCone([R_d for d, R_d in enumerate(R) if not lambda_[d] == 0])
 
 
 def is_in_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False, verbose: bool = False) -> Any:

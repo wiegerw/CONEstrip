@@ -11,7 +11,7 @@ from more_itertools.recipes import flatten
 from z3 import *
 import cdd
 from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination
-from conestrip.conestrip import conestrip_constraints, is_valid_conestrip_input
+from conestrip.conestrip import conestrip4_constraints, is_valid_conestrip_input
 
 
 def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any]):
