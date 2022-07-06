@@ -31,6 +31,7 @@ def propositional_conestrip2_constraints(R: PropositionalGeneralCone,
                                          Delta: List[Any],
                                          Phi: PropositionalBasis,
                                          variables: Tuple[Any, Any, Any, Any],
+                                         with_border: bool,
                                          verbose: bool = False
                                         ) -> List[Any]:
     k = len(Phi)
@@ -102,6 +103,7 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone,
                                    Gamma,
                                    Delta,
                                    Phi: PropositionalBasis,
+                                   with_border: bool,
                                    verbose: bool = False
                                   ) -> Optional[Tuple[Any, Any, Any, Any]]:
     """
@@ -120,7 +122,7 @@ def solve_propositional_conestrip2(R: PropositionalGeneralCone,
     # expressions
     goal = z3.simplify(sum(lambda_))
 
-    constraints = propositional_conestrip2_constraints(R, f, Gamma, Delta, Phi, (lambda_, mu, sigma, kappa), verbose)
+    constraints = propositional_conestrip2_constraints(R, f, Gamma, Delta, Phi, (lambda_, mu, sigma, kappa), with_border, verbose)
     optimizer = z3.Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
@@ -167,6 +169,7 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
                                       psi: PropositionalSentence,
                                       psi_Gamma: PropositionalSentence,
                                       psi_Delta: PropositionalSentence,
+                                      with_border: bool = False,
                                       verbose: bool = False
                                      ) -> Optional[Tuple[Any, Any, Any, Any]]:
     """
@@ -178,6 +181,7 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
     @param psi:
     @param psi_Gamma:
     @param psi_Delta:
+    @param with_border:
     @param verbose:
     @return: A solution (lambda, mu, sigma, kappa) to the propositional CONEstrip optimization problem, or None if no solution exists
     """
@@ -218,7 +222,7 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
             print(f'Gamma = {Gamma}')
             print(f'Delta = {Delta}')
 
-        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, verbose=False)
+        lambda_, mu, sigma, kappa = solve_propositional_conestrip2(R, f, Gamma, Delta, Phi, with_border, verbose=False)
 
         if not lambda_:
             if verbose:
