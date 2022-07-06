@@ -1,2 +1,2 @@
 PYTHONPATH=../src
-python3 random_cone.py --cone-size=1 --generator-size=7 --gamble-size=7 --coordinate-bound=20 --border-count=5 --count=10
+python3 run_conestrip.py --cone-size=1 --generator-size=7 --gamble-size=7 --coordinate-bound=20 --border-count=5 --count=10

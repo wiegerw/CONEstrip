@@ -9,7 +9,7 @@ from pathlib import Path
 
 from conestrip.cones import print_gamble, linear_combination, parse_general_cone, parse_gamble
 from conestrip.random_cones import add_random_border_cones, random_border_point, random_inside_point, random_general_cone
-from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, simplified_linear_combination, conestrip1_solution, conestrip2_solution, conestrip3_solution, conestrip_algorithm
+from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, conestrip_algorithm
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.utility import StopWatch
 
@@ -116,15 +116,15 @@ def run_experiment(cone_size, generator_size, gamble_size, coordinate_bound, bor
         timings.append(('is_in_cone_generator(r_parent, x3)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=conestrip1_solution)
+        assert is_in_general_cone(R, x1, solver=solve_conestrip1)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip1_solution)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=conestrip2_solution)
+        assert is_in_general_cone(R, x1, solver=solve_conestrip2)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip2_solution)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=conestrip3_solution)
+        assert is_in_general_cone(R, x1, solver=solve_conestrip3)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip1_solution)', watch.seconds()))
 
         watch.restart()

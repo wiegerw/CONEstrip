@@ -1,0 +1,1 @@
+./run run_conestrip_json.py --cone-size=1 --generator-size=3 --gamble-size=3 --coordinate-bound=20 --border-count=5 --count=2
