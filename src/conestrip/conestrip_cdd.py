@@ -100,7 +100,7 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     return less_equal_constraints, equal_constraints, object_function
 
 
-def conestrip_cdd_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def solve_conestrip_cdd(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
     """
     An implementation of formula (4) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
