@@ -4,16 +4,12 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
-import itertools
-from fractions import Fraction
 from unittest import TestCase
-import z3
-from conestrip.cones import parse_gamble, parse_general_cone, print_gambles
-from conestrip.algorithms import gamble_coefficients
+from conestrip.cones import parse_gamble, parse_general_cone, print_gambles, parse_cone_generator
+from conestrip.conestrip import is_in_cone_generator
 from conestrip.propositional_conestrip import propositional_conestrip_algorithm
-from conestrip.propositional_sentence_parser import parse_propositional_sentence
-from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble, default_basis, \
-    default_propositional_basis, convert_general_cone, convert_gamble
+from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble, \
+    default_propositional_basis, convert_general_cone, convert_gamble, is_in_propositional_cone_generator
 
 
 class Test(TestCase):
@@ -47,6 +43,18 @@ class Test(TestCase):
         print('mu =', mu)
         print('sigma =', sigma)
         print('kappa =', kappa)
+
+    def test1(self):
+        r = parse_cone_generator('-5 9')
+        x3 = parse_gamble('-2 8')
+        self.assertFalse(is_in_cone_generator(r, x3))
+        self.assertFalse(is_in_propositional_cone_generator(r, x3, verbose=True))
+
+    def test2(self):
+        r = parse_cone_generator('3 -4')
+        x3 = parse_gamble('13 -14')
+        self.assertFalse(is_in_cone_generator(r, x3))
+        self.assertFalse(is_in_propositional_cone_generator(r, x3, verbose=True))
 
 
 if __name__ == '__main__':
