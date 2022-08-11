@@ -3,7 +3,7 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 from fractions import Fraction
-from typing import List
+from typing import Any, List, Optional
 import z3
 from conestrip.cones import Gamble, GambleBasis
 
@@ -55,7 +55,7 @@ def is_convex_combination(f: Gamble, G: List[Gamble]):
     return [model[x] for x in lambda_]
 
 
-def is_positive_combination(f: Gamble, G: List[Gamble]):
+def is_positive_combination(f: Gamble, G: List[Gamble]) -> Optional[List[Any]]:
     """
     Determines if f is a positive combination of the elements in G
     @param f: a gamble

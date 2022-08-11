@@ -81,3 +81,7 @@ class StopWatch(object):
 def is_power_of_two(n):
     m = int(math.log2(n))
     return 2**m == n
+
+
+def is_solved(solution):
+    return not None in solution

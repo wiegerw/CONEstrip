@@ -171,7 +171,7 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
                                       psi_Delta: PropositionalSentence,
                                       with_border: bool = False,
                                       verbose: bool = False
-                                     ) -> Optional[Tuple[Any, Any, Any, Any]]:
+                                     ) -> Tuple[Any, Any, Any, Any]:
     """
     An implementation of the Propositional CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     @param R:
@@ -183,7 +183,7 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
     @param psi_Delta:
     @param with_border:
     @param verbose:
-    @return: A solution (lambda, mu, sigma, kappa) to the propositional CONEstrip optimization problem, or None if no solution exists
+    @return: A solution (lambda, mu, sigma, kappa) to the propositional CONEstrip optimization problem, or (None, None, None, None) if no solution exists
     """
     k = len(Phi)
     C = z3.Bools(' '.join(f'c{i}' for i in range(k)))
@@ -227,7 +227,7 @@ def propositional_conestrip_algorithm(R: PropositionalGeneralCone,
         if not lambda_:
             if verbose:
                 print('no solution lambda, mu, sigma, kappa found')
-            return None
+            return None, None, None, None
 
         if verbose:
             print(f'lambda = {print_list(lambda_)}')

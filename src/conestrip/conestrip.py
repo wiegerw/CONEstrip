@@ -2,14 +2,14 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, List, Optional, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
 
 from conestrip.algorithms import is_positive_combination
 from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination
-from conestrip.utility import product, sum_rows
+from conestrip.utility import product, sum_rows, is_solved
 
 
 def is_valid_conestrip_input(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int]) -> bool:
@@ -85,7 +85,7 @@ def conestrip1_constraints(R0: GeneralCone, f: List[Any], Omega_Gamma: List[int]
     return lambda_constraints0 + lambda_constraints1 + nu_constraints, constraints_2 + constraints_3 + constraints_4
 
 
-def solve_conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any]]:
+def solve_conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Tuple[Any, Any]:
     """
     An implementation of formula (1) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -108,7 +108,7 @@ def solve_conestrip1(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
             print('nu =', nu_solution)
         return lambda_solution, nu_solution
     else:
-        return None
+        return None, None
 
 
 def conestrip2_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
@@ -184,7 +184,7 @@ def solve_conestrip2(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
             print('sigma =', sigma_solution)
         return lambda_solution, tau_solution, sigma_solution
     else:
-        return None
+        return None, None, None
 
 
 def conestrip3_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
@@ -236,7 +236,7 @@ def conestrip3_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
     return constraints
 
 
-def solve_conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def solve_conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Tuple[Any, Any, Any]:
     """
     An implementation of formula (3) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -262,7 +262,7 @@ def solve_conestrip3(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
             print('sigma =', sigma_solution)
         return lambda_solution, mu_solution, sigma_solution
     else:
-        return None
+        return None, None, None
 
 
 def conestrip4_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
@@ -315,7 +315,7 @@ def conestrip4_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
     return constraints
 
 
-def solve_conestrip4(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def solve_conestrip4(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Tuple[Any, Any, Any]:
     """
     An implementation of formula (4) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -349,7 +349,7 @@ def solve_conestrip4(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_
         return None, None, None
 
 
-def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Tuple[Any, Any, Any]:
     """
     An implementation of the CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     @param R:
@@ -361,33 +361,35 @@ def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omeg
     while True:
         lambda_, mu, sigma = solve_conestrip4(R, f0, Omega_Gamma, Omega_Delta, verbose)
         if not lambda_:
-            return None
+            return None, None, None
         if all(x == 0 for x in collapse(mu[d] for d, lambda_d in enumerate(lambda_) if lambda_d == 0)):
             return lambda_, mu, sigma
         R = GeneralCone([R_d for d, R_d in enumerate(R) if not lambda_[d] == 0])
 
 
-def is_in_cone_generator(R: ConeGenerator, g: Gamble, verbose: bool = False) -> Any:
+def is_in_cone_generator(R: ConeGenerator, g: Gamble, verbose: bool = False) -> bool:
     n = len(g)
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
     cone = GeneralCone([R])
-    return solve_conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=verbose)
+    solution = solve_conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=verbose)
+    return is_solved(solution)
 
 
-def is_in_closed_cone_generator(R: ConeGenerator, g: Gamble) -> Any:
-    return is_positive_combination(g, R.gambles)
+def is_in_closed_cone_generator(R: ConeGenerator, g: Gamble) -> bool:
+    return is_positive_combination(g, R.gambles) is not None
 
 
 def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
     return not is_in_cone_generator(R, g) and is_in_closed_cone_generator(R, g)
 
 
-def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=solve_conestrip4) -> Any:
+def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=solve_conestrip4) -> bool:
     n = len(g)
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
-    return solver(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
+    solution = solver(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
+    return is_solved(solution)
 
 
 def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[Tuple[Gamble, ConvexCombination]]:

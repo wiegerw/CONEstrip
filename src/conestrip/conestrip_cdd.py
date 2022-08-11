@@ -100,7 +100,7 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     return less_equal_constraints, equal_constraints, object_function
 
 
-def solve_conestrip_cdd(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def solve_conestrip_cdd(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Tuple[Any, Any, Any]:
     """
     An implementation of formula (4) in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     """
@@ -162,24 +162,25 @@ def solve_conestrip_cdd(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Ome
             index = index + n
         sigma = x[index]
         return lambda_, mu, sigma
+    else:
+        return None, None, None
 
 
-def conestrip_cdd_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Optional[Tuple[Any, Any, Any]]:
+def conestrip_cdd_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], verbose: bool = False) -> Tuple[Any, Any, Any]:
     """
     An implementation of the CONEstrip algorithm in 'A Propositional CONEstrip Algorithm', IPMU 2014.
     @param R:
     @param f0:
     @param Omega_Gamma:
     @param Omega_Delta:
-    @return: A solution (lambda, mu, sigma) to the CONEstrip optimization problem (4), or None if no solution exists
+    @return: A solution (lambda, mu, sigma) to the CONEstrip optimization problem (4), or (None, None, None) if no solution exists
     """
 
     while True:
-        Lambda = conestrip_cdd_solution(R, f0, Omega_Gamma, Omega_Delta, verbose)
-        if not Lambda:
-            return None
-        lambda_, mu, sigma = Lambda
+        lambda_, mu, sigma = solve_conestrip_cdd(R, f0, Omega_Gamma, Omega_Delta, verbose)
+        if not lambda_:
+            return None, None, None
         Q = [d for d, lambda_d in enumerate(lambda_) if lambda_d == 0]
         if all(x == 0 for x in collapse(mu[d] for d in Q)):
-            return Lambda
+            return lambda_, mu, sigma
         R = GeneralCone([R_d for d, R_d in enumerate(R) if d not in Q])

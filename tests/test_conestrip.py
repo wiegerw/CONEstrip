@@ -6,13 +6,13 @@
 
 from fractions import Fraction
 from unittest import TestCase
-from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone, Gamble
+from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
 from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, random_inside_point, random_general_cone
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
 from conestrip.conestrip import conestrip_algorithm, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
     is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, random_between_point, \
-    is_in_closed_cone_generator
+    is_in_closed_cone_generator, is_solved
 
 
 class Test(TestCase):
@@ -47,36 +47,7 @@ class Test(TestCase):
         cone = parse_general_cone(text)
         self.assertEqual(remove_spaces(text), str(cone))
 
-    def test_conestrip1(self):
-        text = '''
-          1 0
-          0 1
-        '''
-        R = parse_general_cone(text)
-        Omega_Gamma = [0, 1]
-        Omega_Delta = [0, 1]
-
-        f = parse_gamble('1 0')
-        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
-        self.assertIsNone(result)
-
-        f = parse_gamble('1/2 0')
-        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
-        self.assertIsNone(result)
-
-        f = parse_gamble('0 1')
-        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
-        self.assertIsNone(result)
-
-        f = parse_gamble('1 1')
-        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
-        self.assertIsNotNone(result)
-
-        f = parse_gamble('0 0')
-        result = solve_conestrip1(R, f, Omega_Gamma, Omega_Delta)
-        self.assertIsNone(result)
-
-    def check_conestrip(self, R: GeneralCone, f_text: str, expected_result=False, verbose=True):
+    def check_conestrip(self, R: GeneralCone, f_text: str, expected_result: bool = False, verbose=True):
         f = parse_gamble(f_text)
         n = len(f)
         Omega_Gamma = list(range(n))
@@ -91,11 +62,24 @@ class Test(TestCase):
         print('result3', result3)
         print('result4', result4)
         print('result5', result5)
-        self.assertEqual(expected_result, result1 is not None)
-        self.assertEqual(expected_result, result2 is not None)
-        self.assertEqual(expected_result, result3 is not None)
-        self.assertEqual(expected_result, result4 is not None)
-        self.assertEqual(expected_result, result5 is not None)
+        self.assertEqual(expected_result, is_solved(result1))
+        self.assertEqual(expected_result, is_solved(result2))
+        self.assertEqual(expected_result, is_solved(result3))
+        self.assertEqual(expected_result, is_solved(result4))
+        self.assertEqual(expected_result, is_solved(result5))
+
+    def test_conestrip1(self):
+        text = '''
+          1 0
+          0 1
+        '''
+        R = parse_general_cone(text)
+
+        self.check_conestrip(R, '1 0', False)
+        self.check_conestrip(R, '1/2 0', False)
+        self.check_conestrip(R, '0 1', False)
+        self.check_conestrip(R, '1 1', True)
+        self.check_conestrip(R, '0 0', False)
 
     def test_conestrip2(self):
         text = '''
@@ -187,8 +171,8 @@ class Test(TestCase):
         R = parse_cone_generator(text)
         r1 = parse_gamble('1 0')
         r2 = parse_gamble('0 1')
-        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r1))
-        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r2))
+        self.assertFalse(is_in_general_cone(GeneralCone([R]), r1))
+        self.assertFalse(is_in_general_cone(GeneralCone([R]), r2))
 
     def test_in_cone2(self):
         text = '''
@@ -198,8 +182,8 @@ class Test(TestCase):
         R = parse_cone_generator(text)
         r1 = parse_gamble('1 2')
         r2 = parse_gamble('2 1')
-        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r1))
-        self.assertIsNone(is_in_general_cone(GeneralCone([R]), r2))
+        self.assertFalse(is_in_general_cone(GeneralCone([R]), r1))
+        self.assertFalse(is_in_general_cone(GeneralCone([R]), r2))
 
     def test_random_border_point(self):
         for _ in range(10):

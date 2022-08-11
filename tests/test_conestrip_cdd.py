@@ -6,7 +6,7 @@
 
 from unittest import TestCase
 from conestrip.cones import parse_general_cone, parse_gamble, GeneralCone
-from conestrip.conestrip import solve_conestrip1, solve_conestrip2, solve_conestrip3
+from conestrip.conestrip import solve_conestrip1, solve_conestrip2, solve_conestrip3, is_solved
 from conestrip.conestrip_cdd import solve_conestrip_cdd
 
 
@@ -21,7 +21,7 @@ class Test(TestCase):
         result3 = solve_conestrip3(R, f, Omega_Gamma, Omega_Delta)
         result4 = solve_conestrip_cdd(R, f, Omega_Gamma, Omega_Delta)
         result5 = solve_conestrip_cdd(R, f, Omega_Gamma, Omega_Delta)
-        results = [result1, result2, result3, result4, result5]
+        results = list(map(is_solved, [result1, result2, result3, result4, result5]))
         if expected_result == True:
             self.assertTrue(all(results))
         else:

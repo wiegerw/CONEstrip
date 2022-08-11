@@ -14,6 +14,7 @@ from conestrip.cones import Gamble, GeneralCone, ConeGenerator, GambleBasis
 from conestrip.propositional_cones import PropositionalSentence, BooleanVariable, PropositionalBasis, \
     PropositionalGeneralCone, PropositionalConeGenerator, PropositionalGamble
 from conestrip.propositional_conestrip import propositional_conestrip_algorithm
+from conestrip.utility import is_solved
 
 
 def sentence_to_gamble(phi: PropositionalSentence, B: List[BooleanVariable]) -> Gamble:
@@ -97,13 +98,14 @@ def convert_conestrip_problem(R0: GeneralCone, f0: Gamble) -> Tuple[Propositiona
     return R1, f1, B, Phi, psi, psi_Gamma, psi_Delta
 
 
-def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int] = None, Omega_Delta: List[int] = None, verbose: bool = False) -> Optional[Tuple[Any, Any, Any, Any]]:
+def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int] = None, Omega_Delta: List[int] = None, verbose: bool = False) -> Tuple[Any, Any, Any, Any]:
     R1, f1, B, Phi, psi, psi_Gamma, psi_Delta = convert_conestrip_problem(R0, f0)
     return propositional_conestrip_algorithm(R1, f1, B, Phi, psi, psi_Gamma, psi_Delta, verbose)
 
 
 def is_in_propositional_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False, verbose: bool = False) -> Any:
-    return propositional_conestrip_solution(GeneralCone([R]), g, verbose=verbose)
+    solution = propositional_conestrip_solution(GeneralCone([R]), g, verbose=verbose)
+    return is_solved(solution)
 
 
 def is_in_propositional_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
