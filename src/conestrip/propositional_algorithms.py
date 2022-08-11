@@ -10,7 +10,7 @@ from typing import Any, List, Optional, Tuple
 import z3
 
 from conestrip.algorithms import gamble_coefficients
-from conestrip.cones import Gamble, GeneralCone, ConeGenerator, GambleBasis
+from conestrip.cones import Gamble, GambleBasis, GeneralCone, ConeGenerator
 from conestrip.propositional_cones import PropositionalSentence, BooleanVariable, PropositionalBasis, \
     PropositionalGeneralCone, PropositionalConeGenerator, PropositionalGamble
 from conestrip.propositional_conestrip import propositional_conestrip_algorithm
@@ -61,11 +61,11 @@ def convert_gamble(g: Gamble, Phi: GambleBasis) -> PropositionalGamble:
 
 
 def convert_cone_generator(R: ConeGenerator, Phi: GambleBasis) -> PropositionalConeGenerator:
-    return [convert_gamble(g, Phi) for g in R.gambles]
+    return [convert_gamble(g, Phi) for g in R]
 
 
 def convert_general_cone(R: GeneralCone, Phi: GambleBasis) -> PropositionalGeneralCone:
-    return [convert_cone_generator(D, Phi) for D in R.generators]
+    return [convert_cone_generator(D, Phi) for D in R]
 
 
 def print_propositional_gamble(g: PropositionalGamble) -> str:
@@ -104,7 +104,7 @@ def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: L
 
 
 def is_in_propositional_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False, verbose: bool = False) -> Any:
-    solution = propositional_conestrip_solution(GeneralCone([R]), g, verbose=verbose)
+    solution = propositional_conestrip_solution([R], g, verbose=verbose)
     return is_solved(solution)
 
 

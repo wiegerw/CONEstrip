@@ -10,7 +10,7 @@ from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
 import cdd
-from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination
+from conestrip.cones import Gamble, ConvexCombination, linear_combination, GeneralCone
 from conestrip.conestrip import conestrip4_constraints, is_valid_conestrip_input
 
 
@@ -27,9 +27,7 @@ def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int
     n_sigma = 1
     N = n_lambda + n_mu + n_sigma    # the total number of variables
 
-    # G = list(flatten(r.gambles for r in R0.generators))  # a flat list of all the gambles in R0
-    # assert len(G) == n_mu
-    G = [r.gambles for r in R0.generators]
+    G = R0
 
     # Constraints are stored in the format [b -A] for constraints of the type Ax <= b
     # To make this easier we use [b A] for constraints of the type Ax + b >= 0
@@ -110,8 +108,8 @@ def solve_conestrip_cdd(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Ome
     lambda_variables = [f'lambda{d}' for d in range(len(R0))]
     mu_variables = [[f'mu{d}_{i}' for i in range(len(R0[d]))] for d in range(len(R0))]
     sigma = 'sigma'
-    n_lambda = len(R0.generators)
-    n_mu = [len(r.gambles) for r in R0.generators]
+    n_lambda = len(R0)
+    n_mu = [len(r) for r in R0]
 
     less_equal_constraints, equal_constraints, object_function = conestrip_cdd_constraints(R0, f0, Omega_Gamma, Omega_Delta, (lambda_variables, mu_variables, sigma))
     constraints = less_equal_constraints + equal_constraints
@@ -183,4 +181,4 @@ def conestrip_cdd_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], 
         Q = [d for d, lambda_d in enumerate(lambda_) if lambda_d == 0]
         if all(x == 0 for x in collapse(mu[d] for d in Q)):
             return lambda_, mu, sigma
-        R = GeneralCone([R_d for d, R_d in enumerate(R) if d not in Q])
+        R = [R_d for d, R_d in enumerate(R) if d not in Q]

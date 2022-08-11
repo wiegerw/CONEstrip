@@ -10,6 +10,8 @@ from conestrip.polyhedron import Polyhedron
 
 
 Gamble = List[Fraction]
+ConeGenerator = List[Gamble]
+GeneralCone = List[ConeGenerator]
 GambleBasis = List[Gamble]          # a list of gambles that spans the probability space
 ConvexCombination = List[Fraction]  # positive values that sum to one
 
@@ -49,55 +51,13 @@ def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
     return poly
 
 
-class ConeGenerator(object):
-    """
-    A cone generator, defined by a finite set of gambles. Each facet of the generated cone can have links to
-    lower dimensional cones that are contained in this facet.
-    """
-
-    def __init__(self, gambles: List[Gamble]):
-        self.gambles = gambles
-        poly = gambles_to_polyhedron(gambles)
-        self.vertices: List[List[Fraction]] = poly.vertices()  # Note that the vertices may be in a different order than the gambles
-        facets: List[Tuple[int]] = poly.face_vertex_adjacencies()
-        self.facets = [tuple(sorted(facet)) for facet in facets]
-
-        # If self.parent == (R, i), then this generator is contained in the i-th facet of R.
-        self.parent: Optional[Tuple[ConeGenerator, int]] = None
-        self.children: Dict[int, List[ConeGenerator]] = {i: [] for i in range(len(self.facets))}  # maps facets to the generators contained in it
-
-    def __getitem__(self, item):
-        return self.gambles[item]
-
-    def __len__(self):
-        return len(self.gambles)
-
-    def __str__(self):
-        return '\n'.join([print_gamble(g) for g in self.gambles])
-
-
-class GeneralCone(object):
-    def __init__(self, generators: List[ConeGenerator]):
-        self.generators = generators
-
-    def __getitem__(self, item):
-        return self.generators[item]
-
-    def __len__(self):
-        return len(self.generators)
-
-    def __str__(self):
-        return '\n\n'.join([str(cone) for cone in self.generators])
-
-
 def parse_gamble(text: str) -> Gamble:
     return [Fraction(s) for s in text.strip().split()]
 
 
 def parse_cone_generator(text: str) -> ConeGenerator:
-    gambles = list(map(parse_gamble, text.strip().split('\n')))
-    return ConeGenerator(gambles)
+    return list(map(parse_gamble, text.strip().split('\n')))
 
 
 def parse_general_cone(text: str) -> GeneralCone:
-    return GeneralCone(list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip()))))
+    return list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip())))

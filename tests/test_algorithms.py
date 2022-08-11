@@ -56,9 +56,9 @@ class Test(TestCase):
             0 2
             4 0
         ''')
-        self.assertIsNotNone(is_convex_combination(f1, R.gambles))
-        self.assertIsNone(is_convex_combination(f2, R.gambles))
-        self.assertIsNotNone(is_positive_combination(f2, R.gambles))
+        self.assertIsNotNone(is_convex_combination(f1, R))
+        self.assertIsNone(is_convex_combination(f2, R))
+        self.assertIsNotNone(is_positive_combination(f2, R))
 
 
 if __name__ == '__main__':

@@ -364,20 +364,20 @@ def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omeg
             return None, None, None
         if all(x == 0 for x in collapse(mu[d] for d, lambda_d in enumerate(lambda_) if lambda_d == 0)):
             return lambda_, mu, sigma
-        R = GeneralCone([R_d for d, R_d in enumerate(R) if not lambda_[d] == 0])
+        R = [R_d for d, R_d in enumerate(R) if not lambda_[d] == 0]
 
 
 def is_in_cone_generator(R: ConeGenerator, g: Gamble, verbose: bool = False) -> bool:
     n = len(g)
     Omega_Gamma = list(range(n))
     Omega_Delta = list(range(n))
-    cone = GeneralCone([R])
+    cone = [R]
     solution = solve_conestrip1(cone, g, Omega_Gamma, Omega_Delta, verbose=verbose)
     return is_solved(solution)
 
 
 def is_in_closed_cone_generator(R: ConeGenerator, g: Gamble) -> bool:
-    return is_positive_combination(g, R.gambles) is not None
+    return is_positive_combination(g, R) is not None
 
 
 def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
@@ -390,55 +390,6 @@ def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=solve_conestrip4) ->
     Omega_Delta = list(range(n))
     solution = solver(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
     return is_solved(solution)
-
-
-def random_between_point(R1: ConeGenerator, verbose: bool = False) -> Optional[Tuple[Gamble, ConvexCombination]]:
-    """
-    Generates a point that is contained in R1.parent, but not in R1.
-    @precondition R1.parent != None
-    @param R1: A cone generator
-    """
-
-    R0, facet_index = R1.parent
-
-    n = len(R1.gambles[0])
-    Omega_Gamma = list(range(n))
-    Omega_Delta = list(range(n))
-
-    cone0 = GeneralCone([R0])
-    cone1 = GeneralCone([R1])
-
-    # variables
-    f = [Real(f'f{d}') for d in range(n)]
-    lambda0 = [Real(f'lambda0{d}') for d in range(len(cone0))]
-    nu0 = [[Real(f'nu0_{d}_{i}') for i in range(len(cone0[d]))] for d in range(len(cone0))]
-    lambda1 = [Real(f'lambda1{d}') for d in range(len(cone1))]
-    nu1 = [[Real(f'nu1_{d}_{i}') for i in range(len(cone1[d]))] for d in range(len(cone1))]
-
-    # f is inside R0, and not inside R1
-    constraints0 = list(flatten(conestrip1_constraints(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)))
-    lambda_nu_constraints, omega_constraints = conestrip1_constraints(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose)
-    constraint1 = ForAll(lambda1 + list(flatten(nu1)), Implies(And(lambda_nu_constraints), Not(And(omega_constraints))))
-    constraints = constraints0 + [constraint1]
-
-    solver = Solver()
-    solver.add(constraints)
-    if solver.check() == sat:
-        model = solver.model()
-        lambda0_solution = [model.evaluate(lambda0[d]) for d in range(len(cone0))]
-        lambda1_solution = [model.evaluate(lambda1[d]) for d in range(len(cone1))]
-        nu0_solution = [[model.evaluate(nu0[d][i]) for i in range(len(cone0[d]))] for d in range(len(cone0))]
-        nu1_solution = [[model.evaluate(nu1[d][i]) for i in range(len(cone1[d]))] for d in range(len(cone1))]
-        f = [model.evaluate(f[d]) for d in range(len(f))]
-        if verbose:
-            print('--- solution ---')
-            print('lambda0 =', lambda0_solution)
-            print('nu0 =', nu0_solution)
-            print('lambda1 =', lambda1_solution)
-            print('nu1 =', nu1_solution)
-        coefficients = [simplify(x) for x in nu0_solution[0]]
-        return f, coefficients
-    return None
 
 
 def simplified_linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
