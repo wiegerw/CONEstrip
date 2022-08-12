@@ -1,21 +1,26 @@
+#!/usr/bin/env python3
+
 # Copyright 2022 Wieger Wesselink.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 import argparse
 from conestrip.cones import print_gamble, linear_combination
-from conestrip.random_cones import add_random_border_cones, random_border_point, random_inside_point, random_general_cone
-from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, \
-    random_between_point, simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
-    conestrip_algorithm, is_in_closed_cone_generator
+from conestrip.conestrip import is_in_general_cone, \
+    simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
+    conestrip_algorithm
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
+from conestrip.extended_cones import is_in_cone_generator_extended, is_in_general_cone_extended, \
+    is_in_closed_cone_generator_extended, is_in_cone_generator_border_extended
+from conestrip.random_extended_cones import random_general_cone_extended, add_random_border_cones_extended, \
+    random_inside_point_extended, random_border_point_extended, random_between_point_extended
 from conestrip.utility import StopWatch, is_power_of_two
 from conestrip.propositional_algorithms import propositional_conestrip_solution, is_in_propositional_cone_generator
 
 
 def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, border_count):
-    R = random_general_cone(cone_size, gamble_size, generator_size, coordinate_bound)
-    add_random_border_cones(R, border_count, False)
+    R = random_general_cone_extended(cone_size, gamble_size, generator_size, coordinate_bound)
+    add_random_border_cones_extended(R, border_count, False)
 
     print('--- Generated cone ---')
     print(R)
@@ -31,9 +36,9 @@ def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, bor
 
         print('r_parent =\n', r_parent, '\n')
         print('r =\n', r, '\n')
-        x1, lambda1 = random_inside_point(r)
-        x2, lambda2 = random_border_point(r)
-        x3, lambda3 = random_between_point(r)
+        x1, lambda1 = random_inside_point_extended(r)
+        x2, lambda2 = random_border_point_extended(r)
+        x3, lambda3 = random_between_point_extended(r)
         print('x1 =', print_gamble(x1), 'lambda1 =', print_gamble(lambda1))
         print('x2 =', print_gamble(x2), 'lambda2 =', print_gamble(lambda2))
         print('x3 =', print_gamble(x3), 'lambda3 =', print_gamble(lambda3))
@@ -43,60 +48,60 @@ def generate_cones(cone_size, generator_size, gamble_size, coordinate_bound, bor
         assert x3 == simplified_linear_combination(lambda3, r_parent.vertices)
 
         watch = StopWatch()
-        assert is_in_cone_generator(r, x1)
+        assert is_in_cone_generator_extended(r, x1)
         print(f'is_in_cone_generator(r, x1): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert is_in_cone_generator_border(r, x2)
+        assert is_in_cone_generator_border_extended(r, x2)
         print(f'is_in_cone_generator_border(r, x2): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert not is_in_cone_generator(r, x3)
+        assert not is_in_cone_generator_extended(r, x3)
         print(f'not is_in_cone_generator(r, x3): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert not is_in_closed_cone_generator(r, x3)
+        assert not is_in_closed_cone_generator_extended(r, x3)
         print(f'not is_in_closed_cone_generator(r, x3): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert is_in_cone_generator(r_parent, x3)
+        assert is_in_cone_generator_extended(r_parent, x3)
         print(f'is_in_cone_generator(r_parent, x3): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=solve_conestrip1)
+        assert is_in_general_cone_extended(R, x1, solver=solve_conestrip1)
         print(f'is_in_general_cone(R, x1, solver=solve_conestrip1): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=solve_conestrip2)
+        assert is_in_general_cone_extended(R, x1, solver=solve_conestrip2)
         print(f'is_in_general_cone(R, x1, solver=solve_conestrip2): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=solve_conestrip3)
+        assert is_in_general_cone_extended(R, x1, solver=solve_conestrip3)
         print(f'is_in_general_cone(R, x1, solver=solve_conestrip1): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=conestrip_algorithm)
+        assert is_in_general_cone_extended(R, x1, solver=conestrip_algorithm)
         print(f'is_in_general_cone(R, x1, solver=conestrip_algorithm): {watch.seconds():.4f}s')
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm)
+        assert is_in_general_cone_extended(R, x1, solver=conestrip_cdd_algorithm)
         print(f'is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm): {watch.seconds():.4f}s')
 
         if is_power_of_two(gamble_size):
             watch.restart()
-            assert is_in_propositional_cone_generator(r, x1)
+            assert is_in_propositional_cone_generator(r.to_cone_generator(), x1)
             print(f'is_in_propositional_cone_generator(r, x1): {watch.seconds():.4f}s')
 
             watch.restart()
-            assert not is_in_propositional_cone_generator(r, x3)
+            assert not is_in_propositional_cone_generator(r.to_cone_generator(), x3)
             print(f'not is_in_propositional_cone_generator(r, x3): {watch.seconds():.4f}s')
 
             watch.restart()
-            assert is_in_propositional_cone_generator(r_parent, x3)
+            assert is_in_propositional_cone_generator(r_parent.to_cone_generator(), x3)
             print(f'is_in_propositional_cone_generator(r_parent, x3): {watch.seconds():.4f}s')
 
             watch.restart()
-            assert is_in_general_cone(R, x1, solver=propositional_conestrip_solution)
+            assert is_in_general_cone(R.to_general_cone(), x1, solver=propositional_conestrip_solution)
             print(f'is_in_general_cone(R, x1, solver=propositional_conestrip_solution): {watch.seconds():.4f}s')
         print()
 

@@ -8,9 +8,11 @@ from fractions import Fraction
 from unittest import TestCase
 from conestrip.cones import parse_gamble, parse_cone_generator, parse_general_cone, print_gamble, GeneralCone
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
-from conestrip.extended_cones import random_between_point, parse_extended_cone_generator, parse_extended_general_cone
-from conestrip.random_cones import random_cone_generator, add_random_border_cones, random_border_point, \
-    random_inside_point, random_general_cone, random_extended_general_cone, random_extended_cone_generator
+from conestrip.extended_cones import parse_extended_cone_generator, parse_extended_general_cone
+from conestrip.random_cones import random_cone_generator
+from conestrip.random_extended_cones import random_border_point_extended, random_inside_point_extended, \
+    random_cone_generator_extended, random_general_cone_extended, add_random_border_cones_extended, \
+    random_between_point_extended
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
 from conestrip.conestrip import conestrip_algorithm, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
     is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, \
@@ -159,9 +161,9 @@ class Test(TestCase):
           -1 -1  2 
         '''
         R = parse_extended_cone_generator(text)
-        g1, lambda1 = random_border_point(R)
+        g1, lambda1 = random_border_point_extended(R)
         print('g1', g1)
-        g2, lambda2 = random_inside_point(R)
+        g2, lambda2 = random_inside_point_extended(R)
         self.assertFalse(is_in_general_cone([R.to_cone_generator()], g1))
         self.assertTrue(is_in_general_cone([R.to_cone_generator()], g2))
 
@@ -193,8 +195,8 @@ class Test(TestCase):
             generator_size = 3
             bound = 10
             normal = [Fraction(1), Fraction(1), Fraction(1)]
-            R = random_extended_cone_generator(dimension, generator_size, bound, normal)
-            x, lambda_ = random_border_point(R)
+            R = random_cone_generator_extended(dimension, generator_size, bound, normal)
+            x, lambda_ = random_border_point_extended(R)
             print('\nx =', print_gamble(x))
             self.assertTrue(is_in_cone_generator_border(R.to_cone_generator(), x))
 
@@ -203,8 +205,8 @@ class Test(TestCase):
         dimension = 3
         generator_size = 3
         bound = 10
-        R = random_extended_general_cone(cone_size, dimension, generator_size, bound)
-        add_random_border_cones(R, 2, False)
+        R = random_general_cone_extended(cone_size, dimension, generator_size, bound)
+        add_random_border_cones_extended(R, 2, False)
 
         for r in R.generators:
             if not r.parent:
@@ -213,9 +215,9 @@ class Test(TestCase):
 
             print('r_parent =\n', r_parent, '\n')
             print('r =\n', r, '\n')
-            x1, lambda1 = random_inside_point(r)
-            x2, lambda2 = random_border_point(r)
-            x3, lambda3 = random_between_point(r)
+            x1, lambda1 = random_inside_point_extended(r)
+            x2, lambda2 = random_border_point_extended(r)
+            x3, lambda3 = random_between_point_extended(r)
             print('x1 =', print_gamble(x1), 'lambda =', print_gamble(lambda1))
             print('x2 =', print_gamble(x2), 'lambda =', print_gamble(lambda2))
             print('x3 =', print_gamble(x3), 'lambda =', print_gamble(lambda3))

@@ -6,17 +6,16 @@ import re
 from fractions import Fraction
 from typing import Dict, List, Tuple, Optional
 
-from more_itertools.recipes import flatten
-from z3 import Real, Implies, And, Not, ForAll, Solver, sat, simplify
-
-from conestrip.cones import Gamble, gambles_to_polyhedron, print_gamble, parse_gamble, ConvexCombination
-from conestrip.conestrip import conestrip1_constraints
+from conestrip.cones import Gamble, gambles_to_polyhedron, print_gamble, parse_gamble
+from conestrip.conestrip import is_in_cone_generator, is_in_closed_cone_generator, \
+    is_in_cone_generator_border, solve_conestrip4, is_in_general_cone
 
 
 class ExtendedConeGenerator(object):
     """
-    A cone generator, defined by a finite set of gambles. Each facet of the generated cone can have links to
-    lower dimensional cones that are contained in this facet.
+    A cone generator, enhanced with some additional structure.
+    If parent is defined, then this cone generator is inside the border of the parent.
+    Similarly, the children of this cone generator are contained inside the border of this cone generator.
     """
 
     def __init__(self, gambles: List[Gamble]):
@@ -69,50 +68,17 @@ def parse_extended_general_cone(text: str) -> ExtendedGeneralCone:
     return ExtendedGeneralCone(list(map(parse_extended_cone_generator, re.split(r'\n\s*\n', text.strip()))))
 
 
-def random_between_point(R1: ExtendedConeGenerator, verbose: bool = False) -> Optional[Tuple[Gamble, ConvexCombination]]:
-    """
-    Generates a point that is contained in R1.parent, but not in R1.
-    @precondition R1.parent != None
-    @param R1: A cone generator
-    """
+def is_in_cone_generator_extended(R: ExtendedConeGenerator, g: Gamble, verbose: bool = False) -> bool:
+    return is_in_cone_generator(R.to_cone_generator(), g, verbose)
 
-    R0, facet_index = R1.parent
 
-    n = len(R1.gambles[0])
-    Omega_Gamma = list(range(n))
-    Omega_Delta = list(range(n))
+def is_in_closed_cone_generator_extended(R: ExtendedConeGenerator, g: Gamble) -> bool:
+    return is_in_closed_cone_generator(R.to_cone_generator(), g)
 
-    cone0 = [R0.to_cone_generator()]
-    cone1 = [R1.to_cone_generator()]
 
-    # variables
-    f = [Real(f'f{d}') for d in range(n)]
-    lambda0 = [Real(f'lambda0{d}') for d in range(len(cone0))]
-    nu0 = [[Real(f'nu0_{d}_{i}') for i in range(len(cone0[d]))] for d in range(len(cone0))]
-    lambda1 = [Real(f'lambda1{d}') for d in range(len(cone1))]
-    nu1 = [[Real(f'nu1_{d}_{i}') for i in range(len(cone1[d]))] for d in range(len(cone1))]
+def is_in_cone_generator_border_extended(R: ExtendedConeGenerator, g: Gamble) -> bool:
+    return is_in_cone_generator_border(R.to_cone_generator(), g)
 
-    # f is inside R0, and not inside R1
-    constraints0 = list(flatten(conestrip1_constraints(cone0, f, Omega_Gamma, Omega_Delta, (lambda0, nu0), verbose)))
-    lambda_nu_constraints, omega_constraints = conestrip1_constraints(cone1, f, Omega_Gamma, Omega_Delta, (lambda1, nu1), verbose)
-    constraint1 = ForAll(lambda1 + list(flatten(nu1)), Implies(And(lambda_nu_constraints), Not(And(omega_constraints))))
-    constraints = constraints0 + [constraint1]
 
-    solver = Solver()
-    solver.add(constraints)
-    if solver.check() == sat:
-        model = solver.model()
-        lambda0_solution = [model.evaluate(lambda0[d]) for d in range(len(cone0))]
-        lambda1_solution = [model.evaluate(lambda1[d]) for d in range(len(cone1))]
-        nu0_solution = [[model.evaluate(nu0[d][i]) for i in range(len(cone0[d]))] for d in range(len(cone0))]
-        nu1_solution = [[model.evaluate(nu1[d][i]) for i in range(len(cone1[d]))] for d in range(len(cone1))]
-        f = [model.evaluate(f[d]) for d in range(len(f))]
-        if verbose:
-            print('--- solution ---')
-            print('lambda0 =', lambda0_solution)
-            print('nu0 =', nu0_solution)
-            print('lambda1 =', lambda1_solution)
-            print('nu1 =', nu1_solution)
-        coefficients = [simplify(x) for x in nu0_solution[0]]
-        return f, coefficients
-    return None
+def is_in_general_cone_extended(cone: ExtendedGeneralCone, g: Gamble, solver=solve_conestrip4) -> bool:
+    return is_in_general_cone(cone.to_general_cone(), g, solver)

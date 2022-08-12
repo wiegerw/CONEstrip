@@ -380,7 +380,7 @@ def is_in_closed_cone_generator(R: ConeGenerator, g: Gamble) -> bool:
     return is_positive_combination(g, R) is not None
 
 
-def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
+def is_in_cone_generator_border(R: ConeGenerator, g: Gamble) -> bool:
     return not is_in_cone_generator(R, g) and is_in_closed_cone_generator(R, g)
 
 

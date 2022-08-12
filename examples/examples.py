@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright 2022 Wieger Wesselink.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
@@ -144,8 +146,8 @@ def example_sure_loss():
       -2 1 1
       1 -4 1
     ''')
-    result1 = avoids_sure_loss(generator.gambles, verbose=True)
-    result2 = avoids_sure_loss_with_slack(generator.gambles, verbose=True)
+    result1 = avoids_sure_loss(generator, verbose=True)
+    result2 = avoids_sure_loss_with_slack(generator, verbose=True)
     print(result1, result2)
 
 
@@ -156,14 +158,15 @@ def example_prevision():
       0 1
     ''')
     f = parse_gamble('2 5')
-    alpha1 = calculate_lower_prevision(generator.gambles, f, verbose=True)
-    alpha2 = calculate_lower_prevision_with_slack(generator.gambles, f, verbose=True)
+    alpha1 = calculate_lower_prevision(generator, f, verbose=True)
+    alpha2 = calculate_lower_prevision_with_slack(generator, f, verbose=True)
     print(alpha1, alpha2)
 
 
-example1()
-example2()
-example3()
-example_conestrip1()
-example_conestrip2()
-example_sure_loss()
+if __name__ == '__main__':
+    example1()
+    example2()
+    example3()
+    example_conestrip1()
+    example_conestrip2()
+    example_sure_loss()

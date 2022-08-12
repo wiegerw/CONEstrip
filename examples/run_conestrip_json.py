@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright 2022 Wieger Wesselink.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
@@ -7,12 +9,14 @@ import json
 
 from pathlib import Path
 
-from conestrip.cones import print_gamble, linear_combination, parse_general_cone, parse_gamble
-from conestrip.random_cones import add_random_border_cones, random_border_point, random_inside_point, random_general_cone
-from conestrip.conestrip import is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, \
-    random_between_point, simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
-    conestrip_algorithm, is_in_closed_cone_generator
+from conestrip.cones import print_gamble, linear_combination, parse_gamble
+from conestrip.extended_cones import parse_extended_general_cone, is_in_cone_generator_extended, \
+    is_in_cone_generator_border_extended, is_in_closed_cone_generator_extended, is_in_general_cone_extended
+from conestrip.conestrip import simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
+    conestrip_algorithm
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
+from conestrip.random_extended_cones import random_general_cone_extended, add_random_border_cones_extended, \
+    random_inside_point_extended, random_border_point_extended, random_between_point_extended
 from conestrip.utility import StopWatch
 
 
@@ -28,7 +32,7 @@ def print_experiment(data):
     print(f"coordinate-bound: {coordinate_bound}")
     print(f"border-count: {border_count}")
 
-    cone = parse_general_cone(data["extended-cone"])
+    cone = parse_extended_general_cone(data["extended-cone"])
 
     experiments = data["experiments"]
     for experiment in experiments:
@@ -63,8 +67,8 @@ def run_experiment(cone_size, generator_size, gamble_size, coordinate_bound, bor
         "border-count": border_count
     }
 
-    R = random_general_cone(cone_size, gamble_size, generator_size, coordinate_bound)
-    add_random_border_cones(R, border_count, False)
+    R = random_general_cone_extended(cone_size, gamble_size, generator_size, coordinate_bound)
+    add_random_border_cones_extended(R, border_count, False)
     data["extended-cone"] = str(R)
 
     experiments = []
@@ -80,9 +84,9 @@ def run_experiment(cone_size, generator_size, gamble_size, coordinate_bound, bor
         experiment["parent-index"] = r_parent_index
         experiment["parent-facet-index"] = facet_index
 
-        x1, lambda1 = random_inside_point(r)
-        x2, lambda2 = random_border_point(r)
-        x3, lambda3 = random_between_point(r)
+        x1, lambda1 = random_inside_point_extended(r)
+        x2, lambda2 = random_border_point_extended(r)
+        x3, lambda3 = random_between_point_extended(r)
 
         experiment["x1"] = print_gamble(x1)  # N.B. json does not support writing decimals
         experiment["x2"] = print_gamble(x2)
@@ -98,43 +102,43 @@ def run_experiment(cone_size, generator_size, gamble_size, coordinate_bound, bor
         timings = []
 
         watch = StopWatch()
-        assert is_in_cone_generator(r, x1)
+        assert is_in_cone_generator_extended(r, x1)
         timings.append(('is_in_cone_generator(r, x1)', watch.seconds()))
 
         watch.restart()
-        assert is_in_cone_generator_border(r, x2)
+        assert is_in_cone_generator_border_extended(r, x2)
         timings.append(('is_in_cone_generator_border(r, x2)', watch.seconds()))
 
         watch.restart()
-        assert not is_in_cone_generator(r, x3)
+        assert not is_in_cone_generator_extended(r, x3)
         timings.append(('is_in_cone_generator(r, x3)', watch.seconds()))
 
         watch.restart()
-        assert not is_in_closed_cone_generator(r, x3)
+        assert not is_in_closed_cone_generator_extended(r, x3)
         timings.append(('not is_in_closed_cone_generator(r, x3)', watch.seconds()))
 
         watch.restart()
-        assert is_in_cone_generator(r_parent, x3)
+        assert is_in_cone_generator_extended(r_parent, x3)
         timings.append(('is_in_cone_generator(r_parent, x3)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=solve_conestrip1)
+        assert is_in_general_cone_extended(R, x1, solver=solve_conestrip1)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip1_solution)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=solve_conestrip2)
+        assert is_in_general_cone_extended(R, x1, solver=solve_conestrip2)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip2_solution)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=solve_conestrip3)
+        assert is_in_general_cone_extended(R, x1, solver=solve_conestrip3)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip1_solution)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=conestrip_algorithm)
+        assert is_in_general_cone_extended(R, x1, solver=conestrip_algorithm)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip_algorithm)', watch.seconds()))
 
         watch.restart()
-        assert is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm)
+        assert is_in_general_cone_extended(R, x1, solver=conestrip_cdd_algorithm)
         timings.append(('is_in_general_cone(R, x1, solver=conestrip_cdd_algorithm)', watch.seconds()))
 
         experiment['timings'] = timings
