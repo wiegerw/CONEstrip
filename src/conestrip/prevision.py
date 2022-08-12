@@ -2,14 +2,13 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
-from typing import Optional
 from z3 import *
 from conestrip.cones import *
 from conestrip.utility import product, sum_rows
 
 
 def calculate_lower_prevision(g0: List[Gamble], f0: Gamble, verbose: bool = False) -> Optional[float]:
-    assert(g0)
+    assert g0
     m = len(g0)
     n = len(g0[0])
 
@@ -49,7 +48,7 @@ def calculate_lower_prevision(g0: List[Gamble], f0: Gamble, verbose: bool = Fals
 
 
 def calculate_lower_prevision_with_slack(g0: List[Gamble], f0: Gamble, verbose: bool = False) -> Optional[float]:
-    assert(g0)
+    assert g0
     m = len(g0)
     n = len(g0[0])
 

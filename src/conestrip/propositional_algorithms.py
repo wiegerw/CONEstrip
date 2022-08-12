@@ -103,11 +103,6 @@ def propositional_conestrip_solution(R0: GeneralCone, f0: Gamble, Omega_Gamma: L
     return propositional_conestrip_algorithm(R1, f1, B, Phi, psi, psi_Gamma, psi_Delta, verbose)
 
 
-def is_in_propositional_cone_generator(R: ConeGenerator, g: Gamble, with_border: bool = False, verbose: bool = False) -> Any:
+def is_in_propositional_cone_generator(R: ConeGenerator, g: Gamble, verbose: bool = False) -> Any:
     solution = propositional_conestrip_solution([R], g, verbose=verbose)
     return is_solved(solution)
-
-
-def is_in_propositional_cone_generator_border(R: ConeGenerator, g: Gamble) -> Any:
-    return not is_in_propositional_cone_generator(R, g) and is_in_propositional_cone_generator(R, g, with_border=True)
-

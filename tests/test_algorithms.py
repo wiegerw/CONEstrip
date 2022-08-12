@@ -8,12 +8,11 @@ import itertools
 from fractions import Fraction
 from unittest import TestCase
 import z3
-from conestrip.cones import parse_gamble, parse_general_cone, print_gambles, parse_cone_generator
+from conestrip.cones import parse_gamble, parse_cone_generator
 from conestrip.algorithms import gamble_coefficients, is_convex_combination, is_positive_combination
-from conestrip.propositional_conestrip import propositional_conestrip_algorithm
 from conestrip.propositional_sentence_parser import parse_propositional_sentence
 from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble, default_basis, \
-    default_propositional_basis, convert_general_cone, convert_gamble
+    default_propositional_basis
 
 
 class Test(TestCase):

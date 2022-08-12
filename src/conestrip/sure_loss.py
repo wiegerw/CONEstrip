@@ -8,7 +8,7 @@ from conestrip.utility import product, sum_rows
 
 
 def avoids_sure_loss(g0: List[Gamble], verbose: bool = False) -> bool:
-    assert(g0)
+    assert g0
     m = len(g0)
     n = len(g0[0])
 
@@ -44,7 +44,7 @@ def avoids_sure_loss(g0: List[Gamble], verbose: bool = False) -> bool:
 
 
 def avoids_sure_loss_with_slack(g0: List[Gamble], verbose: bool = False) -> bool:
-    assert(g0)
+    assert g0
     m = len(g0)
     n = len(g0[0])
 
