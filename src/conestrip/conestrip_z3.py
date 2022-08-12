@@ -7,8 +7,8 @@ from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
 
-from conestrip.algorithms import is_positive_combination
-from conestrip.cones import GeneralCone, Gamble, ConeGenerator, ConvexCombination, linear_combination
+from conestrip.gamble_algorithms import is_positive_combination
+from conestrip.cones import GeneralCone, Gamble, ConeGenerator
 from conestrip.utility import product, sum_rows, is_solved
 
 
@@ -356,6 +356,7 @@ def conestrip_algorithm(R: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omeg
     @param f0:
     @param Omega_Gamma:
     @param Omega_Delta:
+    @param verbose:
     @return: A solution (lambda, mu, sigma) to the CONEstrip optimization problem (4), or None if no solution exists
     """
     while True:
@@ -390,8 +391,3 @@ def is_in_general_cone(cone: GeneralCone, g: Gamble, solver=solve_conestrip4) ->
     Omega_Delta = list(range(n))
     solution = solver(cone, g, Omega_Gamma, Omega_Delta, verbose=False)
     return is_solved(solution)
-
-
-def simplified_linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
-    result = linear_combination(lambda_, gambles)
-    return [simplify(x) for x in result]

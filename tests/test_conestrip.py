@@ -14,7 +14,7 @@ from conestrip.random_extended_cones import random_border_point_extended, random
     random_cone_generator_extended, random_general_cone_extended, add_random_border_cones_extended, \
     random_between_point_extended
 from conestrip.utility import remove_spaces, random_nonzero_rationals_summing_to_one
-from conestrip.conestrip import conestrip_algorithm, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
+from conestrip.conestrip_z3 import conestrip_algorithm, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
     is_in_general_cone, is_in_cone_generator, is_in_cone_generator_border, \
     is_in_closed_cone_generator, is_solved
 

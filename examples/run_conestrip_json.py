@@ -12,9 +12,10 @@ from pathlib import Path
 from conestrip.cones import print_gamble, linear_combination, parse_gamble
 from conestrip.extended_cones import parse_extended_general_cone, is_in_cone_generator_extended, \
     is_in_cone_generator_border_extended, is_in_closed_cone_generator_extended, is_in_general_cone_extended
-from conestrip.conestrip import simplified_linear_combination, solve_conestrip1, solve_conestrip2, solve_conestrip3, \
+from conestrip.conestrip_z3 import solve_conestrip1, solve_conestrip2, solve_conestrip3, \
     conestrip_algorithm
 from conestrip.conestrip_cdd import conestrip_cdd_algorithm
+from conestrip.gamble_algorithms import simplified_linear_combination
 from conestrip.random_extended_cones import random_general_cone_extended, add_random_border_cones_extended, \
     random_inside_point_extended, random_border_point_extended, random_between_point_extended
 from conestrip.utility import StopWatch

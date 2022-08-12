@@ -5,11 +5,11 @@
 import itertools
 import math
 from fractions import Fraction
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Tuple
 
 import z3
 
-from conestrip.algorithms import gamble_coefficients
+from conestrip.gamble_algorithms import gamble_coefficients
 from conestrip.cones import Gamble, GambleBasis, GeneralCone, ConeGenerator
 from conestrip.propositional_cones import PropositionalSentence, BooleanVariable, PropositionalBasis, \
     PropositionalGeneralCone, PropositionalConeGenerator, PropositionalGamble

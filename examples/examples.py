@@ -7,7 +7,7 @@
 import inspect
 import cdd
 from conestrip.cones import parse_general_cone, parse_gamble, parse_cone_generator
-from conestrip.conestrip import solve_conestrip1, solve_conestrip2, solve_conestrip3, conestrip_algorithm
+from conestrip.conestrip_z3 import solve_conestrip1, solve_conestrip2, solve_conestrip3, conestrip_algorithm
 from conestrip.polyhedron import Polyhedron
 from conestrip.prevision import calculate_lower_prevision, calculate_lower_prevision_with_slack
 from conestrip.sure_loss import avoids_sure_loss, avoids_sure_loss_with_slack

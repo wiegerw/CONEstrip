@@ -6,7 +6,7 @@
 
 from unittest import TestCase
 from conestrip.cones import parse_general_cone, parse_gamble, GeneralCone
-from conestrip.conestrip import solve_conestrip1, solve_conestrip2, solve_conestrip3, is_solved
+from conestrip.conestrip_z3 import solve_conestrip1, solve_conestrip2, solve_conestrip3, is_solved
 from conestrip.conestrip_cdd import solve_conestrip_cdd
 
 

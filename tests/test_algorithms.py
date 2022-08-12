@@ -9,7 +9,7 @@ from fractions import Fraction
 from unittest import TestCase
 import z3
 from conestrip.cones import parse_gamble, parse_cone_generator
-from conestrip.algorithms import gamble_coefficients, is_convex_combination, is_positive_combination
+from conestrip.gamble_algorithms import gamble_coefficients, is_convex_combination, is_positive_combination
 from conestrip.propositional_sentence_parser import parse_propositional_sentence
 from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble, default_basis, \
     default_propositional_basis

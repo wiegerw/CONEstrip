@@ -7,7 +7,7 @@ from fractions import Fraction
 from typing import Dict, List, Tuple, Optional
 
 from conestrip.cones import Gamble, gambles_to_polyhedron, print_gamble, parse_gamble
-from conestrip.conestrip import is_in_cone_generator, is_in_closed_cone_generator, \
+from conestrip.conestrip_z3 import is_in_cone_generator, is_in_closed_cone_generator, \
     is_in_cone_generator_border, solve_conestrip4, is_in_general_cone
 
 

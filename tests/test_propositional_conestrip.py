@@ -6,7 +6,7 @@
 
 from unittest import TestCase
 from conestrip.cones import parse_gamble, parse_general_cone, print_gambles, parse_cone_generator
-from conestrip.conestrip import is_in_cone_generator
+from conestrip.conestrip_z3 import is_in_cone_generator
 from conestrip.propositional_conestrip import propositional_conestrip_algorithm
 from conestrip.propositional_algorithms import gamble_to_sentence, sentence_to_gamble, \
     default_propositional_basis, convert_general_cone, convert_gamble, is_in_propositional_cone_generator

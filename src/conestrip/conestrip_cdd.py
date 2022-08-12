@@ -3,15 +3,13 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 
-import re
-from collections import defaultdict
-from typing import Any, List, Optional, Set, Tuple
+from typing import Any, List, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
 import cdd
-from conestrip.cones import Gamble, ConvexCombination, linear_combination, GeneralCone
-from conestrip.conestrip import conestrip4_constraints, is_valid_conestrip_input
+from conestrip.cones import Gamble, GeneralCone
+from conestrip.conestrip_z3 import is_valid_conestrip_input
 
 
 def conestrip_cdd_constraints(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Omega_Delta: List[int], variables: Tuple[Any, Any, Any]):
@@ -146,7 +144,6 @@ def solve_conestrip_cdd(R0: GeneralCone, f0: Gamble, Omega_Gamma: List[int], Ome
         print(f'optimizer.maximize(goal)')
         print('print(optimizer.check() == sat)')
         print('------------------------------------------------------------')
-
 
     lp = cdd.LinProg(mat)
     lp.solve()

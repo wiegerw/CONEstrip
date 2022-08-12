@@ -5,7 +5,9 @@
 from fractions import Fraction
 from typing import Any, List, Optional
 import z3
-from conestrip.cones import Gamble, GambleBasis
+from z3 import simplify
+
+from conestrip.cones import Gamble, GambleBasis, ConvexCombination, linear_combination
 
 
 def gamble_coefficients(g: Gamble, Phi: GambleBasis) -> List[Fraction]:
@@ -77,3 +79,8 @@ def is_positive_combination(f: Gamble, G: List[Gamble]) -> Optional[List[Any]]:
         return None
     model = solver.model()
     return [model[x] for x in lambda_]
+
+
+def simplified_linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gamble:
+    result = linear_combination(lambda_, gambles)
+    return [simplify(x) for x in result]

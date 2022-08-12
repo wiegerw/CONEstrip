@@ -12,7 +12,7 @@ from more_itertools import flatten
 from z3 import Real, ForAll, Implies, And, Not, Solver, sat, simplify
 
 from conestrip.cones import Gamble, ConvexCombination
-from conestrip.conestrip import conestrip1_constraints
+from conestrip.conestrip_z3 import conestrip1_constraints
 from conestrip.extended_cones import ExtendedConeGenerator, ExtendedGeneralCone
 from conestrip.random_cones import remove_redundant_vertices, random_cone_generator, random_inside_point
 
