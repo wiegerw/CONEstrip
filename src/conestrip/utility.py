@@ -84,4 +84,4 @@ def is_power_of_two(n):
 
 
 def is_solved(solution):
-    return not None in solution
+    return None not in solution

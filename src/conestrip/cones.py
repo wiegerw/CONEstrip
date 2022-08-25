@@ -4,7 +4,7 @@
 
 import re
 from fractions import Fraction
-from typing import Dict, List, Tuple, Optional
+from typing import List
 import cdd
 from conestrip.polyhedron import Polyhedron
 
