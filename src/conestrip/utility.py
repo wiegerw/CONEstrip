@@ -37,9 +37,9 @@ def random_floats_summing_to_one(n: int) -> List[float]:
     return [x / s for x in values]
 
 
-def random_rationals_summing_to_one(n: int) -> List[Fraction]:
+def random_rationals_summing_to_one(n: int, N=1000) -> List[Fraction]:
     values = random_floats_summing_to_one(n)
-    v = [int(round(1000*x)) / 1000 for x in values]
+    v = [int(round(N * x)) / N for x in values]
     v = v[:-1]
     v.append(1 - sum(v))
     return [Fraction(vi) for vi in v]

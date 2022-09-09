@@ -8,12 +8,15 @@ from more_itertools.recipes import flatten
 from z3 import *
 
 from conestrip.cones import GeneralCone, Gamble
-from conestrip.utility import product, sum_rows
+from conestrip.utility import product, sum_rows, random_rationals_summing_to_one
 
+AtomicEvent = int
+Event = List[AtomicEvent]
+PossibilitySpace = List[AtomicEvent]
 
-LowerPrevision = List[Gamble]
-EventSet = List[int]
-ConditionalLowerPrevision = List[Tuple[Gamble, EventSet]]
+MassFunction = List[Fraction]
+LowerPrevisionFunction = List[Tuple[Gamble, Fraction]]
+ConditionalLowerPrevisionFunction = List[Tuple[Gamble, Event]]
 
 
 def make_one_omega(i: int, N: int) -> Gamble:
@@ -34,11 +37,11 @@ def make_zero(N: int) -> Gamble:
     return [Fraction(0)] * N
 
 
-def make_one(B: EventSet, N: int) -> Gamble:
+def make_one(B: Event, N: int) -> Gamble:
     return [Fraction(i in B) for i in range(N)]
 
 
-def make_minus_one(B: EventSet, N: int) -> Gamble:
+def make_minus_one(B: Event, N: int) -> Gamble:
     return [-Fraction(i in B) for i in range(N)]
 
 
@@ -46,7 +49,22 @@ def is_unit_gamble(g: Gamble) -> bool:
     return g.count(Fraction(1)) == 1 and g.count(Fraction(0)) == len(g) - 1
 
 
-def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]], Omega: EventSet, variables: Tuple[Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
+def generate_mass_function(Omega: PossibilitySpace) -> MassFunction:
+    N = len(Omega)
+    return random_rationals_summing_to_one(N)
+
+
+def lower_prevision_set_A(p: MassFunction, K: List[Gamble], Omega: PossibilitySpace) -> List[Gamble]:
+    def dot(f: Gamble, g: Gamble) -> Fraction:
+        return sum(x * y for (x, y) in zip(f, g))
+
+    def minus(f: Gamble, c: Fraction) -> Gamble:
+        return [f_i - c for f_i in f]
+
+    return [minus(h, dot(p, h)) for h in K]
+
+
+def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]], Omega: PossibilitySpace, variables: Tuple[Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, nu = variables
 
@@ -136,8 +154,23 @@ def optimize_maximize(R: GeneralCone, f: Gamble, a: Any, B: List[Tuple[Any, Any]
         return None, None
 
 
-def incurs_sure_loss(P: LowerPrevision, A: List[Gamble]) -> bool:
-    N = len(P)
+def minus_constant(f: Gamble, c: Fraction) -> Gamble:
+    return [x - c for x in f]
+
+
+def lower_prevision_set(P: LowerPrevisionFunction):
+    return [minus_constant(h, c) for (h, c) in P]
+
+
+def incurs_sure_loss(R: GeneralCone, Omega: PossibilitySpace) -> bool:
+    N = len(Omega)
+    zero = make_zero(N)
+    lambda_, mu = optimize_find(R, zero, [], Omega)
+    return lambda_ is not None
+
+
+def incurs_sure_loss1(A: List[Gamble], Omega: PossibilitySpace) -> bool:
+    N = len(Omega)
     Omega = list(range(N))
     zero = make_zero(N)
     D = [make_one_omega(i, N) for i in range(N)] + [a for a in A if not a == zero and not is_unit_gamble(a)]
@@ -147,8 +180,8 @@ def incurs_sure_loss(P: LowerPrevision, A: List[Gamble]) -> bool:
     return lambda_ is not None
 
 
-def is_unconditional_natural_extension(P: LowerPrevision, A: List[Gamble]) -> bool:
-    N = len(P)
+def is_unconditional_natural_extension1(A: List[Gamble], Omega: PossibilitySpace) -> bool:
+    N = len(Omega)
     Omega = list(range(N))
     zero = make_zero(N)
     one_Omega = make_one_Omega(N)
@@ -172,7 +205,7 @@ def is_unconditional_natural_extension(P: LowerPrevision, A: List[Gamble]) -> bo
     return lambda_ is not None
 
 
-def incurs_partial_loss(Q: ConditionalLowerPrevision, B_: List[Tuple[Gamble, List[int]]], C: EventSet) -> bool:
+def incurs_partial_loss1(Q: ConditionalLowerPrevisionFunction, B_: List[Tuple[Gamble, List[int]]], C: Event) -> bool:
     N = len(Q)
     Omega = list(range(N))
     zero = make_zero(N)
@@ -185,7 +218,7 @@ def incurs_partial_loss(Q: ConditionalLowerPrevision, B_: List[Tuple[Gamble, Lis
     return lambda_ is not None
 
 
-def is_conditional_natural_extension(Q: ConditionalLowerPrevision, B_: List[Tuple[Gamble, List[int]]], C: EventSet) -> bool:
+def is_conditional_natural_extension1(Q: ConditionalLowerPrevisionFunction, B_: List[Tuple[Gamble, List[int]]], C: Event) -> bool:
     N = len(Q)
     Omega = list(range(N))
     zero = make_zero(N)
