@@ -54,6 +54,10 @@ def generate_mass_function(Omega: PossibilitySpace) -> MassFunction:
     return random_rationals_summing_to_one(N)
 
 
+def is_mass_function(p: MassFunction) -> Bool:
+    return all(x >= 0 for x in p) and sum(p) == 1
+
+
 def lower_prevision_set_A(p: MassFunction, K: List[Gamble], Omega: PossibilitySpace) -> List[Gamble]:
     def dot(f: Gamble, g: Gamble) -> Fraction:
         return sum(x * y for (x, y) in zip(f, g))
@@ -178,20 +182,26 @@ def lower_prevision_assessment(P: LowerPrevisionFunction):
     return [minus_constant(h, c) for (h, c) in P]
 
 
-def incurs_sure_loss(R: GeneralCone, Omega: PossibilitySpace) -> bool:
+def sure_loss_cone(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> GeneralCone:
+    N = len(Omega)
+    zero = make_zero(N)
+    A = lower_prevision_assessment(P)
+    D = [make_one_omega(i, N) for i in range(N)] + [a for a in A if not a == zero and not is_unit_gamble(a)]
+    R = [D]
+    return R
+
+
+def incurs_sure_loss1(R: GeneralCone, Omega: PossibilitySpace) -> bool:
     N = len(Omega)
     zero = make_zero(N)
     lambda_, mu = optimize_find(R, zero, [], Omega)
     return lambda_ is not None
 
 
-def incurs_sure_loss1(A: List[Gamble], Omega: PossibilitySpace) -> bool:
+def incurs_sure_loss2(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
     N = len(Omega)
-    Omega = list(range(N))
     zero = make_zero(N)
-    D = [make_one_omega(i, N) for i in range(N)] + [a for a in A if not a == zero and not is_unit_gamble(a)]
-    R = [D]
-
+    R = sure_loss_cone(P, Omega)
     lambda_, mu = optimize_find(R, zero, [], Omega)
     return lambda_ is not None
 
