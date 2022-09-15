@@ -2,7 +2,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
@@ -158,7 +158,23 @@ def minus_constant(f: Gamble, c: Fraction) -> Gamble:
     return [x - c for x in f]
 
 
-def lower_prevision_set(P: LowerPrevisionFunction):
+def make_lower_prevision_function1(p: MassFunction, K: List[Gamble]) -> LowerPrevisionFunction:
+    def value(f: Gamble) -> Fraction:
+        assert len(f) == len(p)
+        return sum(p_i * f_i for (p_i, f_i) in zip(p, f))
+
+    return [(f, value(f)) for f in K]
+
+
+def make_lower_prevision_function2(p: MassFunction, K: List[Gamble], epsilon: Fraction) -> LowerPrevisionFunction:
+    def value(f: Gamble) -> Fraction:
+        assert len(f) == len(p)
+        return (1 - epsilon) * sum(p_i * f_i for (p_i, f_i) in zip(p, f)) + epsilon * min(f)
+
+    return [(f, value(f)) for f in K]
+
+
+def lower_prevision_assessment(P: LowerPrevisionFunction):
     return [minus_constant(h, c) for (h, c) in P]
 
 
