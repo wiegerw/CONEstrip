@@ -13,7 +13,6 @@ from conestrip.utility import product, sum_rows, random_rationals_summing_to_one
 AtomicEvent = int
 Event = List[AtomicEvent]
 PossibilitySpace = List[AtomicEvent]
-
 MassFunction = List[Fraction]
 LowerPrevisionFunction = List[Tuple[Gamble, Fraction]]
 LowerPrevisionAssessment = List[Gamble]
@@ -136,13 +135,13 @@ def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: Li
         return None, None
 
 
-def optimize_maximize_full(R: GeneralCone, f: Gamble, a: Any, B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
+def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
     # variables
     lambda_ = [Real(f'lambda{d}') for d in range(len(R))]
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
 
     constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu), verbose)))
-    goal = None  # TODO
+    goal = sum(lambda_[d] * sum(nu[d][g] * a[d][g]) for d in range(len(nu)) for g in range(len(nu[d])))
     optimizer = Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
@@ -161,12 +160,12 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: Any, B: List[Tuple[Any,
         return None, None, Fraction(0)
 
 
-def optimize_maximize(R: GeneralCone, f: Gamble, a: Any, B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
+def optimize_maximize(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
     lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega, verbose)
     return lambda_, nu
 
 
-def optimize_maximize_value(R: GeneralCone, f: Gamble, a: Any, B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
+def optimize_maximize_value(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
     lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega, verbose)
     return goal
 
@@ -230,17 +229,17 @@ def natural_extension_cone(A: LowerPrevisionAssessment, Omega: PossibilitySpace)
     return R
 
 
-def natural_extension_objective(R: GeneralCone, Omega: PossibilitySpace):
+def natural_extension_objective(R: GeneralCone, Omega: PossibilitySpace) -> List[List[Fraction]]:
     N = len(Omega)
     one_Omega = make_one_Omega(N)
     minus_one_Omega = make_minus_one_Omega(N)
 
     def a_value(D, g):
         if D == [one_Omega] and g == one_Omega:
-            return 1
+            return Fraction(1)
         elif D == [minus_one_Omega] and g == minus_one_Omega:
-            return -1
-        return 0
+            return Fraction(-1)
+        return Fraction(0)
 
     a = [[a_value(D, g) for g in D] for D in R]
 
