@@ -16,7 +16,9 @@ PossibilitySpace = List[AtomicEvent]
 
 MassFunction = List[Fraction]
 LowerPrevisionFunction = List[Tuple[Gamble, Fraction]]
-ConditionalLowerPrevisionFunction = List[Tuple[Gamble, Event]]
+LowerPrevisionAssessment = List[Gamble]
+ConditionalLowerPrevisionFunction = List[Tuple[Gamble, Event, Fraction]]
+ConditionalLowerPrevisionAssessment = List[Tuple[Gamble, Event]]
 
 
 def make_one_omega(i: int, N: int) -> Gamble:
@@ -189,17 +191,19 @@ def make_lower_prevision_function2(p: MassFunction, K: List[Gamble], epsilon: Fr
     return [(f, value(f)) for f in K]
 
 
-def lower_prevision_assessment(P: LowerPrevisionFunction) -> List[Gamble]:
+def lower_prevision_assessment(P: LowerPrevisionFunction) -> LowerPrevisionAssessment:
     return [minus_constant(h, c) for (h, c) in P]
 
 
-def conditional_lower_prevision_assessment(P: ConditionalLowerPrevisionFunction):
-    # P: List[Tuple[Gamble, Event]]
-    # TODO
-    pass
+def conditional_lower_prevision_assessment(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace) -> ConditionalLowerPrevisionAssessment:
+    def hadamard(f: Gamble, g: Gamble) -> Gamble:
+        return [x * y for (x, y) in zip(f, g)]
+
+    N = len(Omega)
+    return [(hadamard(minus_constant(h, c), make_one(B, N)), B) for (h, B, c) in P]
 
 
-def sure_loss_cone(A: List[Gamble], Omega: PossibilitySpace) -> GeneralCone:
+def sure_loss_cone(A: LowerPrevisionAssessment, Omega: PossibilitySpace) -> GeneralCone:
     N = len(Omega)
     zero = make_zero(N)
     D = [make_one_omega(i, N) for i in range(N)] + [a for a in A if not a == zero and not is_unit_gamble(a)]
@@ -207,12 +211,17 @@ def sure_loss_cone(A: List[Gamble], Omega: PossibilitySpace) -> GeneralCone:
     return R
 
 
-def partial_loss_cone(B: List[Any], Omega: PossibilitySpace) -> GeneralCone:
-    # TODO
-    pass
+def partial_loss_cone(B: ConditionalLowerPrevisionAssessment, Omega: PossibilitySpace) -> GeneralCone:
+    N = len(Omega)
+    zero = make_zero(N)
+
+    R1 = [[g, make_one(B1, N)] for (g, B1) in B if g != zero]
+    R2 = [[make_one_omega(i, N) for i in range(N)]]
+    R = R1 + R2  # TODO: remove duplicates
+    return R
 
 
-def natural_extension_cone(A: List[Gamble], Omega: PossibilitySpace) -> GeneralCone:
+def natural_extension_cone(A: LowerPrevisionAssessment, Omega: PossibilitySpace) -> GeneralCone:
     N = len(Omega)
     R1 = [[g] for g in A]
     R2 = [[make_one_Omega(N)], [make_minus_one_Omega(N)], [make_zero(N)]]
@@ -238,94 +247,58 @@ def natural_extension_objective(R: GeneralCone, Omega: PossibilitySpace):
     return a
 
 
-def incurs_sure_loss1(R: GeneralCone, Omega: PossibilitySpace) -> bool:
+def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace) -> bool:
     N = len(Omega)
     zero = make_zero(N)
     lambda_, mu = optimize_find(R, zero, [], Omega)
     return lambda_ is not None
 
 
-def incurs_sure_loss2(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
+def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
     A = lower_prevision_assessment(P)
     R = sure_loss_cone(A, Omega)
-    return incurs_sure_loss1(R, Omega)
+    return incurs_sure_loss_cone(R, Omega)
 
 
 def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace) -> Fraction:
     R = natural_extension_cone(A, Omega)
     a = natural_extension_objective(R, Omega)
-    return optimize_maximize_value(R, f, a, B, Omega)
+    return optimize_maximize_value(R, f, a, [], Omega)
+
+
+def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
+    A = lower_prevision_assessment(P)
+    return all(P_f == natural_extension(A, f, Omega) for (f, P_f) in P)
 
 
 def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
     N = len(P)
     zero = make_zero(N)
-    B = conditional_lower_prevision_assessment(P)
+    B = conditional_lower_prevision_assessment(P, Omega)
     R = partial_loss_cone(B, Omega)
     lambda_, mu = optimize_find(R, zero, [], Omega)
     return lambda_ is not None
 
 
-def is_unconditional_natural_extension1(A: List[Gamble], Omega: PossibilitySpace) -> bool:
+def conditional_natural_extension_cone(B: ConditionalLowerPrevisionAssessment, C: Event, Omega: PossibilitySpace) -> GeneralCone:
     N = len(Omega)
-    Omega = list(range(N))
-    zero = make_zero(N)
-    one_Omega = make_one_Omega(N)
-    minus_one_Omega = make_minus_one_Omega(N)
-
-    R1 = [[g] for g in A]
-    R2 = [[make_one_Omega(N)], [make_minus_one_Omega(N)], [make_zero(N)]]
-    R3 = [[make_one_omega(i, N) for i in range(N)]]
-    R = R1 + R2 + R3  # TODO: remove duplicates
-
-    def a_value(D, g):
-        if D == [one_Omega] and g == one_Omega:
-            return 1
-        elif D == [minus_one_Omega] and g == minus_one_Omega:
-            return -1
-        return 0
-
-    a = [[a_value(D, g) for g in D] for D in R]
-
-    lambda_, mu = optimize_maximize(R, zero, a, [], Omega)
-    return lambda_ is not None
-
-
-def incurs_partial_loss1(Q: ConditionalLowerPrevisionFunction, B_: List[Tuple[Gamble, List[int]]], C: Event) -> bool:
-    N = len(Q)
-    Omega = list(range(N))
-    zero = make_zero(N)
-
-    R1 = [[g, make_one(B, N)] for (g, B) in B_ if g != zero]
-    R2 = [[make_one_omega(i, N) for i in range(N)]]
-    R = R1 + R2  # TODO: remove duplicates
-
-    lambda_, mu = optimize_find(R, zero, [], Omega)
-    return lambda_ is not None
-
-
-def is_conditional_natural_extension1(Q: ConditionalLowerPrevisionFunction, B_: List[Tuple[Gamble, List[int]]], C: Event) -> bool:
-    N = len(Q)
-    Omega = list(range(N))
     zero = make_zero(N)
     one_C = make_one(C, N)
     minus_one_C = make_minus_one(C, N)
-    one_Omega = make_one_Omega(N)
-    minus_one_Omega = make_minus_one_Omega(N)
 
-    R1 = [[g, make_one(B, N)] for (g, B) in B_]
+    R1 = [[g, make_one(B1, N)] for (g, B1) in B]
     R2 = [[one_C], [minus_one_C], [zero]]
     R3 = [[make_one_omega(i, N) for i in range(N)]]
     R = R1 + R2 + R3  # TODO: remove duplicates
 
-    def a_value(D, g):
-        if D == [one_Omega] and g == one_Omega:
-            return 1
-        elif D == [minus_one_Omega] and g == minus_one_Omega:
-            return -1
-        return 0
+    return R
 
-    a = [[a_value(D, g) for g in D] for D in R]
 
-    lambda_, mu = optimize_maximize(R, zero, a, [], Omega)
-    return lambda_ is not None
+def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gamble, C: Event, Omega: PossibilitySpace) -> Fraction:
+    def hadamard(f: Gamble, g: Gamble) -> Gamble:
+        return [x * y for (x, y) in zip(f, g)]
+
+    N = len(Omega)
+    R = conditional_natural_extension_cone(B, C, Omega)
+    a = natural_extension_objective(R, Omega)
+    return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega)
