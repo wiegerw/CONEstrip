@@ -1,0 +1,2 @@
+PYTHONPATH=../src
+python3 run_conestrip.py --cone-size=1 --generator-size=2 --gamble-size=8 --coordinate-bound=10 --border-count=5 --count=40
