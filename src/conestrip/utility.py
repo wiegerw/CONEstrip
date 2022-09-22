@@ -39,10 +39,11 @@ def random_floats_summing_to_one(n: int) -> List[float]:
 
 def random_rationals_summing_to_one(n: int, N=1000) -> List[Fraction]:
     values = random_floats_summing_to_one(n)
-    v = [int(round(N * x)) / N for x in values]
+    v = [Fraction(int(round(N * x)) / N) for x in values]
     v = v[:-1]
-    v.append(1 - sum(v))
-    return [Fraction(vi) for vi in v]
+    v.append(Fraction(1) - sum(v))
+    assert sum(v) == 1, f'random_rationals_summing_to_one: the sum of {v} equals {sum(v)}'
+    return v
 
 
 def random_nonzero_rationals_summing_to_one(n: int) -> List[Fraction]:
