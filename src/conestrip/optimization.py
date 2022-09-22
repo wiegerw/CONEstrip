@@ -7,7 +7,8 @@ from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
 
-from conestrip.cones import GeneralCone, Gamble
+from conestrip.cones import GeneralCone, Gamble, print_gamble, pretty_print_gamble, pretty_print_gambles, \
+    print_general_cone
 from conestrip.utility import product, sum_rows, random_rationals_summing_to_one
 
 AtomicEvent = int
@@ -18,6 +19,11 @@ LowerPrevisionFunction = List[Tuple[Gamble, Fraction]]
 LowerPrevisionAssessment = List[Gamble]
 ConditionalLowerPrevisionFunction = List[Tuple[Gamble, Event, Fraction]]
 ConditionalLowerPrevisionAssessment = List[Tuple[Gamble, Event]]
+
+
+def print_lower_prevision_function(P: LowerPrevisionFunction) -> str:
+    items = [f'({pretty_print_gamble(g)}, {c})' for (g, c) in P]
+    return '[{}]'.format(', '.join(items))
 
 
 def make_one_omega(i: int, N: int) -> Gamble:
@@ -246,6 +252,9 @@ def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace, verbose: bool
 def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, verbose: bool = False) -> bool:
     A = lower_prevision_assessment(P)
     R = sure_loss_cone(A, Omega)
+    if verbose:
+        print(f'A = {pretty_print_gambles(A)}')
+        print(f'R = {print_general_cone(R)}')
     return incurs_sure_loss_cone(R, Omega, verbose)
 
 

@@ -6,8 +6,9 @@
 
 import argparse
 
+from conestrip.cones import print_gambles, pretty_print_gambles, print_fractions
 from conestrip.optimization import generate_mass_function, make_lower_prevision_function1, incurs_sure_loss, \
-    is_mass_function
+    is_mass_function, print_lower_prevision_function
 from conestrip.random_cones import random_gambles
 from conestrip.utility import StopWatch
 
@@ -28,7 +29,7 @@ def run_testcase1(gamble_size: int, k_size: int, bound: int, verbose: bool):
     assert is_mass_function(p)
     P_p = make_lower_prevision_function1(p, K)
     print('--- testcase 1 ---')
-    print(f'K = {K}\np = {p}\nP_p = {P_p}')
+    print(f'K = {pretty_print_gambles(K)}\np = {print_fractions(p)}\nP_p = {print_lower_prevision_function(P_p)}')
     watch = StopWatch()
     assert(incurs_sure_loss(P_p, Omega, verbose))
     print(f'incurs_sure_loss(P_p, Omega): {watch.seconds():.4f}s\n')

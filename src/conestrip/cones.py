@@ -35,6 +35,27 @@ def print_gambles(G: List[Gamble]) -> str:
     return '\n'.join(print_gamble(g) for g in G)
 
 
+def pretty_print_gamble(g: Gamble) -> str:
+    return '[{}]'.format(', '.join(map(str, g)))
+
+
+def pretty_print_gambles(G: List[Gamble]) -> str:
+    return '[{}]'.format(', '.join(pretty_print_gamble(g) for g in G))
+
+
+def print_cone_generator(D: ConeGenerator) -> str:
+    return pretty_print_gambles(D)
+
+
+def print_general_cone(R: GeneralCone) -> str:
+    items = [print_cone_generator(D) for D in R]
+    return '[\n  {}\n]'.format('\n\n  '.join(map(str, items)))
+
+
+def print_fractions(x: List[Fraction]) -> str:
+    return '[{}]'.format(', '.join(map(str, x)))
+
+
 def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
     """
     Defines a cone that encloses a list of gambles
