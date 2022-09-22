@@ -82,8 +82,8 @@ def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]],
     # 0 < lambda
     lambda_constraints = [0 < x for x in lambda_]
 
-    # 0 <= nu
-    nu_constraints = [0 <= x for x in collapse(nu)]
+    # (0 <= nu) && (nu != 0)
+    nu_constraints = [0 <= x for x in collapse(nu)] + [Or([0 < x for x in collapse(nu)])]
 
     constraints_1 = [h[omega] == f[omega] for omega in Omega]
 
