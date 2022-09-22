@@ -32,7 +32,7 @@ def print_list_list(x: List[Any]) -> str:
 
 
 def random_floats_summing_to_one(n: int) -> List[float]:
-    values = [random.random() for i in range(n)]
+    values = [random.random() for _ in range(n)]
     s = sum(values)
     return [x / s for x in values]
 

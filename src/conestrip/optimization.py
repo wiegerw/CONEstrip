@@ -59,16 +59,6 @@ def is_mass_function(p: MassFunction) -> Bool:
     return all(x >= 0 for x in p) and sum(p) == 1
 
 
-def lower_prevision_set_A(p: MassFunction, K: List[Gamble], Omega: PossibilitySpace) -> List[Gamble]:
-    def dot(f: Gamble, g: Gamble) -> Fraction:
-        return sum(x * y for (x, y) in zip(f, g))
-
-    def minus(f: Gamble, c: Fraction) -> Gamble:
-        return [f_i - c for f_i in f]
-
-    return [minus(h, dot(p, h)) for h in K]
-
-
 def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]], Omega: PossibilitySpace, variables: Tuple[Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, nu = variables
@@ -246,23 +236,23 @@ def natural_extension_objective(R: GeneralCone, Omega: PossibilitySpace) -> List
     return a
 
 
-def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace) -> bool:
+def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace, verbose: bool = False) -> bool:
     N = len(Omega)
     zero = make_zero(N)
-    lambda_, mu = optimize_find(R, zero, [], Omega)
+    lambda_, mu = optimize_find(R, zero, [], Omega, verbose)
     return lambda_ is not None
 
 
-def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
+def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, verbose: bool = False) -> bool:
     A = lower_prevision_assessment(P)
     R = sure_loss_cone(A, Omega)
-    return incurs_sure_loss_cone(R, Omega)
+    return incurs_sure_loss_cone(R, Omega, verbose)
 
 
-def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace) -> Fraction:
+def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace, verbose: bool = False) -> Fraction:
     R = natural_extension_cone(A, Omega)
     a = natural_extension_objective(R, Omega)
-    return optimize_maximize_value(R, f, a, [], Omega)
+    return optimize_maximize_value(R, f, a, [], Omega, verbose)
 
 
 def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
@@ -270,12 +260,12 @@ def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
     return all(P_f == natural_extension(A, f, Omega) for (f, P_f) in P)
 
 
-def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
+def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace, verbose: bool = False) -> bool:
     N = len(P)
     zero = make_zero(N)
     B = conditional_lower_prevision_assessment(P, Omega)
     R = partial_loss_cone(B, Omega)
-    lambda_, mu = optimize_find(R, zero, [], Omega)
+    lambda_, mu = optimize_find(R, zero, [], Omega, verbose)
     return lambda_ is not None
 
 
@@ -293,11 +283,11 @@ def conditional_natural_extension_cone(B: ConditionalLowerPrevisionAssessment, C
     return R
 
 
-def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gamble, C: Event, Omega: PossibilitySpace) -> Fraction:
+def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gamble, C: Event, Omega: PossibilitySpace, verbose: bool = False) -> Fraction:
     def hadamard(f: Gamble, g: Gamble) -> Gamble:
         return [x * y for (x, y) in zip(f, g)]
 
     N = len(Omega)
     R = conditional_natural_extension_cone(B, C, Omega)
     a = natural_extension_objective(R, Omega)
-    return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega)
+    return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega, verbose)

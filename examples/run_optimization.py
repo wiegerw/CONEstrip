@@ -21,7 +21,7 @@ def info(args):
     print()
 
 
-def run_testcase1(gamble_size: int, k_size: int, bound: int = 10):
+def run_testcase1(gamble_size: int, k_size: int, bound: int, verbose: bool):
     Omega = list(range(gamble_size))
     K = random_gambles(k_size, gamble_size, bound)
     p = generate_mass_function(Omega)
@@ -30,7 +30,7 @@ def run_testcase1(gamble_size: int, k_size: int, bound: int = 10):
     print('--- testcase 1 ---')
     print(f'K = {K}\np = {p}\nP_p = {P_p}')
     watch = StopWatch()
-    assert(incurs_sure_loss(P_p, Omega))
+    assert(incurs_sure_loss(P_p, Omega, verbose))
     print(f'incurs_sure_loss(P_p, Omega): {watch.seconds():.4f}s\n')
 
 
@@ -40,10 +40,11 @@ def main():
     cmdline_parser.add_argument('--k-size', type=int, default=3, help='the number of elements of the set of gambles K')
     cmdline_parser.add_argument('--coordinate-bound', type=int, default=10, help='the maximum absolute value of the coordinates')
     cmdline_parser.add_argument('--count', type=int, default=1000, help='the number of times the experiment is repeated')
+    cmdline_parser.add_argument('--verbose', '-v', help='print verbose output', action='store_true')
     args = cmdline_parser.parse_args()
     info(args)
     for _ in range(args.count):
-        run_testcase1(args.gamble_size, args.k_size, args.coordinate_bound)
+        run_testcase1(args.gamble_size, args.k_size, args.coordinate_bound, args.verbose)
 
 
 if __name__ == '__main__':
