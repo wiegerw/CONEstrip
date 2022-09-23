@@ -27,33 +27,52 @@ def linear_combination(lambda_: ConvexCombination, gambles: List[Gamble]) -> Gam
     return result
 
 
-def print_gamble(g: Gamble) -> str:
-    return ' '.join(map(str, g))
+def print_gamble(g: Gamble, pretty=False) -> str:
+    if pretty:
+        return '[{}]'.format(', '.join(f'{float(x)}' for x in g))
+    else:
+        return ' '.join(map(str, g))
 
 
-def print_gambles(G: List[Gamble]) -> str:
-    return '\n'.join(print_gamble(g) for g in G)
+def print_gambles(G: List[Gamble], pretty=False) -> str:
+    if pretty:
+        return '[{}]'.format(', '.join(print_gamble(g, pretty) for g in G))
+    else:
+        return '\n'.join(print_gamble(g) for g in G)
 
 
-def pretty_print_gamble(g: Gamble) -> str:
-    return '[{}]'.format(', '.join(map(str, g)))
+def print_cone_generator(D: ConeGenerator, pretty=False) -> str:
+    if pretty:
+         return print_gambles(D, pretty)
+    else:
+         return '\n'.join(print_gamble(g) for g in D)
 
 
-def pretty_print_gambles(G: List[Gamble]) -> str:
-    return '[{}]'.format(', '.join(pretty_print_gamble(g) for g in G))
+def print_general_cone(R: GeneralCone, pretty=False) -> str:
+    if pretty:
+        items = [print_cone_generator(D, pretty) for D in R]
+        return '[\n  {}\n]'.format('\n\n  '.join(map(str, items)))
+    else:
+        return '\n\n'.join(print_cone_generator(D) for D in R)
 
 
-def print_cone_generator(D: ConeGenerator) -> str:
-    return pretty_print_gambles(D)
+def parse_gamble(text: str) -> Gamble:
+    return [Fraction(s) for s in text.strip().split()]
 
 
-def print_general_cone(R: GeneralCone) -> str:
-    items = [print_cone_generator(D) for D in R]
-    return '[\n  {}\n]'.format('\n\n  '.join(map(str, items)))
+def parse_cone_generator(text: str) -> ConeGenerator:
+    return list(map(parse_gamble, text.strip().split('\n')))
 
 
-def print_fractions(x: List[Fraction]) -> str:
-    return '[{}]'.format(', '.join(map(str, x)))
+def parse_general_cone(text: str) -> GeneralCone:
+    return list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip())))
+
+
+def print_fractions(x: List[Fraction], pretty=False) -> str:
+    if pretty:
+        return '[{}]'.format(', '.join(f'{float(xi)}' for xi in x))
+    else:
+        return ', '.join(map(str, x))
 
 
 def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
@@ -70,15 +89,3 @@ def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
     poly = Polyhedron(mat)
     poly.to_V()
     return poly
-
-
-def parse_gamble(text: str) -> Gamble:
-    return [Fraction(s) for s in text.strip().split()]
-
-
-def parse_cone_generator(text: str) -> ConeGenerator:
-    return list(map(parse_gamble, text.strip().split('\n')))
-
-
-def parse_general_cone(text: str) -> GeneralCone:
-    return list(map(parse_cone_generator, re.split(r'\n\s*\n', text.strip())))
