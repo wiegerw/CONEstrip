@@ -34,7 +34,7 @@ def run_testcase1(gamble_size: int, k_size: int, bound: int, verbose: bool, pret
     print('--- testcase 1 ---')
     print(f'K = {print_gambles(K, pretty)}\np = {print_fractions(p, pretty)}\nP_p = {print_lower_prevision_function(P_p, pretty)}')
     watch = StopWatch()
-    result = incurs_sure_loss(P_p, Omega, verbose)
+    result = incurs_sure_loss(P_p, Omega, verbose, pretty)
     print(f'incurs_sure_loss(P_p, Omega): {result} {watch.seconds():.4f}s\n')
     assert(not result)
 
@@ -52,7 +52,7 @@ def run_testcase2(gamble_size: int, k_size: int, bound: int, verbose: bool, pret
         P = lower_prevision_sum(P_p, Q)
         print(f'epsilon = {epsilon}\nP = {print_lower_prevision_function(P, pretty)}')
         watch = StopWatch()
-        result = incurs_sure_loss(P_p, Omega, verbose)
+        result = incurs_sure_loss(P_p, Omega, verbose, pretty)
         print(f'incurs_sure_loss(P, Omega): {result} {watch.seconds():.4f}s\n')
 
 

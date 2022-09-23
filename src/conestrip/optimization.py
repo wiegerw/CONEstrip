@@ -253,12 +253,12 @@ def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace, verbose: bool
     return lambda_ is not None
 
 
-def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, verbose: bool = False) -> bool:
+def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, verbose: bool = False, pretty=False) -> bool:
     A = lower_prevision_assessment(P)
     R = sure_loss_cone(A, Omega)
     if verbose:
-        print(f'A = {print_gambles(A)}')
-        print(f'R = {print_general_cone(R)}')
+        print(f'A = {print_gambles(A, pretty)}')
+        print(f'R = {print_general_cone(R, pretty)}')
     return incurs_sure_loss_cone(R, Omega, verbose)
 
 

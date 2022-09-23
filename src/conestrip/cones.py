@@ -72,7 +72,7 @@ def print_fractions(x: List[Fraction], pretty=False) -> str:
     if pretty:
         return '[{}]'.format(', '.join(f'{float(xi)}' for xi in x))
     else:
-        return ', '.join(map(str, x))
+        return '[{}]'.format(', '.join(f'{xi}' for xi in x))
 
 
 def gambles_to_polyhedron(gambles: List[Gamble]) -> Polyhedron:
