@@ -2,6 +2,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
+import random
 from typing import Any, List, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
@@ -300,3 +301,20 @@ def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gam
     R = conditional_natural_extension_cone(B, C, Omega)
     a = natural_extension_objective(R, Omega)
     return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega, verbose)
+
+
+def make_perturbation(K: List[Gamble], epsilon: Fraction) -> LowerPrevisionFunction:
+    result = []
+    for f in K:
+        delta = Fraction(random.uniform(0, 1))
+        value = random.choice([-epsilon, epsilon]) * delta * (max(f) - min(f))
+        result.append((f, value))
+    return result
+
+
+def lower_prevision_sum(P: LowerPrevisionFunction, Q: LowerPrevisionFunction) -> LowerPrevisionFunction:
+    def same_domain(P, Q):
+        return len(P) == len(Q) and all(p[0] == q[0] for (p, q) in zip(P, Q))
+
+    assert same_domain(P, Q)
+    return [(p[0], p[1] + q[1]) for (p, q) in zip(P, Q)]
