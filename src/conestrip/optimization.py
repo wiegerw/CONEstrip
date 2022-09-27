@@ -83,11 +83,11 @@ def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]],
     # intermediate expressions
     h = sum_rows(list(product(lambda_[d], sum_rows([product(nu[d][i], g[d][i]) for i in range(len(R[d]))])) for d in range(len(R))))
 
-    # 0 < lambda
-    lambda_constraints = [0 < x for x in lambda_]
+    # 0 <= lambda && (lambda != 0)
+    lambda_constraints = [0 <= x for x in lambda_] + [Or([0 < x for x in lambda_])]
 
-    # (0 <= nu) && (nu != 0)
-    nu_constraints = [0 <= x for x in collapse(nu)] + [Or([0 < x for x in collapse(nu)])]
+    # (0 < nu)
+    nu_constraints = [0 < x for x in collapse(nu)]
 
     constraints_1 = [h[omega] == f[omega] for omega in Omega]
 
@@ -321,3 +321,15 @@ def lower_prevision_sum(P: LowerPrevisionFunction, Q: LowerPrevisionFunction) ->
 
     assert same_domain(P, Q)
     return [(p[0], p[1] + q[1]) for (p, q) in zip(P, Q)]
+
+
+def clamp(num, min_value, max_value):
+   return max(min(num, max_value), min_value)
+
+
+def lower_prevision_clamped_sum(P: LowerPrevisionFunction, Q: LowerPrevisionFunction) -> LowerPrevisionFunction:
+    def same_domain(P, Q):
+        return len(P) == len(Q) and all(p[0] == q[0] for (p, q) in zip(P, Q))
+
+    assert same_domain(P, Q)
+    return [(p[0], clamp(p[1] + q[1], min(p[0]), max(p[0]))) for (p, q) in zip(P, Q)]

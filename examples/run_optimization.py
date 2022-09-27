@@ -9,7 +9,8 @@ from fractions import Fraction
 
 from conestrip.cones import print_gambles, print_fractions
 from conestrip.optimization import generate_mass_function, make_lower_prevision_function1, incurs_sure_loss, \
-    is_mass_function, print_lower_prevision_function, make_perturbation, lower_prevision_sum
+    is_mass_function, print_lower_prevision_function, make_perturbation, lower_prevision_sum, \
+    lower_prevision_clamped_sum
 from conestrip.random_cones import random_gambles
 from conestrip.utility import StopWatch
 
@@ -47,12 +48,12 @@ def run_testcase2(gamble_size: int, k_size: int, bound: int, verbose: bool, pret
     P_p = make_lower_prevision_function1(p, K)
     print('--- testcase 2 ---')
     print(f'K = {print_gambles(K, pretty)}\np = {print_fractions(p, pretty)}\nP_p = {print_lower_prevision_function(P_p, pretty)}\n')
-    for epsilon in [0.000001, 0.00001, 0.0001, 0.001, 0.1]:
+    for epsilon in [0.000001, 0.00001, 0.0001, 0.001, 0.1, 1, 10]:
         Q = make_perturbation(K, Fraction(epsilon))
-        P = lower_prevision_sum(P_p, Q)
+        P = lower_prevision_clamped_sum(P_p, Q)
         print(f'epsilon = {epsilon}\nP = {print_lower_prevision_function(P, pretty)}')
         watch = StopWatch()
-        result = incurs_sure_loss(P_p, Omega, verbose, pretty)
+        result = incurs_sure_loss(P, Omega, verbose, pretty)
         print(f'incurs_sure_loss(P, Omega): {result} {watch.seconds():.4f}s\n')
 
 
