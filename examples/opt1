@@ -1,2 +1,2 @@
 PYTHONPATH=../src
-python3 run_optimization.py --k-size=3 --gamble-size=3 --coordinate-bound=20 --count=100 --pretty
+python3 run_optimization.py --k-size=3 --gamble-size=3 --coordinate-bound=20 --count=10 --pretty --epsilon-lower-prevision=0.02 --seed=7672516284 -v

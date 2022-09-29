@@ -9,6 +9,7 @@ from more_itertools.recipes import flatten
 from z3 import *
 
 from conestrip.cones import GeneralCone, Gamble, print_gamble, print_gambles, print_general_cone
+from conestrip.global_settings import GlobalSettings
 from conestrip.utility import product, sum_rows, random_rationals_summing_to_one
 
 AtomicEvent = int
@@ -69,7 +70,7 @@ def is_mass_function(p: MassFunction) -> Bool:
     return all(x >= 0 for x in p) and sum(p) == 1
 
 
-def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]], Omega: PossibilitySpace, variables: Tuple[Any, Any], verbose: bool = False) -> Tuple[List[Any], List[Any]]:
+def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]], Omega: PossibilitySpace, variables: Tuple[Any, Any]) -> Tuple[List[Any], List[Any]]:
     # variables
     lambda_, nu = variables
 
@@ -97,7 +98,7 @@ def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]],
         h_j_constraints = [h_j[omega] == f[omega] for omega in Omega]
         constraints_2.extend(h_j_constraints)
 
-    if verbose:
+    if GlobalSettings.print_smt:
         print('--- variables ---')
         print(lambda_)
         print(nu)
@@ -114,19 +115,19 @@ def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]],
     return lambda_constraints + nu_constraints, constraints_1 + constraints_2
 
 
-def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
+def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: List[int]):
     # variables
     lambda_ = [Real(f'lambda{d}') for d in range(len(R))]
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
 
-    constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu), verbose)))
+    constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu))))
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
         model = solver.model()
         lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R))]
         nu_solution = [[model.evaluate(nu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
-        if verbose:
+        if GlobalSettings.print_smt:
             print('--- solution ---')
             print('lambda =', lambda_solution)
             print('nu =', nu_solution)
@@ -135,12 +136,12 @@ def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: Li
         return None, None
 
 
-def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
+def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]):
     # variables
     lambda_ = [Real(f'lambda{d}') for d in range(len(R))]
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
 
-    constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu), verbose)))
+    constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu))))
     goal = sum(lambda_[d] * sum(nu[d][g] * a[d][g]) for d in range(len(nu)) for g in range(len(nu[d])))
     optimizer = Optimize()
     optimizer.add(constraints)
@@ -150,7 +151,7 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B
         lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R))]
         nu_solution = [[model.evaluate(nu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
         goal_solution = model.evaluate(goal)
-        if verbose:
+        if GlobalSettings.print_smt:
             print('--- solution ---')
             print('lambda =', lambda_solution)
             print('nu =', nu_solution)
@@ -160,13 +161,13 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B
         return None, None, Fraction(0)
 
 
-def optimize_maximize(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
-    lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega, verbose)
+def optimize_maximize(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]):
+    lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega)
     return lambda_, nu
 
 
-def optimize_maximize_value(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int], verbose: bool = False):
-    lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega, verbose)
+def optimize_maximize_value(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]):
+    lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega)
     return goal
 
 
@@ -246,26 +247,27 @@ def natural_extension_objective(R: GeneralCone, Omega: PossibilitySpace) -> List
     return a
 
 
-def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace, verbose: bool = False) -> bool:
+def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace) -> bool:
     N = len(Omega)
     zero = make_zero(N)
-    lambda_, mu = optimize_find(R, zero, [], Omega, verbose)
+    lambda_, mu = optimize_find(R, zero, [], Omega)
     return lambda_ is not None
 
 
-def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, verbose: bool = False, pretty=False) -> bool:
+def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, pretty=False) -> bool:
     A = lower_prevision_assessment(P)
     R = sure_loss_cone(A, Omega)
-    if verbose:
-        print(f'A = {print_gambles(A, pretty)}')
-        print(f'R = {print_general_cone(R, pretty)}')
-    return incurs_sure_loss_cone(R, Omega, verbose)
+    if GlobalSettings.verbose:
+        print(f'incurs_sure_loss: R = {print_general_cone(R, pretty)}')
+    return incurs_sure_loss_cone(R, Omega)
 
 
-def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace, verbose: bool = False) -> Fraction:
+def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace, pretty=False) -> Fraction:
     R = natural_extension_cone(A, Omega)
     a = natural_extension_objective(R, Omega)
-    return optimize_maximize_value(R, f, a, [], Omega, verbose)
+    if GlobalSettings.verbose:
+        print(f'natural_extension: R = {print_general_cone(R, pretty)}')
+    return optimize_maximize_value(R, f, a, [], Omega)
 
 
 def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
@@ -273,12 +275,14 @@ def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
     return all(P_f == natural_extension(A, f, Omega) for (f, P_f) in P)
 
 
-def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace, verbose: bool = False) -> bool:
+def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace, pretty=False) -> bool:
     N = len(P)
     zero = make_zero(N)
     B = conditional_lower_prevision_assessment(P, Omega)
     R = partial_loss_cone(B, Omega)
-    lambda_, mu = optimize_find(R, zero, [], Omega, verbose)
+    if GlobalSettings.verbose:
+        print(f'incurs_partial_loss: R = {print_general_cone(R, pretty)}')
+    lambda_, mu = optimize_find(R, zero, [], Omega)
     return lambda_ is not None
 
 
@@ -296,14 +300,16 @@ def conditional_natural_extension_cone(B: ConditionalLowerPrevisionAssessment, C
     return R
 
 
-def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gamble, C: Event, Omega: PossibilitySpace, verbose: bool = False) -> Fraction:
+def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gamble, C: Event, Omega: PossibilitySpace, pretty=False) -> Fraction:
     def hadamard(f: Gamble, g: Gamble) -> Gamble:
         return [x * y for (x, y) in zip(f, g)]
 
     N = len(Omega)
     R = conditional_natural_extension_cone(B, C, Omega)
     a = natural_extension_objective(R, Omega)
-    return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega, verbose)
+    if GlobalSettings.verbose:
+        print(f'conditional_natural_extension: R = {print_general_cone(R, pretty)}')
+    return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega)
 
 
 def make_perturbation(K: List[Gamble], epsilon: Fraction) -> LowerPrevisionFunction:
