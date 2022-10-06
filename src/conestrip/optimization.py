@@ -142,7 +142,7 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B
     nu = [[Real(f'nu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
 
     constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu))))
-    goal = sum(lambda_[d] * sum(nu[d][g] * a[d][g]) for d in range(len(nu)) for g in range(len(nu[d])))
+    goal = simplify(sum(lambda_[d] * sum(nu[d][g] * a[d][g] for g in range(len(nu[d]))) for d in range(len(nu))))
     optimizer = Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
