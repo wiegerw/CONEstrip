@@ -146,6 +146,10 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B
     optimizer = Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
+    if GlobalSettings.verbose:
+        print('=== optimize_maximize ===')
+        print('goal =', goal)
+        print('constraints =', constraints)
     if optimizer.check() == sat:
         model = optimizer.model()
         lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R))]
