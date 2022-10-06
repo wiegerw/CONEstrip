@@ -8,7 +8,7 @@ from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
 
-from conestrip.cones import GeneralCone, Gamble, print_gamble, print_gambles, print_general_cone
+from conestrip.cones import GeneralCone, Gamble, print_gamble, print_general_cone, print_cone_generator
 from conestrip.global_settings import GlobalSettings
 from conestrip.utility import product, sum_rows, random_rationals_summing_to_one
 
@@ -267,12 +267,13 @@ def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace, prett
     a = natural_extension_objective(R, Omega)
     if GlobalSettings.verbose:
         print(f'natural_extension: R = {print_general_cone(R, pretty)}')
+        print(f'natural_extension: a = {print_cone_generator(a, pretty)}')
     return optimize_maximize_value(R, f, a, [], Omega)
 
 
-def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace) -> bool:
+def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace, pretty=False) -> bool:
     A = lower_prevision_assessment(P)
-    return all(P_f == natural_extension(A, f, Omega) for (f, P_f) in P)
+    return all(P_f == natural_extension(A, f, Omega, pretty) for (f, P_f) in P)
 
 
 def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace, pretty=False) -> bool:
@@ -330,7 +331,7 @@ def lower_prevision_sum(P: LowerPrevisionFunction, Q: LowerPrevisionFunction) ->
 
 
 def clamp(num, min_value, max_value):
-   return max(min(num, max_value), min_value)
+    return max(min(num, max_value), min_value)
 
 
 def lower_prevision_clamped_sum(P: LowerPrevisionFunction, Q: LowerPrevisionFunction) -> LowerPrevisionFunction:
