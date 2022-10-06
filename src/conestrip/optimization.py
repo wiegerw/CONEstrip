@@ -136,6 +136,13 @@ def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: Li
         return None, None
 
 
+def print_constraints(msg: str, constraints: List[Any]) -> None:
+    print(msg)
+    for constraint in constraints:
+        print(constraint)
+        print('')
+
+
 def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]):
     # variables
     lambda_ = [Real(f'lambda{d}') for d in range(len(R))]
@@ -148,8 +155,8 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B
     optimizer.maximize(goal)
     if GlobalSettings.verbose:
         print('=== optimize_maximize ===')
-        print('goal =', goal)
-        print('constraints =', constraints)
+        print('goal:', goal)
+        print_constraints('constraints:\n', constraints)
     if optimizer.check() == sat:
         model = optimizer.model()
         lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R))]
