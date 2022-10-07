@@ -92,6 +92,9 @@ def run_testcase3(args):
     def experiment(epsilon: Fraction) -> Tuple[bool, bool]:
         Q = make_perturbation(K, Fraction(epsilon))
         P = lower_prevision_clamped_sum(P_p, Q)
+        if args.verbose:
+            print(f'--- test case 3, epsilon = {float(epsilon):6.4f} ---\n')
+            print(f'P = {print_lower_prevision_function(P, args.pretty)}\n')
         sure_loss = incurs_sure_loss(P, Omega, args.pretty)
         coherent = is_coherent(P, Omega, args.pretty)
         return sure_loss, coherent
@@ -105,7 +108,6 @@ def run_testcase3(args):
         coherent_values = [print_bool(coherent) for sure_loss, coherent in result]
         print(f'incurs sure loss : {str.join("", sure_loss_values)}')
         print(f'is coherent      : {str.join("", coherent_values)}')
-
 
     GlobalSettings.verbose = args.verbose
     Omega = list(range(args.gamble_size))

@@ -258,7 +258,7 @@ def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, pretty=
     A = lower_prevision_assessment(P)
     R = sure_loss_cone(A, Omega)
     if GlobalSettings.verbose:
-        print(f'incurs_sure_loss: R = {print_general_cone(R, pretty)}')
+        print(f'incurs_sure_loss: R = {print_general_cone(R, pretty)}\n')
     return incurs_sure_loss_cone(R, Omega)
 
 
@@ -266,8 +266,8 @@ def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace, prett
     R = natural_extension_cone(A, Omega)
     a = natural_extension_objective(R, Omega)
     if GlobalSettings.verbose:
-        print(f'natural_extension: R = {print_general_cone(R, pretty)}')
-        print(f'natural_extension: a = {print_cone_generator(a, pretty)}')
+        print(f'natural_extension: R = {print_general_cone(R, pretty)}\n')
+        print(f'natural_extension: a = {print_cone_generator(a, pretty)}\n')
     return optimize_maximize_value(R, f, a, [], Omega)
 
 
@@ -282,7 +282,7 @@ def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: Possibility
     B = conditional_lower_prevision_assessment(P, Omega)
     R = partial_loss_cone(B, Omega)
     if GlobalSettings.verbose:
-        print(f'incurs_partial_loss: R = {print_general_cone(R, pretty)}')
+        print(f'incurs_partial_loss: R = {print_general_cone(R, pretty)}\n')
     mu = optimize_find(R, zero, [], Omega)
     return mu is not None
 
@@ -309,7 +309,7 @@ def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gam
     R = conditional_natural_extension_cone(B, C, Omega)
     a = natural_extension_objective(R, Omega)
     if GlobalSettings.verbose:
-        print(f'conditional_natural_extension: R = {print_general_cone(R, pretty)}')
+        print(f'conditional_natural_extension: R = {print_general_cone(R, pretty)}\n')
     return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega)
 
 
