@@ -13,7 +13,8 @@ from conestrip.cones import print_gambles, print_fractions
 from conestrip.global_settings import GlobalSettings
 from conestrip.optimization import generate_mass_function, make_lower_prevision_function1, incurs_sure_loss, \
     is_mass_function, print_lower_prevision_function, make_perturbation, lower_prevision_sum, \
-    lower_prevision_clamped_sum, make_lower_prevision_function2, is_coherent
+    lower_prevision_clamped_sum, make_lower_prevision_function2, is_coherent, LowerPrevisionFunction, \
+    scale_lower_prevision_function
 from conestrip.random_cones import random_gambles
 from conestrip.utility import StopWatch
 
@@ -89,9 +90,9 @@ def print_number_list(x: List[Fraction]) -> str:
 
 
 def run_testcase3(args):
-    def experiment(epsilon: Fraction) -> Tuple[bool, bool]:
-        Q = make_perturbation(K, Fraction(epsilon))
-        P = lower_prevision_clamped_sum(P_p, Q)
+    def experiment(P_p: LowerPrevisionFunction, Q: LowerPrevisionFunction, epsilon: Fraction) -> Tuple[bool, bool]:
+        Q_epsilon = scale_lower_prevision_function(Q, epsilon)
+        P = lower_prevision_clamped_sum(P_p, Q_epsilon)
         if args.verbose:
             print(f'--- test case 3, epsilon = {float(epsilon):6.4f} ---\n')
             print(f'P = {print_lower_prevision_function(P, args.pretty)}\n')
@@ -122,7 +123,8 @@ def run_testcase3(args):
     print('--- testcase 3 ---')
     print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}\n')
     epsilon_range = make_epsilon_range(args.epsilon_perturbation)
-    result = [experiment(epsilon) for epsilon in epsilon_range]
+    Q = make_perturbation(K, Fraction(1))
+    result = [experiment(P_p, Q, epsilon) for epsilon in epsilon_range]
     print_result(epsilon_range, result)
 
 

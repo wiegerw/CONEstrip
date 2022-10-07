@@ -322,6 +322,10 @@ def make_perturbation(K: List[Gamble], epsilon: Fraction) -> LowerPrevisionFunct
     return result
 
 
+def scale_lower_prevision_function(P: LowerPrevisionFunction, c: Fraction) -> LowerPrevisionFunction:
+    return [(f, c * value) for (f, value) in P]
+
+
 def lower_prevision_sum(P: LowerPrevisionFunction, Q: LowerPrevisionFunction) -> LowerPrevisionFunction:
     def same_domain(P, Q):
         return len(P) == len(Q) and all(p[0] == q[0] for (p, q) in zip(P, Q))
