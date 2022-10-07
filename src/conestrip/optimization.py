@@ -70,9 +70,9 @@ def is_mass_function(p: MassFunction) -> Bool:
     return all(x >= 0 for x in p) and sum(p) == 1
 
 
-def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]], Omega: PossibilitySpace, variables: Tuple[Any, Any]) -> Tuple[List[Any], List[Any]]:
+def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]], Omega: PossibilitySpace, variables: Any) -> Tuple[List[Any], List[Any]]:
     # variables
-    lambda_, nu = variables
+    mu = variables
 
     # constants
     g = [[[RealVal(R[d][i][j]) for j in range(len(R[d][i]))] for i in range(len(R[d]))] for d in range(len(R))]
@@ -82,58 +82,50 @@ def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]],
         f = [RealVal(f[j]) for j in range(len(f))]
 
     # intermediate expressions
-    h = sum_rows(list(product(lambda_[d], sum_rows([product(nu[d][i], g[d][i]) for i in range(len(R[d]))])) for d in range(len(R))))
+    h = sum_rows(list(sum_rows([product(mu[d][i], g[d][i]) for i in range(len(R[d]))]) for d in range(len(R))))
 
-    # 0 <= lambda && (lambda != 0)
-    lambda_constraints = [0 <= x for x in lambda_] + [Or([0 < x for x in lambda_])]
-
-    # (0 < nu)
-    nu_constraints = [0 < x for x in collapse(nu)]
+    # 0 <= mu && (mu_D != 0 for all D in R)
+    mu_constraints = [0 <= x for x in collapse(mu)] + [Or([0 < x for x in mu_D]) for mu_D in mu]
 
     constraints_1 = [h[omega] == f[omega] for omega in Omega]
 
     constraints_2 = []
     for b, c in range(len(B)):
-        h_j = sum_rows(list(product(lambda_[d], sum_rows([product(nu[d][i], b[d][i]) for i in range(len(R[d]))])) for d in range(len(R))))
+        h_j = sum_rows(list(sum_rows([product(mu[d][i], b[d][i]) for i in range(len(R[d]))]) for d in range(len(R))))
         h_j_constraints = [h_j[omega] == f[omega] for omega in Omega]
         constraints_2.extend(h_j_constraints)
 
     if GlobalSettings.print_smt:
         print('--- variables ---')
-        print(lambda_)
-        print(nu)
+        print(mu)
         print('--- constants ---')
         print('g =', g)
         print('f =', f)
         print('--- intermediate expressions ---')
         print('h =', h)
         print('--- constraints ---')
-        print(lambda_constraints)
-        print(nu_constraints)
+        print(mu_constraints)
         print(constraints_1)
 
-    return lambda_constraints + nu_constraints, constraints_1 + constraints_2
+    return mu_constraints, constraints_1 + constraints_2
 
 
-def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: List[int]):
+def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: List[int]) -> Any:
     # variables
-    lambda_ = [Real(f'lambda{d}') for d in range(len(R))]
-    nu = [[Real(f'nu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
+    mu = [[Real(f'mu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
 
-    constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu))))
+    constraints = list(flatten(optimize_constraints(R, f, B, Omega, mu)))
     solver = Solver()
     solver.add(constraints)
     if solver.check() == sat:
         model = solver.model()
-        lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R))]
-        nu_solution = [[model.evaluate(nu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
+        mu_solution = [[model.evaluate(mu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
         if GlobalSettings.print_smt:
             print('--- solution ---')
-            print('lambda =', lambda_solution)
-            print('nu =', nu_solution)
-        return lambda_solution, nu_solution
+            print('mu =', mu_solution)
+        return mu_solution
     else:
-        return None, None
+        return None
 
 
 def print_constraints(msg: str, constraints: List[Any]) -> None:
@@ -143,13 +135,12 @@ def print_constraints(msg: str, constraints: List[Any]) -> None:
         print('')
 
 
-def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]):
+def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]) -> Tuple[Any, Fraction]:
     # variables
-    lambda_ = [Real(f'lambda{d}') for d in range(len(R))]
-    nu = [[Real(f'nu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
+    mu = [[Real(f'mu{d}_{i}') for i in range(len(R[d]))] for d in range(len(R))]
 
-    constraints = list(flatten(optimize_constraints(R, f, B, Omega, (lambda_, nu))))
-    goal = simplify(sum(lambda_[d] * sum(nu[d][g] * a[d][g] for g in range(len(nu[d]))) for d in range(len(nu))))
+    constraints = list(flatten(optimize_constraints(R, f, B, Omega, mu)))
+    goal = simplify(sum(sum(mu[d][g] * a[d][g] for g in range(len(mu[d]))) for d in range(len(mu))))
     optimizer = Optimize()
     optimizer.add(constraints)
     optimizer.maximize(goal)
@@ -159,26 +150,24 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B
         print_constraints('constraints:\n', constraints)
     if optimizer.check() == sat:
         model = optimizer.model()
-        lambda_solution = [model.evaluate(lambda_[d]) for d in range(len(R))]
-        nu_solution = [[model.evaluate(nu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
+        mu_solution = [[model.evaluate(mu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
         goal_solution = model.evaluate(goal)
         if GlobalSettings.print_smt:
             print('--- solution ---')
-            print('lambda =', lambda_solution)
-            print('nu =', nu_solution)
+            print('mu =', mu_solution)
             print('goal =', model.evaluate(goal))
-        return lambda_solution, nu_solution, goal_solution
+        return mu_solution, goal_solution
     else:
-        return None, None, Fraction(0)
+        return None, Fraction(0)
 
 
 def optimize_maximize(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]):
-    lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega)
-    return lambda_, nu
+    mu, goal = optimize_maximize_full(R, f, a, B, Omega)
+    return mu
 
 
 def optimize_maximize_value(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B: List[Tuple[Any, Any]], Omega: List[int]):
-    lambda_, nu, goal = optimize_maximize_full(R, f, a, B, Omega)
+    mu, goal = optimize_maximize_full(R, f, a, B, Omega)
     return goal
 
 
@@ -261,8 +250,8 @@ def natural_extension_objective(R: GeneralCone, Omega: PossibilitySpace) -> List
 def incurs_sure_loss_cone(R: GeneralCone, Omega: PossibilitySpace) -> bool:
     N = len(Omega)
     zero = make_zero(N)
-    lambda_, mu = optimize_find(R, zero, [], Omega)
-    return lambda_ is not None
+    mu = optimize_find(R, zero, [], Omega)
+    return mu is not None
 
 
 def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, pretty=False) -> bool:
@@ -294,8 +283,8 @@ def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: Possibility
     R = partial_loss_cone(B, Omega)
     if GlobalSettings.verbose:
         print(f'incurs_partial_loss: R = {print_general_cone(R, pretty)}')
-    lambda_, mu = optimize_find(R, zero, [], Omega)
-    return lambda_ is not None
+    mu = optimize_find(R, zero, [], Omega)
+    return mu is not None
 
 
 def conditional_natural_extension_cone(B: ConditionalLowerPrevisionAssessment, C: Event, Omega: PossibilitySpace) -> GeneralCone:

@@ -40,7 +40,7 @@ def make_epsilon_range(epsilon: Fraction) -> List[Fraction]:
     def nine_range(e: Fraction) -> List[Fraction]:
         return [n * e for n in range(1, 10)]
 
-    return nine_range(epsilon) + nine_range(10 * epsilon) + nine_range(100 * epsilon) + nine_range(1000 * epsilon)
+    return nine_range(epsilon) + nine_range(10 * epsilon) + nine_range(100 * epsilon) + nine_range(1000 * epsilon) + nine_range(10000 * epsilon)
 
 
 def run_testcase1(args):
@@ -76,10 +76,16 @@ def run_testcase2(args):
     for epsilon in make_default_epsilon_range():
         Q = make_perturbation(K, Fraction(epsilon))
         P = lower_prevision_clamped_sum(P_p, Q)
-        print(f'epsilon = {epsilon}\nP = {print_lower_prevision_function(P, args.pretty)}')
+        print(f'epsilon = {float(epsilon):7.4f}\nP = {print_lower_prevision_function(P, args.pretty)}')
         watch = StopWatch()
         result = incurs_sure_loss(P, Omega, args.pretty)
         print(f'incurs_sure_loss(P, Omega): {result} {watch.seconds():.4f}s\n')
+
+
+def print_number_list(x: List[Fraction]) -> str:
+    numbers = list(f'{xi:6.4f}' for xi in x)
+    numbers = ', '.join(numbers)
+    return f'[{numbers}]'
 
 
 def run_testcase3(args):
@@ -88,14 +94,13 @@ def run_testcase3(args):
         P = lower_prevision_clamped_sum(P_p, Q)
         sure_loss = incurs_sure_loss(P, Omega, args.pretty)
         coherent = is_coherent(P, Omega, args.pretty)
-        print(f'experiment: epsilon={epsilon} sure loss = {sure_loss} coherent = {coherent}')
         return sure_loss, coherent
 
     def print_bool(x: bool) -> str:
         return 'T' if x else 'F'
 
     def print_result(epsilon_range: List[Fraction], result: List[Tuple[bool, bool]]) -> None:
-        print(f'epsilon range    : {list(map(str, epsilon_range))}')
+        print(f'epsilon range    : {print_number_list(epsilon_range)}')
         sure_loss_values = [print_bool(sure_loss) for sure_loss, coherent in result]
         coherent_values = [print_bool(coherent) for sure_loss, coherent in result]
         print(f'incurs sure loss : {str.join("", sure_loss_values)}')
