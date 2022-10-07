@@ -83,6 +83,10 @@ def run_testcase2(args):
         print(f'incurs_sure_loss(P, Omega): {result} {watch.seconds():.4f}s\n')
 
 
+def print_bool(x: bool) -> str:
+    return 'T' if x else 'F'
+
+
 def print_number_list(x: List[Fraction]) -> str:
     numbers = list(f'{xi:6.4f}' for xi in x)
     numbers = ', '.join(numbers)
@@ -99,9 +103,6 @@ def run_testcase3(args):
         sure_loss = incurs_sure_loss(P, Omega, args.pretty)
         coherent = is_coherent(P, Omega, args.pretty)
         return sure_loss, coherent
-
-    def print_bool(x: bool) -> str:
-        return 'T' if x else 'F'
 
     def print_result(epsilon_range: List[Fraction], result: List[Tuple[bool, bool]]) -> None:
         print(f'epsilon range    : {print_number_list(epsilon_range)}')
