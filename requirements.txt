@@ -1,3 +1,5 @@
 more_itertools
 z3-python
 pycddlib
+xarray
+netCDF4
