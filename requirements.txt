@@ -3,3 +3,5 @@ z3-python
 pycddlib
 xarray
 netCDF4
+dask
+bottleneck
