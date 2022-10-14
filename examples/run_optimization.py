@@ -15,7 +15,7 @@ from conestrip.cones import print_gambles, print_fractions
 from conestrip.global_settings import GlobalSettings
 from conestrip.optimization import generate_mass_function, lower_prevision_function1, incurs_sure_loss, \
     is_mass_function, print_lower_prevision_function, generate_lower_prevision_perturbation, \
-    lower_prevision_clamped_sum, lower_prevision_function2, is_coherent
+    lower_prevision_clamped_sum, lower_prevision_function2, is_coherent, generate_mass_functions
 from conestrip.random_cones import random_gambles
 from conestrip.utility import StopWatch
 
@@ -107,18 +107,21 @@ def run_testcase3(args):
     print('--- testcase 3 ---')
     GlobalSettings.verbose = args.verbose
     error_magnitude = Fraction(args.error_magnitude)
-    M, I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
+    I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
     V = 2  # the number of values per experiment
     Omega = list(range(args.omega_size))
     K = random_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
-    p = [generate_mass_function(Omega) for m in range(M)]
+    p = generate_mass_functions(Omega)
+    M = len(p)
     delta = [Fraction(i, I) for i in range(I)]  # the imprecision values
     epsilon = make_epsilon_range(E)  # the error magnitude values
 
     print(f'M, I, E, N = {M}, {I}, {E}, {N}')
     print(f'delta = {list(map(float, delta))}')
     print(f'epsilon = {list(map(float, epsilon))}')
+    for m in range(M):
+        print(f'mass function {m} = {list(map(float, p[m]))}')
     print('')
 
     Q_data = np.empty((M, I, E, N, V), dtype=object)
@@ -148,14 +151,14 @@ def main():
     cmdline_parser.add_argument("--seed", help="the seed of the random generator", type=int, default=0)
     cmdline_parser.add_argument('--omega-size', type=int, default=3, help='the number of elements of event set Omega')
     cmdline_parser.add_argument('--k-size', type=int, default=3, help='the number of elements of the set of gambles K')
-    cmdline_parser.add_argument('--coordinate-bound', type=int, default=10, help='the maximum absolute value of the coordinates')
+    cmdline_parser.add_argument('--coordinate-bound', type=int, default=1, help='the maximum absolute value of the coordinates')
     cmdline_parser.add_argument('--error-magnitude', type=str, default='0', help='the error magnitude value used for generating lower prevision functions')
     cmdline_parser.add_argument('--repetitions', type=int, default=1, help='the number of times an experiment is repeated')
     cmdline_parser.add_argument('--test', type=int, default=1, help='the test case (1 or 2)')
     cmdline_parser.add_argument('--pretty', help='print fractions as floats', action='store_true')
     cmdline_parser.add_argument('--print-smt', help='print info about the generated SMT problems', action='store_true')
     cmdline_parser.add_argument('--verbose', '-v', help='print verbose output', action='store_true')
-    cmdline_parser.add_argument('--testcase3-dimensions', type=str, default='2,10,7,5', help='the dimensions M,I,E,N of test case 3 (a comma-separated list)')
+    cmdline_parser.add_argument('--testcase3-dimensions', type=str, default='10,7,5', help='the dimensions I,E,N of test case 3 (a comma-separated list)')
     cmdline_parser.add_argument('--output-filename', type=str, help='a filename where output is stored')
     args = cmdline_parser.parse_args()
     if args.seed == 0:

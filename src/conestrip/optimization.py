@@ -61,9 +61,31 @@ def is_unit_gamble(g: Gamble) -> bool:
     return g.count(Fraction(1)) == 1 and g.count(Fraction(0)) == len(g) - 1
 
 
-def generate_mass_function(Omega: PossibilitySpace) -> MassFunction:
+def generate_mass_function(Omega: PossibilitySpace, number_of_zeroes: int = 0) -> MassFunction:
+    if number_of_zeroes == 0:
+        N = len(Omega)
+        return random_rationals_summing_to_one(N)
+    else:
+        N = len(Omega)
+        values = random_rationals_summing_to_one(N - number_of_zeroes)
+        zero_positions = random.sample(range(N), number_of_zeroes)
+        result = [Fraction(0)] * N
+        index = 0
+        for i in range(N):
+            if i not in zero_positions:
+                result[i] = values[index]
+                index += 1
+        return result
+
+
+# generates 1 mass function with 1 non-zero, 2 with 2 non-zeroes, etc.
+def generate_mass_functions(Omega: PossibilitySpace) -> List[MassFunction]:
+    result = []
     N = len(Omega)
-    return random_rationals_summing_to_one(N)
+    for number_of_zeroes in range(N - 1, -1, -1):
+        for _ in range(N - number_of_zeroes):
+            result.append(generate_mass_function(Omega, number_of_zeroes))
+    return result
 
 
 def is_mass_function(p: MassFunction) -> Bool:
