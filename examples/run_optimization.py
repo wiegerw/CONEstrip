@@ -50,7 +50,7 @@ def run_testcase1(args):
     Omega = list(range(args.gamble_size))
     K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
 
-    for _ in args.repetitions:
+    for _ in range(args.repetitions):
         p = generate_mass_function(Omega)
         error_magnitude = Fraction(args.error_magnitude)
         assert is_mass_function(p)
@@ -72,7 +72,7 @@ def run_testcase2(args):
     Omega = list(range(args.gamble_size))
     K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
 
-    for _ in args.repetitions:
+    for _ in range(args.repetitions):
         p = generate_mass_function(Omega)
         assert is_mass_function(p)
         if error_magnitude > 0:
@@ -104,6 +104,7 @@ def run_testcase3(args):
     print('--- testcase 3 ---')
     GlobalSettings.verbose = args.verbose
     M, I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
+    V = 2  # the number of values per experiment
     Omega = list(range(args.gamble_size))
     K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
 
@@ -115,7 +116,7 @@ def run_testcase3(args):
     print(f'M, I, E, N = {M}, {I}, {E}, {N}')
     print(f'delta = {list(map(float, delta))}')
     print(f'epsilon = {list(map(float, epsilon))}')
-    V = 2  # the number of values per experiment
+    print('')
 
     # the output is stored in an xarray Q
     Q_data = np.empty((M, I, E, N, V), dtype=object)
