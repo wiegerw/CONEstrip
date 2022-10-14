@@ -7,14 +7,15 @@
 import argparse
 import random
 from fractions import Fraction
-from typing import List, Tuple
+from typing import List
+import numpy as np
+import xarray as xr
 
-from conestrip.cones import print_gambles, print_fractions
+from conestrip.cones import print_gambles, print_fractions, print_gamble
 from conestrip.global_settings import GlobalSettings
-from conestrip.optimization import generate_mass_function, make_lower_prevision_function1, incurs_sure_loss, \
-    is_mass_function, print_lower_prevision_function, make_perturbation, lower_prevision_sum, \
-    lower_prevision_clamped_sum, make_lower_prevision_function2, is_coherent, LowerPrevisionFunction, \
-    scale_lower_prevision_function
+from conestrip.optimization import generate_mass_function, lower_prevision_function1, incurs_sure_loss, \
+    is_mass_function, print_lower_prevision_function, generate_lower_prevision_perturbation, \
+    lower_prevision_clamped_sum, lower_prevision_function2, is_coherent
 from conestrip.random_cones import random_gambles
 from conestrip.utility import StopWatch
 
@@ -25,8 +26,8 @@ def info(args):
     print(f'gamble-size = {args.gamble_size}')
     print(f'k-size = {args.k_size}')
     print(f'coordinate-bound = {args.coordinate_bound}')
-    print(f'epsilon-lower-prevision = {args.epsilon_lower_prevision}')
-    print(f'count = {args.count}')
+    print(f'error-magnitude = {args.error_magnitude}')
+    print(f'repetitions = {args.repetitions}')
     print(f'verbose = {args.verbose}')
     print(f'pretty = {args.pretty}')
     print(f'print-smt = {args.print_smt}')
@@ -48,39 +49,45 @@ def run_testcase1(args):
     GlobalSettings.verbose = args.verbose
     Omega = list(range(args.gamble_size))
     K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
-    p = generate_mass_function(Omega)
-    assert is_mass_function(p)
-    if args.epsilon_lower_prevision > 0:
-        P_p = make_lower_prevision_function2(p, K, Fraction(args.epsilon_lower_prevision))
-    else:
-        P_p = make_lower_prevision_function1(p, K)
-    print('--- testcase 1 ---')
-    print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}')
-    watch = StopWatch()
-    result = incurs_sure_loss(P_p, Omega, args.pretty)
-    print(f'incurs_sure_loss(P_p, Omega): {result} {watch.seconds():.4f}s\n')
-    assert(not result)
+
+    for _ in args.repetitions:
+        p = generate_mass_function(Omega)
+        error_magnitude = Fraction(args.error_magnitude)
+        assert is_mass_function(p)
+        if error_magnitude > 0:
+            P_p = lower_prevision_function2(p, K, Fraction(error_magnitude))
+        else:
+            P_p = lower_prevision_function1(p, K)
+        print('--- testcase 1 ---')
+        print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}')
+        watch = StopWatch()
+        result = incurs_sure_loss(P_p, Omega, args.pretty)
+        print(f'incurs_sure_loss(P_p, Omega): {result} {watch.seconds():.4f}s\n')
+        assert(not result)
 
 
 def run_testcase2(args):
     GlobalSettings.verbose = args.verbose
+    error_magnitude = Fraction(args.error_magnitude)
     Omega = list(range(args.gamble_size))
     K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
-    p = generate_mass_function(Omega)
-    assert is_mass_function(p)
-    if args.epsilon_lower_prevision > 0:
-        P_p = make_lower_prevision_function2(p, K, Fraction(args.epsilon_lower_prevision))
-    else:
-        P_p = make_lower_prevision_function1(p, K)
-    print('--- testcase 2 ---')
-    print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}\n')
-    for epsilon in make_default_epsilon_range():
-        Q = make_perturbation(K, Fraction(epsilon))
-        P = lower_prevision_clamped_sum(P_p, Q)
-        print(f'epsilon = {float(epsilon):7.4f}\nP = {print_lower_prevision_function(P, args.pretty)}')
-        watch = StopWatch()
-        result = incurs_sure_loss(P, Omega, args.pretty)
-        print(f'incurs_sure_loss(P, Omega): {result} {watch.seconds():.4f}s\n')
+
+    for _ in args.repetitions:
+        p = generate_mass_function(Omega)
+        assert is_mass_function(p)
+        if error_magnitude > 0:
+            P_p = lower_prevision_function2(p, K, Fraction(error_magnitude))
+        else:
+            P_p = lower_prevision_function1(p, K)
+        print('--- testcase 2 ---')
+        print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}\n')
+        for epsilon in make_default_epsilon_range():
+            Q = generate_lower_prevision_perturbation(K, Fraction(epsilon))
+            P = lower_prevision_clamped_sum(P_p, Q)
+            print(f'epsilon = {float(epsilon):7.4f}\nP = {print_lower_prevision_function(P, args.pretty)}')
+            watch = StopWatch()
+            result = incurs_sure_loss(P, Omega, args.pretty)
+            print(f'incurs_sure_loss(P, Omega): {result} {watch.seconds():.4f}s\n')
 
 
 def print_bool(x: bool) -> str:
@@ -94,39 +101,43 @@ def print_number_list(x: List[Fraction]) -> str:
 
 
 def run_testcase3(args):
-    def experiment(P_p: LowerPrevisionFunction, Q: LowerPrevisionFunction, epsilon: Fraction) -> Tuple[bool, bool]:
-        Q_epsilon = scale_lower_prevision_function(Q, epsilon)
-        P = lower_prevision_clamped_sum(P_p, Q_epsilon)
-        if args.verbose:
-            print(f'--- test case 3, epsilon = {float(epsilon):6.4f} ---\n')
-            print(f'P = {print_lower_prevision_function(P, args.pretty)}\n')
-        sure_loss = incurs_sure_loss(P, Omega, args.pretty)
-        coherent = is_coherent(P, Omega, args.pretty)
-        return sure_loss, coherent
-
-    def print_result(epsilon_range: List[Fraction], result: List[Tuple[bool, bool]]) -> None:
-        print(f'epsilon range    : {print_number_list(epsilon_range)}')
-        sure_loss_values = [print_bool(sure_loss) for sure_loss, coherent in result]
-        coherent_values = [print_bool(coherent) for sure_loss, coherent in result]
-        print(f'incurs sure loss : {str.join("", sure_loss_values)}')
-        print(f'is coherent      : {str.join("", coherent_values)}')
-
+    print('--- testcase 3 ---')
     GlobalSettings.verbose = args.verbose
+    M, I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
     Omega = list(range(args.gamble_size))
     K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
-    p = generate_mass_function(Omega)
-    assert is_mass_function(p)
-    if args.epsilon_lower_prevision > 0:
-        P_p = make_lower_prevision_function2(p, K, Fraction(args.epsilon_lower_prevision))
-    else:
-        P_p = make_lower_prevision_function1(p, K)
 
-    print('--- testcase 3 ---')
-    print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}\n')
-    epsilon_range = make_epsilon_range(args.epsilon_perturbation)
-    Q = make_perturbation(K, Fraction(1))
-    result = [experiment(P_p, Q, epsilon) for epsilon in epsilon_range]
-    print_result(epsilon_range, result)
+    error_magnitude = Fraction(args.error_magnitude)
+    p = [generate_mass_function(Omega) for m in range(M)]
+    delta = [Fraction(i, I) for i in range(I)]  # the imprecision values
+    epsilon = [e * error_magnitude for e in range(1, E + 1)]  # the error magnitude values
+
+    print(f'M, I, E, N = {M}, {I}, {E}, {N}')
+    print(f'delta = {list(map(float, delta))}')
+    print(f'epsilon = {list(map(float, epsilon))}')
+    V = 2  # the number of values per experiment
+
+    # the output is stored in an xarray Q
+    Q_data = np.empty((M, I, E, N, V), dtype=object)
+    Q_dims = ['mass', 'imprecision', 'errmag', 'repetitions', 'values']
+    Q_coords = [list(range(M)), list(range(I)), list(range(E)), list(range(N)), ['sureloss', 'coherence']]
+
+    for m in range(M):
+        for i in range(I):
+            print(f'm, i = {m}, {i}')
+            for e in range(E):
+                for n in range(N):
+                    P_delta = lower_prevision_function2(p[m], K, delta[i])
+                    Q_epsilon = generate_lower_prevision_perturbation(K, epsilon[e])
+                    P_m_i_e_n = lower_prevision_clamped_sum(P_delta, Q_epsilon)
+                    sure_loss = incurs_sure_loss(P_m_i_e_n, Omega, args.pretty)
+                    coherent = is_coherent(P_m_i_e_n, Omega, args.pretty)
+                    Q_data[m,i,e,n] = [int(sure_loss), int(coherent)]
+
+    Q = xr.DataArray(Q_data, Q_coords, Q_dims)
+    print(Q)
+    print(f'saving data set to {args.output_filename}')
+    Q.to_netcdf(args.output_filename)
 
 
 def main():
@@ -135,26 +146,27 @@ def main():
     cmdline_parser.add_argument('--gamble-size', type=int, default=3, help='the number of elements of the gambles in the initial general cone')
     cmdline_parser.add_argument('--k-size', type=int, default=3, help='the number of elements of the set of gambles K')
     cmdline_parser.add_argument('--coordinate-bound', type=int, default=10, help='the maximum absolute value of the coordinates')
-    cmdline_parser.add_argument('--epsilon-lower-prevision', type=float, default=0, help='the epsilon value used for generating lower prevision functions')
-    cmdline_parser.add_argument('--epsilon-perturbation', type=float, default=0, help='the epsilon value used to generate perturbations in test case 3')
-    cmdline_parser.add_argument('--count', type=int, default=1000, help='the number of times the experiment is repeated')
+    cmdline_parser.add_argument('--error-magnitude', type=str, default='0', help='the error magnitude value used for generating lower prevision functions')
+    cmdline_parser.add_argument('--repetitions', type=int, default=1, help='the number of times an experiment is repeated')
     cmdline_parser.add_argument('--test', type=int, default=1, help='the test case (1 or 2)')
     cmdline_parser.add_argument('--pretty', help='print fractions as floats', action='store_true')
     cmdline_parser.add_argument('--print-smt', help='print info about the generated SMT problems', action='store_true')
     cmdline_parser.add_argument('--verbose', '-v', help='print verbose output', action='store_true')
+    cmdline_parser.add_argument('--testcase3-dimensions', type=str, default='5,10,10,10', help='the dimensions M,I,E,N of test case 3 (a comma-separated list)')
+    cmdline_parser.add_argument('--output-filename', type=str, help='a filename where output is stored')
     args = cmdline_parser.parse_args()
     if args.seed == 0:
         args.seed = random.randrange(0, 10000000000)
     info(args)
-    for _ in range(args.count):
-        if args.test == 1:
-            run_testcase1(args)
-        elif args.test == 2:
-            run_testcase2(args)
-        elif args.test == 3:
-            run_testcase3(args)
-        else:
-            raise RuntimeError(f'Unknown test case {args.test}')
+
+    if args.test == 1:
+        run_testcase1(args)
+    elif args.test == 2:
+        run_testcase2(args)
+    elif args.test == 3:
+        run_testcase3(args)
+    else:
+        raise RuntimeError(f'Unknown test case {args.test}')
 
 
 if __name__ == '__main__':

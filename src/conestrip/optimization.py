@@ -175,7 +175,7 @@ def minus_constant(f: Gamble, c: Fraction) -> Gamble:
     return [x - c for x in f]
 
 
-def make_lower_prevision_function1(p: MassFunction, K: List[Gamble]) -> LowerPrevisionFunction:
+def lower_prevision_function1(p: MassFunction, K: List[Gamble]) -> LowerPrevisionFunction:
     def value(f: Gamble) -> Fraction:
         assert len(f) == len(p)
         return sum(p_i * f_i for (p_i, f_i) in zip(p, f))
@@ -183,10 +183,10 @@ def make_lower_prevision_function1(p: MassFunction, K: List[Gamble]) -> LowerPre
     return [(f, value(f)) for f in K]
 
 
-def make_lower_prevision_function2(p: MassFunction, K: List[Gamble], epsilon: Fraction) -> LowerPrevisionFunction:
+def lower_prevision_function2(p: MassFunction, K: List[Gamble], delta: Fraction) -> LowerPrevisionFunction:
     def value(f: Gamble) -> Fraction:
         assert len(f) == len(p)
-        return (1 - epsilon) * sum(p_i * f_i for (p_i, f_i) in zip(p, f)) + epsilon * min(f)
+        return (1 - delta) * sum(p_i * f_i for (p_i, f_i) in zip(p, f)) + delta * min(f)
 
     return [(f, value(f)) for f in K]
 
@@ -313,7 +313,7 @@ def conditional_natural_extension(B: ConditionalLowerPrevisionAssessment, f: Gam
     return optimize_maximize_value(R, hadamard(f, make_one(C, N)), a, [], Omega)
 
 
-def make_perturbation(K: List[Gamble], epsilon: Fraction) -> LowerPrevisionFunction:
+def generate_lower_prevision_perturbation(K: List[Gamble], epsilon: Fraction) -> LowerPrevisionFunction:
     result = []
     for f in K:
         delta = Fraction(random.uniform(0, 1))
