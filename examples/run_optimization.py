@@ -106,7 +106,6 @@ def print_number_list(x: List[Fraction]) -> str:
 def run_testcase3(args):
     print('--- testcase 3 ---')
     GlobalSettings.verbose = args.verbose
-    error_magnitude = Fraction(args.error_magnitude)
     I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
     V = 2  # the number of values per experiment
     Omega = list(range(args.omega_size))
@@ -121,12 +120,37 @@ def run_testcase3(args):
     print(f'delta = {list(map(float, delta))}')
     print(f'epsilon = {list(map(float, epsilon))}')
     for m in range(M):
-        print(f'mass function {m} = {list(map(float, p[m]))}')
+        print(f'probability mass function {m} = {list(map(float, p[m]))}')
     print('')
 
+    pmf_coords = list(range(M))
+    imprecision_coords = [float(d) for d in delta]  # N.B. list(map(float, delta)) doesn't work!
+    errmag_coords = [float(e) for e in epsilon]
+    repetitions_coords = list(range(N))
+    values_coords = ['sureloss', 'coherence']
+    gamble_coords = list(range(len(K)))
+    outcomes_coords = list(range(len(Omega)))
+
+    # create DataArray G containing the gambles in K
+    G_data = np.empty((len(K), len(Omega)))
+    G_dims = ['gambles', 'outcomes']
+    G_coords = [gamble_coords, outcomes_coords]
+    for i, f in enumerate(K):
+        G_data[i] = [float(f_i) for f_i in f]
+    G = xr.DataArray(G_data, G_coords, G_dims)
+
+    # create DataArray A containing the probability mass functions
+    A_data = np.empty((len(p), len(Omega)))
+    A_dims = ['pmf', 'outcomes']
+    A_coords = [pmf_coords, outcomes_coords]
+    for i, p_i in enumerate(p):
+        A_data[i] = [float(x) for x in p_i]
+    A = xr.DataArray(A_data, A_coords, A_dims)
+
+    # create DataArray Q containing the experimental results
     Q_data = np.empty((M, I, E, N, V), dtype=object)
-    Q_dims = ['mass', 'imprecision', 'errmag', 'repetitions', 'values']
-    Q_coords = [list(range(M)), list(range(I)), list(range(E)), list(range(N)), ['sureloss', 'coherence']]
+    Q_dims = ['pmf', 'imprecision', 'errmag', 'repetitions', 'values']
+    Q_coords = [pmf_coords, imprecision_coords, errmag_coords, repetitions_coords, values_coords]
 
     for m in range(M):
         for i in range(I):
@@ -141,10 +165,14 @@ def run_testcase3(args):
                     Q_data[m, i, e, n] = [int(sure_loss), int(coherent)]
 
     Q = xr.DataArray(Q_data, Q_coords, Q_dims)
-    print(Q)
-    print(f'saving data set to {args.output_filename}')
-    Q.to_netcdf(args.output_filename)
 
+    Z_data_vars = {'Q': Q, 'A': A, 'G': G}
+    Z_coords = {'pmf': pmf_coords, 'imprecision': imprecision_coords, 'errmag': errmag_coords, 'repetitions': repetitions_coords, 'values': values_coords, 'outcomes': outcomes_coords, 'gambles': gamble_coords}
+    Z_dims = {'pmf': M, 'imprecision': I, 'errmag': E, 'repetitions': N, 'values': V, 'outcomes': len(Omega), 'gambles': len(K)}
+    Z = xr.Dataset(Z_data_vars, Z_coords, Z_dims)
+
+    print(f'saving data set to {args.output_filename}')
+    Z.to_netcdf(args.output_filename)
 
 def main():
     cmdline_parser = argparse.ArgumentParser()
