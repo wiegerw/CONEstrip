@@ -11,7 +11,7 @@ from typing import List
 import numpy as np
 import xarray as xr
 
-from conestrip.cones import print_gambles, print_fractions, print_gamble
+from conestrip.cones import print_gambles, print_fractions
 from conestrip.global_settings import GlobalSettings
 from conestrip.optimization import generate_mass_function, lower_prevision_function1, incurs_sure_loss, \
     is_mass_function, print_lower_prevision_function, generate_lower_prevision_perturbation, \
@@ -103,12 +103,12 @@ def print_number_list(x: List[Fraction]) -> str:
 def run_testcase3(args):
     print('--- testcase 3 ---')
     GlobalSettings.verbose = args.verbose
+    error_magnitude = Fraction(args.error_magnitude)
     M, I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
     V = 2  # the number of values per experiment
     Omega = list(range(args.gamble_size))
     K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
 
-    error_magnitude = Fraction(args.error_magnitude)
     p = [generate_mass_function(Omega) for m in range(M)]
     delta = [Fraction(i, I) for i in range(I)]  # the imprecision values
     epsilon = [e * error_magnitude for e in range(1, E + 1)]  # the error magnitude values
@@ -118,7 +118,6 @@ def run_testcase3(args):
     print(f'epsilon = {list(map(float, epsilon))}')
     print('')
 
-    # the output is stored in an xarray Q
     Q_data = np.empty((M, I, E, N, V), dtype=object)
     Q_dims = ['mass', 'imprecision', 'errmag', 'repetitions', 'values']
     Q_coords = [list(range(M)), list(range(I)), list(range(E)), list(range(N)), ['sureloss', 'coherence']]
@@ -133,7 +132,7 @@ def run_testcase3(args):
                     P_m_i_e_n = lower_prevision_clamped_sum(P_delta, Q_epsilon)
                     sure_loss = incurs_sure_loss(P_m_i_e_n, Omega, args.pretty)
                     coherent = is_coherent(P_m_i_e_n, Omega, args.pretty)
-                    Q_data[m,i,e,n] = [int(sure_loss), int(coherent)]
+                    Q_data[m, i, e, n] = [int(sure_loss), int(coherent)]
 
     Q = xr.DataArray(Q_data, Q_coords, Q_dims)
     print(Q)
