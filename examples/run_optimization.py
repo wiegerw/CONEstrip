@@ -23,7 +23,7 @@ from conestrip.utility import StopWatch
 def info(args):
     print('--- Settings ---')
     print(f'seed = {args.seed}')
-    print(f'gamble-size = {args.gamble_size}')
+    print(f'omega-size = {args.omega_size}')
     print(f'k-size = {args.k_size}')
     print(f'coordinate-bound = {args.coordinate_bound}')
     print(f'error-magnitude = {args.error_magnitude}')
@@ -38,17 +38,20 @@ def make_default_epsilon_range() -> List[Fraction]:
     return [Fraction(f) for f in [0.000001, 0.00001, 0.0001, 0.001, 0.1, 1, 10]]
 
 
-def make_epsilon_range(epsilon: Fraction) -> List[Fraction]:
-    def nine_range(e: Fraction) -> List[Fraction]:
-        return [n * e for n in range(1, 10)]
-
-    return nine_range(epsilon) + nine_range(10 * epsilon) + nine_range(100 * epsilon) + nine_range(1000 * epsilon) + nine_range(10000 * epsilon)
+# Returns n values of the shape [..., 1/8, 1/4, 1/2, 1]
+def make_epsilon_range(n: int) -> List[Fraction]:
+    epsilon = Fraction(1)
+    result = []
+    for i in range(n):
+        result.append(epsilon)
+        epsilon /= 2
+    return list(reversed(result))
 
 
 def run_testcase1(args):
     GlobalSettings.verbose = args.verbose
-    Omega = list(range(args.gamble_size))
-    K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
+    Omega = list(range(args.omega_size))
+    K = random_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     for _ in range(args.repetitions):
         p = generate_mass_function(Omega)
@@ -69,8 +72,8 @@ def run_testcase1(args):
 def run_testcase2(args):
     GlobalSettings.verbose = args.verbose
     error_magnitude = Fraction(args.error_magnitude)
-    Omega = list(range(args.gamble_size))
-    K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
+    Omega = list(range(args.omega_size))
+    K = random_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     for _ in range(args.repetitions):
         p = generate_mass_function(Omega)
@@ -106,12 +109,12 @@ def run_testcase3(args):
     error_magnitude = Fraction(args.error_magnitude)
     M, I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
     V = 2  # the number of values per experiment
-    Omega = list(range(args.gamble_size))
-    K = random_gambles(args.k_size, args.gamble_size, args.coordinate_bound)
+    Omega = list(range(args.omega_size))
+    K = random_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     p = [generate_mass_function(Omega) for m in range(M)]
     delta = [Fraction(i, I) for i in range(I)]  # the imprecision values
-    epsilon = [e * error_magnitude for e in range(1, E + 1)]  # the error magnitude values
+    epsilon = make_epsilon_range(E)  # the error magnitude values
 
     print(f'M, I, E, N = {M}, {I}, {E}, {N}')
     print(f'delta = {list(map(float, delta))}')
@@ -143,7 +146,7 @@ def run_testcase3(args):
 def main():
     cmdline_parser = argparse.ArgumentParser()
     cmdline_parser.add_argument("--seed", help="the seed of the random generator", type=int, default=0)
-    cmdline_parser.add_argument('--gamble-size', type=int, default=3, help='the number of elements of the gambles in the initial general cone')
+    cmdline_parser.add_argument('--omega-size', type=int, default=3, help='the number of elements of event set Omega')
     cmdline_parser.add_argument('--k-size', type=int, default=3, help='the number of elements of the set of gambles K')
     cmdline_parser.add_argument('--coordinate-bound', type=int, default=10, help='the maximum absolute value of the coordinates')
     cmdline_parser.add_argument('--error-magnitude', type=str, default='0', help='the error magnitude value used for generating lower prevision functions')
@@ -152,7 +155,7 @@ def main():
     cmdline_parser.add_argument('--pretty', help='print fractions as floats', action='store_true')
     cmdline_parser.add_argument('--print-smt', help='print info about the generated SMT problems', action='store_true')
     cmdline_parser.add_argument('--verbose', '-v', help='print verbose output', action='store_true')
-    cmdline_parser.add_argument('--testcase3-dimensions', type=str, default='5,10,10,10', help='the dimensions M,I,E,N of test case 3 (a comma-separated list)')
+    cmdline_parser.add_argument('--testcase3-dimensions', type=str, default='2,10,7,5', help='the dimensions M,I,E,N of test case 3 (a comma-separated list)')
     cmdline_parser.add_argument('--output-filename', type=str, help='a filename where output is stored')
     args = cmdline_parser.parse_args()
     if args.seed == 0:

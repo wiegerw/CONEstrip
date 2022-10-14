@@ -1,2 +1,2 @@
 PYTHONPATH=../src
-python3 run_optimization.py --k-size=3 --gamble-size=3 --coordinate-bound=20 --test=3 --error-magnitude="1/10" --testcase3-dimensions="2,3,10,10" --output-filename="1.netcdf"
+python3 run_optimization.py --k-size=6 --omega-size=3 --coordinate-bound=20 --test=3 --error-magnitude="1/10" --testcase3-dimensions="2,10,7,5" --output-filename="1.netcdf"
