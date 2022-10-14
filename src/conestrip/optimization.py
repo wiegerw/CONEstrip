@@ -343,4 +343,4 @@ def lower_prevision_clamped_sum(P: LowerPrevisionFunction, Q: LowerPrevisionFunc
         return len(P) == len(Q) and all(p[0] == q[0] for (p, q) in zip(P, Q))
 
     assert same_domain(P, Q)
-    return [(p[0], clamp(p[1] + q[1], min(p[0]), max(p[0]))) for (p, q) in zip(P, Q)]
+    return [(f, clamp(p_f + p_g, min(f), max(f))) for ((f, p_f), (g, p_g)) in zip(P, Q)]
