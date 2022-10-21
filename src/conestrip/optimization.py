@@ -197,7 +197,7 @@ def minus_constant(f: Gamble, c: Fraction) -> Gamble:
     return [x - c for x in f]
 
 
-def lower_prevision_function1(p: MassFunction, K: List[Gamble]) -> LowerPrevisionFunction:
+def linear_lower_prevision_function(p: MassFunction, K: List[Gamble]) -> LowerPrevisionFunction:
     def value(f: Gamble) -> Fraction:
         assert len(f) == len(p)
         return sum(p_i * f_i for (p_i, f_i) in zip(p, f))
@@ -205,7 +205,7 @@ def lower_prevision_function1(p: MassFunction, K: List[Gamble]) -> LowerPrevisio
     return [(f, value(f)) for f in K]
 
 
-def lower_prevision_function2(p: MassFunction, K: List[Gamble], delta: Fraction) -> LowerPrevisionFunction:
+def linear_vacuous_lower_prevision_function(p: MassFunction, K: List[Gamble], delta: Fraction) -> LowerPrevisionFunction:
     def value(f: Gamble) -> Fraction:
         assert len(f) == len(p)
         return (1 - delta) * sum(p_i * f_i for (p_i, f_i) in zip(p, f)) + delta * min(f)

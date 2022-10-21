@@ -13,9 +13,10 @@ import xarray as xr
 
 from conestrip.cones import print_gambles, print_fractions
 from conestrip.global_settings import GlobalSettings
-from conestrip.optimization import generate_mass_function, lower_prevision_function1, incurs_sure_loss, \
+from conestrip.optimization import generate_mass_function, incurs_sure_loss, \
     is_mass_function, print_lower_prevision_function, generate_lower_prevision_perturbation, \
-    lower_prevision_clamped_sum, lower_prevision_function2, is_coherent, generate_mass_functions
+    lower_prevision_clamped_sum, is_coherent, generate_mass_functions, linear_vacuous_lower_prevision_function, \
+    linear_lower_prevision_function
 from conestrip.random_cones import random_gambles
 from conestrip.utility import StopWatch
 
@@ -40,12 +41,12 @@ def make_default_epsilon_range() -> List[Fraction]:
 
 # Returns n values of the shape [..., 1/8, 1/4, 1/2, 1]
 def make_epsilon_range(n: int) -> List[Fraction]:
-    epsilon = Fraction(1)
+    epsilon = Fraction(1, 4)
     result = []
-    for i in range(n):
+    for i in range(n - 1):
         result.append(epsilon)
         epsilon /= 2
-    return list(reversed(result))
+    return [Fraction(0)] + list(reversed(result))
 
 
 def run_testcase1(args):
@@ -58,9 +59,9 @@ def run_testcase1(args):
         error_magnitude = Fraction(args.error_magnitude)
         assert is_mass_function(p)
         if error_magnitude > 0:
-            P_p = lower_prevision_function2(p, K, Fraction(error_magnitude))
+            P_p = linear_vacuous_lower_prevision_function(p, K, Fraction(error_magnitude))
         else:
-            P_p = lower_prevision_function1(p, K)
+            P_p = linear_lower_prevision_function(p, K)
         print('--- testcase 1 ---')
         print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}')
         watch = StopWatch()
@@ -79,9 +80,9 @@ def run_testcase2(args):
         p = generate_mass_function(Omega)
         assert is_mass_function(p)
         if error_magnitude > 0:
-            P_p = lower_prevision_function2(p, K, Fraction(error_magnitude))
+            P_p = linear_vacuous_lower_prevision_function(p, K, Fraction(error_magnitude))
         else:
-            P_p = lower_prevision_function1(p, K)
+            P_p = linear_lower_prevision_function(p, K)
         print('--- testcase 2 ---')
         print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}\n')
         for epsilon in make_default_epsilon_range():
@@ -157,7 +158,7 @@ def run_testcase3(args):
             print(f'm, i = {m}, {i}')
             for e in range(E):
                 for n in range(N):
-                    P_delta = lower_prevision_function2(p[m], K, delta[i])
+                    P_delta = linear_vacuous_lower_prevision_function(p[m], K, delta[i])
                     Q_epsilon = generate_lower_prevision_perturbation(K, epsilon[e])
                     P_m_i_e_n = lower_prevision_clamped_sum(P_delta, Q_epsilon)
                     sure_loss = incurs_sure_loss(P_m_i_e_n, Omega, args.pretty)
