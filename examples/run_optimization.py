@@ -129,20 +129,20 @@ def run_testcase3(args):
     repetitions_coords = list(range(N))
     values_coords = ['sureloss', 'coherence']
     gamble_coords = list(range(len(K)))
-    outcomes_coords = list(range(len(Omega)))
+    outcome_coords = list(range(len(Omega)))
 
     # create DataArray G containing the gambles in K
     G_data = np.empty((len(K), len(Omega)))
-    G_dims = ['gambles', 'outcomes']
-    G_coords = [gamble_coords, outcomes_coords]
+    G_dims = ['gamble', 'outcome']
+    G_coords = [gamble_coords, outcome_coords]
     for i, f in enumerate(K):
         G_data[i] = [float(f_i) for f_i in f]
     G = xr.DataArray(G_data, G_coords, G_dims)
 
     # create DataArray A containing the probability mass functions
     A_data = np.empty((len(p), len(Omega)))
-    A_dims = ['pmf', 'outcomes']
-    A_coords = [pmf_coords, outcomes_coords]
+    A_dims = ['pmf', 'outcome']
+    A_coords = [pmf_coords, outcome_coords]
     for i, p_i in enumerate(p):
         A_data[i] = [float(x) for x in p_i]
     A = xr.DataArray(A_data, A_coords, A_dims)
@@ -168,7 +168,7 @@ def run_testcase3(args):
 
     # Put the data arrays Q, A and G in the data set Z
     Z_data_vars = {'results': Q, 'mass-functions': A, 'gambles': G}
-    Z_coords = {'pmf': pmf_coords, 'imprecision': imprecision_coords, 'errmag': errmag_coords, 'repetitions': repetitions_coords, 'values': values_coords, 'outcomes': outcomes_coords, 'gambles': gamble_coords}
+    Z_coords = {'pmf': pmf_coords, 'imprecision': imprecision_coords, 'errmag': errmag_coords, 'repetitions': repetitions_coords, 'values': values_coords, 'outcome': outcome_coords, 'gamble': gamble_coords}
     Z_dims = {'pmf': M, 'imprecision': I, 'errmag': E, 'repetitions': N, 'values': V, 'outcomes': len(Omega), 'gambles': len(K)}
     Z = xr.Dataset(Z_data_vars, Z_coords, Z_dims)
 
