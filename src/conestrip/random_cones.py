@@ -17,14 +17,19 @@ def remove_redundant_vertices(vertices: List[Gamble]) -> List[Gamble]:
     return poly.vertices()
 
 
-# randomly generate a vector in R^n with coefficients in the range [-bound, ..., bound]
+# randomly generate a vector in R^n with integer coefficients in the range [-bound, ..., bound]
 def random_vector(n: int, bound: int) -> List[Fraction]:
     return [Fraction(random.randrange(-bound, bound+1)) for _ in range(n)]
 
 
+# randomly generate a vector in R^n with real coefficients in the range [-bound, ..., bound]
+def random_real_vector(n: int, bound: int) -> List[Fraction]:
+    return [Fraction(random.uniform(-bound, bound+1)) for _ in range(n)]
+
+
 # randomly generate count n-dimensional gambles with coefficients in the range [-bound, ..., bound]
-def random_gambles(count: int, n: int, bound: int) -> List[Gamble]:
-    return [random_vector(n, bound) for _ in range(count)]
+def random_real_gambles(count: int, n: int, bound: int) -> List[Gamble]:
+    return [random_real_vector(n, bound) for _ in range(count)]
 
 
 def random_cone_generator(dimension: int, generator_size: int, bound: int, normal=None) -> ConeGenerator:

@@ -17,7 +17,7 @@ from conestrip.optimization import generate_mass_function, incurs_sure_loss, \
     is_mass_function, print_lower_prevision_function, generate_lower_prevision_perturbation, \
     lower_prevision_clamped_sum, is_coherent, generate_mass_functions, linear_vacuous_lower_prevision_function, \
     linear_lower_prevision_function
-from conestrip.random_cones import random_gambles
+from conestrip.random_cones import random_real_gambles
 from conestrip.utility import StopWatch
 
 
@@ -52,7 +52,7 @@ def make_epsilon_range(n: int) -> List[Fraction]:
 def run_testcase1(args):
     GlobalSettings.verbose = args.verbose
     Omega = list(range(args.omega_size))
-    K = random_gambles(args.k_size, args.omega_size, args.coordinate_bound)
+    K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     for _ in range(args.repetitions):
         p = generate_mass_function(Omega)
@@ -74,7 +74,7 @@ def run_testcase2(args):
     GlobalSettings.verbose = args.verbose
     error_magnitude = Fraction(args.error_magnitude)
     Omega = list(range(args.omega_size))
-    K = random_gambles(args.k_size, args.omega_size, args.coordinate_bound)
+    K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     for _ in range(args.repetitions):
         p = generate_mass_function(Omega)
@@ -110,7 +110,7 @@ def run_testcase3(args):
     I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
     V = 2  # the number of values per experiment
     Omega = list(range(args.omega_size))
-    K = random_gambles(args.k_size, args.omega_size, args.coordinate_bound)
+    K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     p = generate_mass_functions(Omega)
     M = len(p)
@@ -158,7 +158,10 @@ def run_testcase3(args):
             print(f'm, i = {m}, {i}')
             for e in range(E):
                 for n in range(N):
-                    P_delta = linear_vacuous_lower_prevision_function(p[m], K, delta[i])
+                    if delta[i] > 0:
+                        P_delta = linear_vacuous_lower_prevision_function(p[m], K, delta[i])
+                    else:
+                        P_delta = linear_lower_prevision_function(p[m], K)
                     Q_epsilon = generate_lower_prevision_perturbation(K, epsilon[e])
                     P_m_i_e_n = lower_prevision_clamped_sum(P_delta, Q_epsilon)
                     sure_loss = incurs_sure_loss(P_m_i_e_n, Omega, args.pretty)
@@ -175,6 +178,25 @@ def run_testcase3(args):
 
     print(f'saving data set to {args.output_filename}')
     Z.to_netcdf(args.output_filename)
+
+
+def run_testcase4(args):
+    print('--- testcase 4 ---')
+    Omega = list(range(args.omega_size))
+    K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
+    p = generate_mass_function(Omega)
+    epsilon = Fraction(0)
+    P_delta = linear_lower_prevision_function(p, K)
+    Q_epsilon = generate_lower_prevision_perturbation(K, epsilon)
+    P = lower_prevision_clamped_sum(P_delta, Q_epsilon)
+    assert P == P_delta
+
+    print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP = {print_lower_prevision_function(P, args.pretty)}')
+    sure_loss = incurs_sure_loss(P, Omega, args.pretty)
+    coherent = is_coherent(P, Omega, args.pretty)
+    print(f'incurs_sure_loss(P, Omega) = {sure_loss}')
+    print(f'is_coherent(P, Omega) = {coherent}\n')
+
 
 def main():
     cmdline_parser = argparse.ArgumentParser()
@@ -201,6 +223,8 @@ def main():
         run_testcase2(args)
     elif args.test == 3:
         run_testcase3(args)
+    elif args.test == 4:
+        run_testcase4(args)
     else:
         raise RuntimeError(f'Unknown test case {args.test}')
 
