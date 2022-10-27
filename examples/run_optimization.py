@@ -31,7 +31,7 @@ def info(args):
     print(f'repetitions = {args.repetitions}')
     print(f'verbose = {args.verbose}')
     print(f'pretty = {args.pretty}')
-    print(f'print-smt = {args.print_smt}')
+    print(f'decimals = {args.decimals}')
     print()
 
 
@@ -50,7 +50,6 @@ def make_epsilon_range(n: int) -> List[Fraction]:
 
 
 def run_testcase1(args):
-    GlobalSettings.verbose = args.verbose
     Omega = list(range(args.omega_size))
     K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
@@ -71,7 +70,6 @@ def run_testcase1(args):
 
 
 def run_testcase2(args):
-    GlobalSettings.verbose = args.verbose
     error_magnitude = Fraction(args.error_magnitude)
     Omega = list(range(args.omega_size))
     K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
@@ -106,7 +104,6 @@ def print_number_list(x: List[Fraction]) -> str:
 
 def run_testcase3(args):
     print('--- testcase 3 ---')
-    GlobalSettings.verbose = args.verbose
     I, E, N = [int(s) for s in args.testcase3_dimensions.split(',')]
     V = 2  # the number of values per experiment
     Omega = list(range(args.omega_size))
@@ -195,7 +192,17 @@ def run_testcase4(args):
     assert P == P_delta
 
     print(f'K =\n{print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP = {print_lower_prevision_function(P, args.pretty)}')
+    if args.verbose:
+        print('')
+        print('----------------------------------------------------------')
+        print('            calculating incurs_sure_loss')
+        print('----------------------------------------------------------')
     sure_loss = incurs_sure_loss(P, Omega, args.pretty)
+    if args.verbose:
+        print('')
+        print('----------------------------------------------------------')
+        print('            calculating is_coherent')
+        print('----------------------------------------------------------')
     coherent = is_coherent(P, Omega, args.pretty)
     print(f'incurs_sure_loss(P, Omega) = {sure_loss}')
     print(f'is_coherent(P, Omega) = {coherent}\n')
@@ -212,7 +219,6 @@ def main():
     cmdline_parser.add_argument('--repetitions', type=int, default=1, help='the number of times an experiment is repeated')
     cmdline_parser.add_argument('--test', type=int, default=1, help='the test case (1 or 2)')
     cmdline_parser.add_argument('--pretty', help='print fractions as floats', action='store_true')
-    cmdline_parser.add_argument('--print-smt', help='print info about the generated SMT problems', action='store_true')
     cmdline_parser.add_argument('--verbose', '-v', help='print verbose output', action='store_true')
     cmdline_parser.add_argument('--testcase3-dimensions', type=str, default='10,7,5', help='the dimensions I,E,N of test case 3 (a comma-separated list)')
     cmdline_parser.add_argument('--output-filename', type=str, help='a filename where output is stored')
@@ -222,6 +228,7 @@ def main():
     info(args)
 
     random.seed(args.seed)
+    GlobalSettings.verbose = args.verbose
 
     if args.test == 1:
         run_testcase1(args)

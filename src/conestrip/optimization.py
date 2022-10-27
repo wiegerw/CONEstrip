@@ -154,14 +154,19 @@ def optimize_find(R: GeneralCone, f: Gamble, B: List[Tuple[Any, Any]], Omega: Li
     constraints = list(flatten(optimize_constraints(R, f, B, Omega, mu)))
     solver = Solver()
     solver.add(constraints)
+    if GlobalSettings.verbose:
+        print('=== optimize_find ===')
+        print_constraints('constraints:\n', constraints)
     if solver.check() == sat:
         model = solver.model()
         mu_solution = [[model.evaluate(mu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
-        if GlobalSettings.print_smt:
-            print('--- solution ---')
+        if GlobalSettings.verbose:
+            print('SAT')
             print('mu =', mu_solution)
         return mu_solution
     else:
+        if GlobalSettings.verbose:
+            print('UNSAT')
         return None
 
 
@@ -189,12 +194,14 @@ def optimize_maximize_full(R: GeneralCone, f: Gamble, a: List[List[Fraction]], B
         model = optimizer.model()
         mu_solution = [[model.evaluate(mu[d][i]) for i in range(len(R[d]))] for d in range(len(R))]
         goal_solution = model.evaluate(goal)
-        if GlobalSettings.print_smt:
-            print('--- solution ---')
+        if GlobalSettings.verbose:
+            print('SAT')
             print('mu =', mu_solution)
             print('goal =', model.evaluate(goal))
         return mu_solution, goal_solution
     else:
+        if GlobalSettings.verbose:
+            print('UNSAT')
         return None, Fraction(0)
 
 
@@ -304,7 +311,7 @@ def incurs_sure_loss(P: LowerPrevisionFunction, Omega: PossibilitySpace, pretty=
     A = lower_prevision_assessment(P)
     R = sure_loss_cone(A, Omega)
     if GlobalSettings.verbose:
-        print(f'incurs_sure_loss: R = {print_general_cone(R, pretty)}\n')
+        print(f'incurs_sure_loss: R =\n{print_general_cone(R, pretty)}\n')
     return incurs_sure_loss_cone(R, Omega)
 
 
@@ -312,8 +319,8 @@ def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace, prett
     R = natural_extension_cone(A, Omega)
     a = natural_extension_objective(R, Omega)
     if GlobalSettings.verbose:
-        print(f'natural_extension: R = {print_general_cone(R, pretty)}\n')
-        print(f'natural_extension: a = {print_cone_generator(a, pretty)}\n')
+        print(f'natural_extension: R =\n{print_general_cone(R, pretty)}\n')
+        print(f'natural_extension: a =\n{print_cone_generator(a, pretty)}\n')
     return optimize_maximize_value(R, f, a, [], Omega)
 
 
