@@ -194,7 +194,7 @@ def run_testcase4(args):
     P = lower_prevision_clamped_sum(P_delta, Q_epsilon)
     assert P == P_delta
 
-    print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP = {print_lower_prevision_function(P, args.pretty)}')
+    print(f'K =\n{print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP = {print_lower_prevision_function(P, args.pretty)}')
     sure_loss = incurs_sure_loss(P, Omega, args.pretty)
     coherent = is_coherent(P, Omega, args.pretty)
     print(f'incurs_sure_loss(P, Omega) = {sure_loss}')

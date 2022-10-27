@@ -68,7 +68,6 @@ def is_unit_gamble(g: Gamble) -> bool:
 
 
 def generate_mass_function(Omega: PossibilitySpace, number_of_zeroes: int = 0, decimals: int = 2) -> MassFunction:
-    print('decimals', decimals)
     if number_of_zeroes == 0:
         N = len(Omega)
         return random_rationals_summing_to_one(N, 10 ** decimals)
