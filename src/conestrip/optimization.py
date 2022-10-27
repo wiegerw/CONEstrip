@@ -3,6 +3,7 @@
 # (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
 
 import random
+from itertools import chain, combinations
 from typing import Any, List, Tuple
 from more_itertools import collapse
 from more_itertools.recipes import flatten
@@ -20,6 +21,11 @@ LowerPrevisionFunction = List[Tuple[Gamble, Fraction]]
 LowerPrevisionAssessment = List[Gamble]
 ConditionalLowerPrevisionFunction = List[Tuple[Gamble, Event, Fraction]]
 ConditionalLowerPrevisionAssessment = List[Tuple[Gamble, Event]]
+
+
+def powerset(iterable):
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 
 def print_lower_prevision_function(P: LowerPrevisionFunction, pretty=False) -> str:
@@ -76,6 +82,15 @@ def generate_mass_function(Omega: PossibilitySpace, number_of_zeroes: int = 0) -
                 result[i] = values[index]
                 index += 1
         return result
+
+
+# Generates a mass function on the subsets of Omega.
+# The mass of the empty set is always 0.
+# The subsets are assumed to be ordered according to powerset, which means
+# that the empty set is always at the front.
+def generate_subset_mass_function(Omega: PossibilitySpace) -> MassFunction:
+    N = 2 ** len(Omega)
+    return [Fraction(0)] + random_rationals_summing_to_one(N - 1)
 
 
 # generates 1 mass function with 1 non-zero, 2 with 2 non-zeroes, etc.
@@ -209,6 +224,15 @@ def linear_vacuous_lower_prevision_function(p: MassFunction, K: List[Gamble], de
     def value(f: Gamble) -> Fraction:
         assert len(f) == len(p)
         return (1 - delta) * sum(p_i * f_i for (p_i, f_i) in zip(p, f)) + delta * min(f)
+
+    return [(f, value(f)) for f in K]
+
+
+# We assume that the subsets of Omega are ordered according to the powerset function
+def belief_lower_prevision_function(p: MassFunction, K: List[Gamble]) -> LowerPrevisionFunction:
+    def value(f: Gamble) -> Fraction:
+        assert len(p) == 2 ** len(f)
+        return sum((p[i] * min(S)) for (i, S) in enumerate(powerset(f)) if i > 0)  # N.B. skip the empty set!
 
     return [(f, value(f)) for f in K]
 

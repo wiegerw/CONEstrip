@@ -171,7 +171,7 @@ def run_testcase3(args):
     Q = xr.DataArray(Q_data, Q_coords, Q_dims)
 
     # Put the data arrays Q, A and G in the data set Z
-    Z_data_vars = {'results': Q, 'mass-functions': A, 'gambles': G}
+    Z_data_vars = {'results': Q, 'mass_functions': A, 'gambles': G}
     Z_coords = {'pmf': pmf_coords, 'imprecision': imprecision_coords, 'errmag': errmag_coords, 'repetitions': repetitions_coords, 'values': values_coords, 'outcome': outcome_coords, 'gamble': gamble_coords}
     Z_dims = {'pmf': M, 'imprecision': I, 'errmag': E, 'repetitions': N, 'values': V, 'outcomes': len(Omega), 'gambles': len(K)}
     Z = xr.Dataset(Z_data_vars, Z_coords, Z_dims)
