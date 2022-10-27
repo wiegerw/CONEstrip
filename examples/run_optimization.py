@@ -148,10 +148,15 @@ def run_testcase3(args):
         A_data[i] = [float(x) for x in p_i]
     A = xr.DataArray(A_data, A_coords, A_dims)
 
-    # create DataArray Q containing the experimental results
-    Q_data = np.empty((M, I, E, N, V), dtype=object)
-    Q_dims = ['pmf', 'imprecision', 'errmag', 'repetitions', 'values']
-    Q_coords = [pmf_coords, imprecision_coords, errmag_coords, repetitions_coords, values_coords]
+    # create DataArray Q containing sure loss
+    Q_data = np.empty((M, I, E, N), dtype=object)
+    Q_dims = ['pmf', 'imprecision', 'errmag', 'repetitions']
+    Q_coords = [pmf_coords, imprecision_coords, errmag_coords, repetitions_coords]
+
+    # create DataArray R containing coherence
+    R_data = np.empty((M, I, E, N), dtype=object)
+    R_dims = ['pmf', 'imprecision', 'errmag', 'repetitions']
+    R_coords = [pmf_coords, imprecision_coords, errmag_coords, repetitions_coords]
 
     for m in range(M):
         for i in range(I):
@@ -164,17 +169,15 @@ def run_testcase3(args):
                         P_delta = linear_lower_prevision_function(p[m], K)
                     Q_epsilon = generate_lower_prevision_perturbation(K, epsilon[e])
                     P_m_i_e_n = lower_prevision_clamped_sum(P_delta, Q_epsilon)
-                    sure_loss = incurs_sure_loss(P_m_i_e_n, Omega, args.pretty)
-                    coherent = is_coherent(P_m_i_e_n, Omega, args.pretty)
-                    Q_data[m, i, e, n] = [int(sure_loss), int(coherent)]
+                    Q_data[m, i, e, n] = int(incurs_sure_loss(P_m_i_e_n, Omega, args.pretty))
+                    R_data[m, i, e, n] = int(is_coherent(P_m_i_e_n, Omega, args.pretty))
 
     Q = xr.DataArray(Q_data, Q_coords, Q_dims)
+    R = xr.DataArray(R_data, R_coords, R_dims)
 
     # Put the data arrays Q, A and G in the data set Z
-    Z_data_vars = {'results': Q, 'mass_functions': A, 'gambles': G}
-    Z_coords = {'pmf': pmf_coords, 'imprecision': imprecision_coords, 'errmag': errmag_coords, 'repetitions': repetitions_coords, 'values': values_coords, 'outcome': outcome_coords, 'gamble': gamble_coords}
-    Z_dims = {'pmf': M, 'imprecision': I, 'errmag': E, 'repetitions': N, 'values': V, 'outcomes': len(Omega), 'gambles': len(K)}
-    Z = xr.Dataset(Z_data_vars, Z_coords, Z_dims)
+    Z_data_vars = {'incurs_sure_loss': Q, 'is_coherent': R, 'mass_functions': A, 'gambles': G}
+    Z = xr.Dataset(Z_data_vars)
 
     print(f'saving data set to {args.output_filename}')
     Z.to_netcdf(args.output_filename)
