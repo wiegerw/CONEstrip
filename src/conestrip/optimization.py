@@ -67,13 +67,14 @@ def is_unit_gamble(g: Gamble) -> bool:
     return g.count(Fraction(1)) == 1 and g.count(Fraction(0)) == len(g) - 1
 
 
-def generate_mass_function(Omega: PossibilitySpace, number_of_zeroes: int = 0) -> MassFunction:
+def generate_mass_function(Omega: PossibilitySpace, number_of_zeroes: int = 0, decimals: int = 2) -> MassFunction:
+    print('decimals', decimals)
     if number_of_zeroes == 0:
         N = len(Omega)
-        return random_rationals_summing_to_one(N)
+        return random_rationals_summing_to_one(N, 10 ** decimals)
     else:
         N = len(Omega)
-        values = random_rationals_summing_to_one(N - number_of_zeroes)
+        values = random_rationals_summing_to_one(N - number_of_zeroes, 10 ** decimals)
         zero_positions = random.sample(range(N), number_of_zeroes)
         result = [Fraction(0)] * N
         index = 0
@@ -88,18 +89,18 @@ def generate_mass_function(Omega: PossibilitySpace, number_of_zeroes: int = 0) -
 # The mass of the empty set is always 0.
 # The subsets are assumed to be ordered according to powerset, which means
 # that the empty set is always at the front.
-def generate_subset_mass_function(Omega: PossibilitySpace) -> MassFunction:
+def generate_subset_mass_function(Omega: PossibilitySpace, decimals: int = 2) -> MassFunction:
     N = 2 ** len(Omega)
-    return [Fraction(0)] + random_rationals_summing_to_one(N - 1)
+    return [Fraction(0)] + random_rationals_summing_to_one(N - 1, 10 ** decimals)
 
 
 # generates 1 mass function with 1 non-zero, 2 with 2 non-zeroes, etc.
-def generate_mass_functions(Omega: PossibilitySpace) -> List[MassFunction]:
+def generate_mass_functions(Omega: PossibilitySpace, decimals: int = 2) -> List[MassFunction]:
     result = []
     N = len(Omega)
     for number_of_zeroes in range(N - 1, -1, -1):
         for _ in range(N - number_of_zeroes):
-            result.append(generate_mass_function(Omega, number_of_zeroes))
+            result.append(generate_mass_function(Omega, number_of_zeroes, decimals))
     return result
 
 

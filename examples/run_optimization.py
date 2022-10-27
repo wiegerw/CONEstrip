@@ -55,7 +55,7 @@ def run_testcase1(args):
     K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     for _ in range(args.repetitions):
-        p = generate_mass_function(Omega)
+        p = generate_mass_function(Omega, args.decimals)
         error_magnitude = Fraction(args.error_magnitude)
         assert is_mass_function(p)
         if error_magnitude > 0:
@@ -77,7 +77,7 @@ def run_testcase2(args):
     K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
     for _ in range(args.repetitions):
-        p = generate_mass_function(Omega)
+        p = generate_mass_function(Omega, args.decimals)
         assert is_mass_function(p)
         if error_magnitude > 0:
             P_p = linear_vacuous_lower_prevision_function(p, K, Fraction(error_magnitude))
@@ -112,7 +112,7 @@ def run_testcase3(args):
     Omega = list(range(args.omega_size))
     K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
 
-    p = generate_mass_functions(Omega)
+    p = generate_mass_functions(Omega, args.decimals)
     M = len(p)
     delta = [Fraction(i, I) for i in range(I)]  # the imprecision values
     epsilon = make_epsilon_range(E)  # the error magnitude values
@@ -186,8 +186,8 @@ def run_testcase3(args):
 def run_testcase4(args):
     print('--- testcase 4 ---')
     Omega = list(range(args.omega_size))
-    K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound)
-    p = generate_mass_function(Omega)
+    K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound, args.decimals)
+    p = generate_mass_function(Omega, args.decimals)
     epsilon = Fraction(0)
     P_delta = linear_lower_prevision_function(p, K)
     Q_epsilon = generate_lower_prevision_perturbation(K, epsilon)
@@ -207,6 +207,7 @@ def main():
     cmdline_parser.add_argument('--omega-size', type=int, default=3, help='the number of elements of event set Omega')
     cmdline_parser.add_argument('--k-size', type=int, default=3, help='the number of elements of the set of gambles K')
     cmdline_parser.add_argument('--coordinate-bound', type=int, default=1, help='the maximum absolute value of the coordinates')
+    cmdline_parser.add_argument('--decimals', type=int, default=2, help='the number of decimals for the random generation')
     cmdline_parser.add_argument('--error-magnitude', type=str, default='0', help='the error magnitude value used for generating lower prevision functions')
     cmdline_parser.add_argument('--repetitions', type=int, default=1, help='the number of times an experiment is repeated')
     cmdline_parser.add_argument('--test', type=int, default=1, help='the test case (1 or 2)')
@@ -219,6 +220,8 @@ def main():
     if args.seed == 0:
         args.seed = random.randrange(0, 10000000000)
     info(args)
+
+    random.seed(args.seed)
 
     if args.test == 1:
         run_testcase1(args)
