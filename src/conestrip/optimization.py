@@ -326,7 +326,14 @@ def natural_extension(A: List[Gamble], f: Gamble, Omega: PossibilitySpace, prett
 
 def is_coherent(P: LowerPrevisionFunction, Omega: PossibilitySpace, pretty=False) -> bool:
     A = lower_prevision_assessment(P)
-    return all(P_f == natural_extension(A, f, Omega, pretty) for (f, P_f) in P)
+    for (f, P_f) in P:
+        n_f = natural_extension(A, f, Omega, pretty)
+        if not P_f == n_f:
+            if GlobalSettings.verbose:
+                print(f'the is_coherent check failed for: f=({print_gamble(f, pretty)})  P(f)={P_f}  natural_extension(f) = {n_f}')
+            return False
+    return True
+    # return all(P_f == natural_extension(A, f, Omega, pretty) for (f, P_f) in P)
 
 
 def incurs_partial_loss(P: ConditionalLowerPrevisionFunction, Omega: PossibilitySpace, pretty=False) -> bool:
