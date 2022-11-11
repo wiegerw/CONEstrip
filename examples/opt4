@@ -1,0 +1,2 @@
+PYTHONPATH=../src
+python3 run_optimization.py --k-size=3 --omega-size=3 --coordinate-bound=1 --decimals=0 --test=4 --seed=3203138791 --verbose
