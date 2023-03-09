@@ -269,7 +269,7 @@ def partial_loss_cone(B: ConditionalLowerPrevisionAssessment, Omega: Possibility
     zero = make_zero(N)
 
     R1 = [[g, make_one(B1, N)] for (g, B1) in B if g != zero]
-    R2 = [[make_one_omega(i, N) for i in range(N)]]
+    R2 = [[make_one_omega(i, N)] for i in range(N)]
     R = R1 + R2  # TODO: remove duplicates
     return R
 
@@ -278,7 +278,7 @@ def natural_extension_cone(A: LowerPrevisionAssessment, Omega: PossibilitySpace)
     N = len(Omega)
     R1 = [[g] for g in A]
     R2 = [[make_one_Omega(N)], [make_minus_one_Omega(N)], [make_zero(N)]]
-    R3 = [[make_one_omega(i, N) for i in range(N)]]
+    R3 = [[make_one_omega(i, N)] for i in range(N)]
     R = R1 + R2 + R3  # TODO: remove duplicates
     return R
 
