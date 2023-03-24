@@ -5,6 +5,7 @@
 import random
 from itertools import chain, combinations
 from typing import Any, List, Tuple
+
 from more_itertools import collapse
 from more_itertools.recipes import flatten
 from z3 import *
@@ -121,9 +122,8 @@ def optimize_constraints(R: GeneralCone, f: List[Any], B: List[Tuple[Any, Any]],
     # intermediate expressions
     h = sum_rows(list(sum_rows([product(mu[d][i], g[d][i]) for i in range(len(R[d]))]) for d in range(len(R))))
 
-    # 0 <= mu && (mu_D != 0 for all D in R)
-    mu_constraints = [And(And([x >= 0 for x in mu_D]), Or([x != 0 for x in mu_D])) for mu_D in mu]
-    # mu_constraints = [0 <= x for x in collapse(mu)] + [Or([x != 0 for x in mu_D]) for mu_D in mu]
+    # 0 <= mu && exists mu_D: (x != 0 for x in mu_D)
+    mu_constraints = [0 <= x for x in collapse(mu)] + [Or([And([x != 0 for x in mu_D]) for mu_D in mu])]
 
     constraints_1 = [h[omega] == f[omega] for omega in Omega]
 
