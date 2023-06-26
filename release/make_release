@@ -16,4 +16,4 @@ python3 -m build
 ls dist/CONEstrip-${VERSION}*
 
 # 5) upload the distribution
-#python3 -m twine upload --repository pypi dist/gambatools-${VERSION}*
+#python3 -m twine upload --repository pypi dist/CONEstrip-${VERSION}*

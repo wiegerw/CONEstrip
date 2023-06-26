@@ -45,6 +45,6 @@ logic of Z3. Hence, also this algorithm has been implemented using
 
 ## Documentation
 
-A detailed specification of the implementation can be found in [CONEstrip.pdf](doc/CONEstrip.pdf).
+A detailed specification of the implementation can be found in [CONEstrip.pdf](https://github.com/wiegerw/CONEstrip/blob/main/doc/CONEstrip.pdf).
 Note that this is not a tutorial, but rather a precise description of the algorithms
 that were implemented.
