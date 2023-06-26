@@ -61,9 +61,9 @@ pip install CONEstrip
 ## Licensing
 
 The code is available under the [Boost Software License 1.0](http://www.boost.org/LICENSE_1_0.txt).
-A [local copy](https://github.com/wiegerw/CONEstrip/blob/main/doc/LICENSE) is included in the repository.
+A [local copy](https://github.com/wiegerw/CONEstrip/blob/main/LICENSE) is included in the repository.
 
 For testing the [Toy Parser Generator](https://github.com/CDSoft/tpg) package is used.
 This package is available under the
 [GNU Lesser General Public License v2.1](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html) license.
-A [local copy](https://github.com/wiegerw/CONEstrip/blob/main/doc/LGPL-2.1.txt) is included in the repository.
+A [local copy](https://github.com/wiegerw/CONEstrip/blob/main/LGPL-2.1.txt) is included in the repository.
