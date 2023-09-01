@@ -1,2 +1,0 @@
-PYTHONPATH=../src
-python3 run_optimization.py --k-size=6 --omega-size=4 --coordinate-bound=1 --test=3 --testcase3-dimensions="10,7,5" --output-filename="opt3.nc"

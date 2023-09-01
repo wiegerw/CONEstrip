@@ -84,11 +84,11 @@ def run_testcase2(args):
         print('--- testcase 2 ---')
         print(f'K = {print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP_p = {print_lower_prevision_function(P_p, args.pretty)}\n')
         for epsilon in make_default_epsilon_range():
-            Q = generate_lower_prevision_perturbation(K, Fraction(epsilon))
-            P = lower_prevision_clamped_sum(P_p, Q)
-            print(f'epsilon = {float(epsilon):7.4f}\nP = {print_lower_prevision_function(P, args.pretty)}')
+            Q_epsilon = generate_lower_prevision_perturbation(K, Fraction(epsilon))
+            P_epsilon = lower_prevision_clamped_sum(P_p, Q_epsilon)
+            print(f'epsilon = {float(epsilon):7.4f}\nP = {print_lower_prevision_function(P_epsilon, args.pretty)}')
             watch = StopWatch()
-            result = incurs_sure_loss(P, Omega, args.pretty)
+            result = incurs_sure_loss(P_epsilon, Omega, args.pretty)
             print(f'incurs_sure_loss(P, Omega): {result} {watch.seconds():.4f}s\n')
 
 

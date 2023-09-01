@@ -1,0 +1,2 @@
+PYTHONPATH=../src
+python3 optimization_test_cases.py --k-size=3 --omega-size=3 --coordinate-bound=20 --repetitions=10 --pretty --error-magnitude=0.02 --seed=7672516284 -v
