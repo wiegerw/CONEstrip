@@ -39,7 +39,7 @@ def make_default_epsilon_range() -> List[Fraction]:
     return [Fraction(f) for f in [0.000001, 0.00001, 0.0001, 0.001, 0.1, 1, 10]]
 
 
-# Returns n values of the shape [..., 1/8, 1/4, 1/2, 1]
+# Returns n values of the shape [0, ..., 1/8, 1/4]
 def make_epsilon_range(n: int) -> List[Fraction]:
     epsilon = Fraction(1, 4)
     result = []
@@ -185,27 +185,29 @@ def run_testcase4(args):
     Omega = list(range(args.omega_size))
     K = random_real_gambles(args.k_size, args.omega_size, args.coordinate_bound, args.decimals)
     p = generate_mass_function(Omega, args.decimals)
-    epsilon = Fraction(0)
-    P_delta = linear_lower_prevision_function(p, K)
-    Q_epsilon = generate_lower_prevision_perturbation(K, epsilon)
-    P = lower_prevision_clamped_sum(P_delta, Q_epsilon)
-    assert P == P_delta
 
-    print(f'K =\n{print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP = {print_lower_prevision_function(P, args.pretty)}')
-    if args.verbose:
-        print('')
-        print('----------------------------------------------------------')
-        print('            calculating incurs_sure_loss')
-        print('----------------------------------------------------------')
-    sure_loss = incurs_sure_loss(P, Omega, args.pretty)
-    if args.verbose:
-        print('')
-        print('----------------------------------------------------------')
-        print('            calculating is_coherent')
-        print('----------------------------------------------------------')
-    coherent = is_coherent(P, Omega, args.pretty)
-    print(f'incurs_sure_loss(P, Omega) = {sure_loss}')
-    print(f'is_coherent(P, Omega) = {coherent}\n')
+    for epsilon in make_epsilon_range(4):
+        print(f'--- epsilon = {epsilon}')
+        P = linear_lower_prevision_function(p, K)
+        Q_epsilon = generate_lower_prevision_perturbation(K, epsilon)
+        P_lower = lower_prevision_clamped_sum(P, Q_epsilon)
+
+        print(f'K =\n{print_gambles(K, args.pretty)}\np = {print_fractions(p, args.pretty)}\nP = {print_lower_prevision_function(P, args.pretty)}')
+        if args.verbose:
+            print('')
+            print('----------------------------------------------------------')
+            print('            calculating incurs_sure_loss')
+            print('----------------------------------------------------------')
+        sure_loss = incurs_sure_loss(P_lower, Omega, args.pretty)
+        if args.verbose:
+            print('')
+            print('----------------------------------------------------------')
+            print('            calculating is_coherent')
+            print('----------------------------------------------------------')
+        coherent = is_coherent(P_lower, Omega, args.pretty)
+        print(f'incurs_sure_loss(P_lower, Omega) = {sure_loss}')
+        print(f'is_coherent(P_lower, Omega) = {coherent}\n')
+        assert not sure_loss or not coherent
 
 
 def main():
