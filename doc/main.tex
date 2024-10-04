@@ -1,0 +1,1446 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{fullpage}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{bbm}
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage[noend]{algpseudocode}
+\usepackage{multicol}
+\usepackage{xspace}
+\usepackage{stmaryrd}
+\usepackage{graphicx}
+\usepackage[T1]{fontenc}
+\usepackage{mathtools}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{graphicx}
+
+% Do not swap emphasized and normal text in definitions
+\newtheoremstyle{mytheorem}% 〈name〉
+{8pt} % 〈Space above〉1
+{8pt} % 〈Space below 〉1
+{} % 〈Body font 〉\bfseries, \itshape, ...
+{} % 〈Indent amount 〉2
+{\bfseries} % 〈Theorem head font 〉
+{:} % 〈Punctuation after theorem head 〉
+{.5em} % 〈Space after theorem head 〉3
+{} % 〈Theorem head spec (can be left empty, meaning ‘normal’ )〉
+\theoremstyle{mytheorem}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{note}[theorem]{Note}
+\newtheorem{observation}[theorem]{Observation}
+\newtheorem{question}[theorem]{Question}
+
+\newcommand{\func}[1]{\ensuremath{\textsf{#1}}} % functions
+\newcommand{\attr}[1]{\ensuremath{\fontfamily{cmss}\selectfont \textit{#1}}} % attributes
+\newcommand{\obj}[1]{\ensuremath{\textit{#1}}} % objects
+\newcommand{\var}[1]{\ensuremath{\textit{#1}}} % variables
+\newcommand{\set}[1]{\ensuremath{\{ #1 \} }} % sets
+\newcommand{\indep}{\perp \!\!\! \perp} % independent RVs
+\newcommand{\notindep}{\not\!\perp\!\!\!\perp} % independent RVs
+
+\newcommand{\indicator}[1]{\ensuremath{\mathbbm{1}_{#1}}} % indicator function
+\newcommand{\expectation}[1]{\ensuremath{\mathbb{E}[{#1}]}} % expectation
+
+% bold face mathcal
+\DeclareMathAlphabet\mathbfcal{OMS}{cmsy}{b}{n}
+
+% mathematical operators
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% used for improving fraction layout
+\newcommand\ddfrac[2]{\frac{\displaystyle #1}{\displaystyle #2}}
+
+% data structures
+\newcommand{\emptylist}{\ensuremath{[\:]}}
+\newcommand{\emptymap}{\ensuremath{\{ \mapsto \}}}
+\newcommand{\concat}{\ensuremath{+\!\!+\:}}
+
+\title{CONEstrip}
+\author{Wieger Wesselink}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This document describes the implementation of the CONEstrip and the Propositional CONEstrip algorithm, see \cite{Quaeghebeur2012} and \cite{Quaeghebeur2014}.
+
+\section{Notations}
+Let $P$ be an arbitrary set, and $A = \set{a_1, \ldots, a_n}$ a finite set. Then we use the notation
+$
+  P^A
+$
+as a shorthand for the Cartesian product $P^{|A|}$.
+Furthermore we use the notation
+$
+  \lambda \in P^A
+$
+as a shorthand notation for $\lambda = [\lambda_{a_1}, \ldots, \lambda_{a_n}].$
+
+\begin{definition}
+For a set $V$ the \emph{indicator function} $\indicator{V}$ is defined as
+\[
+  \indicator{V}(x) =
+  \begin{cases*}
+    1 & if $x \in V$ \\
+    0 & otherwise.
+  \end{cases*}
+\]
+For $v \in V$ we define $\indicator{v} = \indicator{\set{v}}.$
+\end{definition}
+
+\section{Cones}
+
+\begin{definition}
+A \emph{field} $(F, +, \cdot)$ is a set $F$ together with two binary operations on F called addition and multiplication. These operations are required to satisfy the field axioms:
+  \begin{itemize}
+    \item Associativity of addition and multiplication: $a + (b + c) = (a + b) + c$, and $a \cdot (b \cdot c) = (a \cdot b) \cdot c$.
+    \item Commutativity of addition and multiplication: $a + b = b + a$, and $a \cdot b = b \cdot a$.
+    \item Additive and multiplicative identity: there exist two different elements 0 and 1 in $F$ such that $a + 0 = a$ and $a \cdot 1 = a$.
+    \item Additive inverses: for every $a$ in $F$, there exists an element in $F$, denoted $-a$, called the additive inverse of $a$, such that $a + (-a) = 0$.
+    \item Multiplicative inverses: for every $a \neq 0$ in $F$, there exists an element in $F$, denoted by $a^{-1}$ or $1/a$, called the multiplicative inverse of $a$, such that $a \cdot a^{-1} = 1$.
+    \item Distributivity of multiplication over addition: $a \cdot (b + c) = (a \cdot b) + (a \cdot c)$.
+  \end{itemize}
+\end{definition}
+
+\begin{definition}
+A field $(F, +, \cdot)$ together with a (strict) total order $<$ on $F$ is an \emph{ordered field} if the order satisfies the following properties for all $a, b, c \in F$:
+  \begin{enumerate}
+      \item if $a < b$ then $a + c < b + c$
+      \item if $0 < a$ and $0 < b$ then $0 < a \cdot b$.
+  \end{enumerate}
+\end{definition}
+
+\begin{definition}
+A \emph{vector space} $(V, +, \cdot)$ over a field $F$ is a set $V$ together with two operations, addition and scalar multiplication, that satisfy the eight axioms listed below.
+  \begin{itemize}
+    \item Associativity of vector addition: $u + (v + w) = (u + v) + w$.
+    \item Commutativity of vector addition: $u + v = v + u$.
+    \item Identity element of vector addition. There exists an element $0 \in V$, called the zero vector, such that $v + 0 = v$ for all $v \in V$.
+    \item Inverse elements of vector addition. For every $v \in V$, there exists an element $-v \in V$, called the additive inverse of $v$, such that $v + (-v) = 0$.
+    \item Compatibility of scalar multiplication with field multiplication: $a(bv) = (ab)v$.
+    \item Identity element of scalar multiplication: $1v = v$, where 1 denotes the multiplicative identity in $F$.
+    \item Distributivity of scalar multiplication with respect to vector addition: $a(u + v) = au + av$.
+    \item Distributivity of scalar multiplication with respect to field addition: $(a + b)v = av + bv$.
+  \end{itemize}
+   where $u$, $v$ and $w$ denote arbitrary vectors in $V$, and $a$ and $b$ denote scalars in $F$.
+\end{definition}
+
+\begin{definition}
+A \emph{cone} is a subset $C$ of a vector space $V$ over an ordered field $F$. A cone $C$ is a convex cone if $\alpha x + \beta y$ belongs to $C$, for any positive scalars $\alpha$, $\beta$, and any $x, y$ in $C$. A cone $C$ is convex if and only if $C + C \subseteq C$. 
+\end{definition}
+
+\begin{definition}
+A subset $U \subseteq \mathbb{A}^d$ is \emph{open} (in the norm topology) if either $U$ is empty or for every point $a \in U$, there is some (small) open ball $B(a, \epsilon)$ contained in $U$. A subset $C \subseteq \mathbb{A}^d$ is \emph{closed} iff $\mathbb{A}^d - C$ is open.
+\end{definition}
+
+\clearpage
+\section{Gambles}
+Let $\Omega = \set{\omega_1, \ldots, \omega_n}$ be a non-empty, finite set of outcomes (possibility space). N.B. In this document we restrict ourselves to finite sets of outcomes. Many of the definitions in this document are taken from \cite{Couso2009}.
+
+\begin{definition}
+A \emph{gamble on $\Omega$} is a bounded mapping
+from $\Omega$ to $\mathbb{R}$, i.e., $f: \Omega \rightarrow \mathbb{R}$. Gambles are used to represent an agent’s beliefs and information.
+% A \emph{gamble} is a (bounded?) real-valued function on $\Omega$, i.e. an element of $\mathcal{G} := [\Omega \rightarrow \mathbb{R}].$ It represents a reward that depends on the outcome of the experiment modelled by some random variable $f$.
+\end{definition}
+
+\noindent
+Let $\Omega = \set{a, b, c, d}$. An example of a gamble is: $f(a) = 3$, $f(b) = -2$, $f(c) = 5$, $f(d) = 10$.
+If an agent accepts a gamble $f$, then the value $f(\omega)$ represents the reward she would obtain if $\omega$ is the true unknown value (this value can be negative and then it represents a loss).
+
+\vspace{0.5cm}
+\noindent
+Let $\mathcal{G} \subseteq \mathbb{R}^n$ denote the set of all gambles defined on $\Omega$. For
+$f, g \in \mathcal{G}$, let $f \geq g$ mean that $f(\omega) \geq g (\omega)$ for all $\omega \in \Omega$, and let $f > g$ mean that $f \geq g$ and
+$f(\omega) > g (\omega)$ for some $\omega \in \Omega$.
+
+\begin{definition}
+A subset $\mathcal{D}$ of $\mathcal{G}$ is said to be a \emph{coherent set of desirable gambles} relative to $\mathcal{G}$ when it satisfies the following
+four axioms (N.B. slightly adapted from \cite{Couso2009}):
+\begin{enumerate}
+    \item [D1.] $0 \in \mathcal{D}$,
+    \item [D2.] If $f \geq 0$, then $f \in \mathcal{D}$ (\textbf{Accept partial gain}),
+    \item [D3.] If $f \in \mathcal{D}$ and $\lambda \geq 0$, then $\lambda f \in \mathcal{D}$ (\textbf{Positive Scale Invariance}),
+    \item [D4.] If $f \in \mathcal{D}$ and $g \in \mathcal{D}$, then $f + g \in \mathcal{D}$ (\textbf{Combination}).
+\end{enumerate}
+\end{definition}
+
+\begin{definition} \label{def:coherent}
+For bounded gambles $f, g$ a set of bounded gambles $\mathcal{D}$ is \emph{coherent} when the following four conditions are satisfied (see \cite{pmlr-v147-wheeler21a}):
+\begin{enumerate}
+    \item [A1.] If $f < 0$, then $f \notin \mathcal{D}$ (\textbf{Avoid partial loss}),
+    \item [A2.] If $f \geq 0$, then $f \in \mathcal{D}$ (\textbf{Accept partial gain})
+    \item [A3.] If $f \in \mathcal{D}$ and $\lambda \geq 0$, then $\lambda f \in \mathcal{D}$ (\textbf{Positive Scale Invariance})
+    \item [A4.] If $f \in \mathcal{D}$ and $g \in \mathcal{D}$, then $f + g \in \mathcal{D}$ (\textbf{Combination})
+\end{enumerate}
+\end{definition}
+\noindent
+Axioms A1 and A2 are rationality conditions: positive
+payments are desirable (A2) while negative payments are
+not (A1). Axiom A3 says that the desirability of a gamble
+is unchanged by the introduction of a positive scale and
+axiom A4 says that desirability is additive.
+
+\begin{definition}
+A \emph{coherent set $\mathcal{D}$ of almost desirable gambles} is a set
+of gambles which satisfies the following axioms (the first one is a modification of the corresponding axiom for desirable gambles.
+The new version is called avoiding sure loss), see \cite{Couso2009}:
+\begin{enumerate}
+    \item [D1'.] $-1 \notin D$ (\textbf{Avoid sure loss} (?)),
+    \item [D2.] If $f \geq 0$, then $f \in \mathcal{D}$ (\textbf{Accept partial gain}),
+    \item [D3.] If $f \in \mathcal{D}$ and $\lambda \geq 0$, then $\lambda f \in \mathcal{D}$ (\textbf{Positive Scale Invariance}),
+    \item [D4.] If $f \in \mathcal{D}$ and $g \in \mathcal{D}$, then $f + g \in \mathcal{D}$ (\textbf{Combination}).
+    \item [D5.] if $f + \epsilon \in \mathcal{D}$, $\forall \epsilon > 0$, then $f \in \mathcal{D}$.
+\end{enumerate}
+Almost desirable gambles avoid uniform loss, but not partial loss.
+\end{definition}
+
+\begin{definition}
+The \emph{lower prevision induced by $\mathcal{D}$} is the function $\underline{P}:
+\mathcal{G} \rightarrow \mathbb{R}$ defined as follows: 
+\[
+\underline{P}(f) = \sup \set{\mu \in \mathbb{R} \mid f - \mu \in \mathcal{D}}.
+\]
+The \emph{upper prevision induced by $\mathcal{D}$} is the function $\overline{P}:
+\mathcal{G} \rightarrow \mathbb{R}$ defined as follows:
+\[
+\overline{P}(f) = \inf \set{\mu \in \mathbb{R} \mid \mu - f \in \mathcal{D}}.
+\]
+% A \emph{lower prevision} $\underline{P}: \mathcal{K} \rightarrow \mathbb{R}$ is defined as a real-valued map (a functional) defined on $\mathcal{K} \subseteq \mathcal{G}$; we call $\func{dom}(\underline{P}) = \mathcal{K}$ the domain of $P$.
+The lower prevision for a gamble $f$ is the supremum acceptable buying price for $f$, meaning that I am inclined to buy it for $\underline{P}(f) - \epsilon$ for any $\epsilon > 0$.
+\end{definition}
+
+
+\begin{definition}
+A \emph{credal set} is a closed and convex set of probability measures.
+\end{definition}
+\noindent
+A set of desirable gambles $\mathcal{D}$ defines a credal set: $P_\mathcal{D} = \set{P \mid P[X ] \geq 0, \forall X \in \mathcal{D}}$.
+
+\begin{definition}
+If $\mathcal{G}$ is an arbitrary set of gambles, then the set of
+all gambles obtained by applying axioms D2, D3, and
+D4 is called the \emph{set of gambles generated by $\mathcal{G}$} and it
+is denoted by $\overline{\mathcal{G}}$. If this set is coherent ($0 \notin \overline{\mathcal{G}}$) then it will be called its \emph{natural extension} (the minimum coherent set containing $\mathcal{G}$). If $0 \in \mathcal{G}$ we will say that $\mathcal{G}$ is incoherent (\textbf{N.B. This contradicts with definition \ref{def:coherent}!}). If $f < 0$ and $f \in \overline{\mathcal{G}}$ we will say that $\mathcal{G}$ does not avoid partial loss.
+\end{definition}
+
+\begin{definition}
+Let $\mathcal{R}$ be a finite set of finite subsets of $\mathcal{G}$. Then we define the \emph{general cone} $\underline{\mathcal{R}}$ as the smallest set that contains $\mathcal{R}$ and that satisfies axioms D2, D3 and D4.
+\end{definition}
+
+\clearpage
+\section{Feasibility problems}
+Let $\Omega = \set{\omega_1, \ldots, \omega_n}$.
+Let $\mathcal{A} = \set{g_1, \ldots, g_m}$ with $g_i \in \Omega \rightarrow \mathbb{R}^n$,  $(1 \leq i \leq m)$ be a finite set of almost desirable gambles.
+
+\subsection{Avoiding sure loss}
+The feasibility problem below checks if $\mathcal{A}$ incurs sure loss, see \cite{Quaeghebeur2012}:
+\begin{equation} \label{eq:sure_loss}
+\begin{array}{ll}
+    \text{find} & \lambda \in \mathbb{R}^\mathcal{A} \\ [\medskipamount]
+    \text{subject to} & 
+    \displaystyle \sum_{g \in \mathcal{A}} \lambda_g \cdot g \leq -1 \text{ and } \lambda \geq 0.
+\end{array}
+\end{equation}
+
+\vspace{0.5cm}
+\noindent
+By introducing slack variables $\mu$, this can be rewritten into the equivalent problem
+\begin{equation} \label{eq:sure_loss_slack}
+\begin{array}{ll}
+    \text{find} & \lambda \in \mathbb{R}^\mathcal{A} \text{ and } \mu \in \mathbb{R}^\Omega \\ [\medskipamount]
+    \text{subject to} & 
+    \displaystyle \sum_{g \in \mathcal{A}} \lambda_g \cdot g +
+    \sum\limits_{\omega \in \Omega} \mu_\omega \cdot 1_\omega = 0
+    \text{ and } \lambda \geq 0 \text{ and } \mu \geq 1.
+\end{array}
+\end{equation}
+
+\subsection{Avoiding sure loss of a lower prevision}
+Let $\underline{P}: \mathcal{K} \rightarrow \mathbb{R}$ be a lower prevision with $\mathcal{K}$ finite, then checking whether $\underline{P}$ incurs sure loss amounts to solving (\ref{eq:sure_loss}) for $\mathcal{A} = \set{h - \underline{P}(h) \mid h \in \mathcal{K}}$.
+
+\subsection{Calculating the lower prevision}
+The lower prevision for a gamble $f \in \mathcal{G}$ is calculated using the linear program below (natural extension), see \cite{Quaeghebeur2012}:
+\begin{equation} \label{eq:lower_prevision_avoid_sure_loss}
+\begin{array}{ll}
+    \text{maximize} & \alpha \in \mathbb{R} \\ [\medskipamount]
+    \text{subject to} & f - \alpha \geq 
+    \displaystyle \sum_{g \in \mathcal{A}} \lambda_g \cdot g \text{ and } \lambda \geq 0.
+\end{array}
+\end{equation}
+
+\noindent
+By introducing slack variables $\mu$, this can be rewritten into the equivalent problem
+\begin{equation} \label{eq:lower_prevision_avoid_sure_loss_slack}
+\begin{array}{ll}
+    \text{maximize} & \alpha \in \mathbb{R} \\ [\medskipamount]
+    \text{subject to} & 
+    \displaystyle \sum\limits_{i = 1}^m \lambda_i \cdot g_i +
+    \sum\limits_{j = 1}^n \mu_j \cdot 1_j + \alpha = f
+    \text{ and } \lambda \geq 0 \text{ and } \mu \geq 0.
+\end{array}
+\end{equation}
+
+\subsection{Determining interior points of a cone}
+To determine if $f \in \mathcal{A}$ is an interior point in the cone generated by $\mathcal{A}$, we define the following optimization problem:
+
+\begin{equation} \label{eq:interior_point}
+\begin{array}{ll}
+    \text{find} & \lambda \in \mathbb{R}^{\mathcal{A} \setminus \set{f}} \\ [\medskipamount]
+    \text{subject to} & 
+    \displaystyle f = \sum_{g \in \mathcal{A} \setminus \set{f}} \lambda_g \cdot g \text{ and } \lambda > 0.
+\end{array}
+\end{equation}
+
+
+\begin{definition}
+We call $f$ an \emph{interior point} of the cone generated by $\mathcal{A}$ iff equation \ref{eq:interior_point} has a solution.
+\end{definition}
+
+\subsection{Coin examples}
+\begin{example}
+Consider an experiment with a coin, with $\Omega = \set{H, T}$ and probabilities $p(H) = p(T) = 0.5$. 
+We represent the indicator function $\indicator{H}$ by the tuple $[\indicator{H}(H), \indicator{H}(T)] = [1, 0]$ and the indicator function $\indicator{T}$ by the tuple $[\indicator{T}(H), \indicator{T}(T)] = [0, 1]$.
+Let $\mathcal{R} = \set{ \set{\indicator{H}}, \set{\indicator{T}}}$ be the generators of an open cone.
+
+\vspace{0.5cm}
+\noindent
+To compute the lower prevision $\underline{\indicator{H}}$ take $f = \indicator{H} - \alpha$ with $\alpha \in \mathbb{R}$, then
+\[
+    \expectation{f} =
+      p(H) f(H) + p(T) f(T) = 
+      0.5 (1 - \alpha) + 0.5 (- \alpha) = 
+      0.5 - \alpha.
+\]
+The minimum is reached for $\alpha = 0.5$, hence $\underline{\indicator{H}} = 0.5$. 
+
+\vspace{0.5cm}
+\noindent
+To compute the lower prevision $\underline{\indicator{T}}$ take $f = \indicator{T} - \alpha$ with $\alpha \in \mathbb{R}$, then
+\[
+    \expectation{f} =
+      p(H) f(H) + p(T) f(T) = 
+      0.5 (- \alpha) + 0.5 (1 - \alpha) = 
+      0.5 - \alpha.
+\]
+Again the minimum is reached for $\alpha = 0.5$, hence $\underline{\indicator{T}} = 0.5$. 
+\end{example}
+
+\begin{example}
+Consider an experiment with a coin, with $\Omega = \set{H, T}$ and suppose we know the following about the probabilities:
+\begin{equation*}
+    \begin{cases*}
+        p(H) > \frac{1}{3} \\
+        p(T) > \frac{1}{5}
+    \end{cases*}
+\end{equation*}
+From this we derive
+\begin{equation*}
+    \begin{cases*}
+        \frac{1}{3} < p(H) \leq \frac{4}{5} \\
+        \frac{1}{5} < p(T) \leq \frac{2}{3}.
+    \end{cases*}
+\end{equation*}
+
+\vspace{0.5cm}
+\noindent
+To compute the lower prevision of a gamble $f$ we solve $\expectation{f} > 0$, or
+equivalently $\expectation{f - \alpha} = 0$, with $\alpha \geq 0$.
+
+\vspace{0.5cm}
+\noindent
+For $f = \indicator{H}$ we calculate
+\[
+\expectation{f - \alpha} = 
+  (1 - \alpha) \cdot p(H) - \alpha \cdot p(T) > 
+  (1 - \alpha) \cdot \frac{1}{3} - \alpha \cdot \frac{2}{3} = 
+  \frac{1}{3} - \alpha.
+\]
+Thus we get $\underline{\indicator{H}} = \frac{1}{3}$.
+
+\vspace{0.5cm}
+\noindent
+For $f = \indicator{T}$ we calculate
+\[
+\expectation{f - \alpha} = 
+  (- \alpha) \cdot p(H) + (1 - \alpha) \cdot p(T) > 
+  (- \alpha) \cdot \frac{4}{5} + (1 - \alpha) \cdot \frac{1}{5} = 
+  \frac{1}{3} - \alpha.
+\]
+Thus we get $\underline{\indicator{T}} = \frac{1}{5}$.
+\end{example}
+
+\clearpage
+\section{The CONEstrip algorithm}
+Let $\Omega$ be a possibility space, and let $\mathcal{G} \subseteq \Omega \rightarrow \mathbb{R}^n$ be the set of all gambles.
+
+\begin{definition}[Cone generator]
+A \emph{cone generator} is a finite set of gambles.
+\end{definition}
+
+\begin{definition}[General cone]
+A \emph{general cone} is a finite set of cone generators.
+\end{definition}
+
+\subsection{The optimization problems of the CONEstrip algorithm}
+The CONEstrip algorithm is an algorithm that determines whether a gamble belongs to a given general cone. It depends on some optimization problems that we will define in this section. The first
+instance of the optimization problems is $\func{solve-conestrip1}$. In three iterations it is rewritten into
+$\func{solve-conestrip4}$, which is suitable to be used in the CONEstrip algorithm.
+
+\vspace{0.5cm}
+\noindent
+Let $\mathcal{R}$ be a general cone, and let $f \in \mathcal{G}$ be a gamble.
+Let $\Omega_\Gamma$ and $\Omega_\Delta$ be sets of events such that $\Omega_\Gamma \cup \Omega_\Delta = \Omega$.
+
+%\emph{belongs to} $\mathcal{R}$ if and only if the following feasibility problem has a solution.
+
+\begin{definition}
+We define $\func{solve-conestrip1}(\mathcal{R}, f, \Omega_\Gamma, \Omega_\Delta)$ as an arbitrary solution $(\lambda, \nu)$ of the following optimization problem, or $(\bot,\bot)$ if no solution exists. See also \cite{Quaeghebeur2014}, formula (1).
+\begin{equation} \label{eq:conestrip1}
+\begin{array}{ll}
+    \text{maximize} & \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D}
+    \\ [0.5cm]
+    \text{such that} & 
+    \left\{
+    \begin{array}{ll}
+         \lambda_\mathcal{D} \in [0,1] \text{ and } \nu_\mathcal{D} \in (\mathbb{R}_{>0})^\mathcal{D} \text{ for all } \mathcal{D} \text{ in } \mathcal{R} \\ [0.2cm]
+    
+         \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} = 1 \\ [0.5cm]
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} \nu_{\mathcal{D},g} \cdot g(\omega)
+         )
+          \leq f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Gamma \\ [0.5cm]         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} \nu_{\mathcal{D},g} \cdot g(\omega) 
+         )
+          \geq f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Delta, \\         
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+
+\noindent
+In many practical cases we have $\Omega_\Gamma = \Omega_\Delta = \Omega$. Then the equations simplify to
+\begin{equation*}
+\begin{array}{ll}
+    \left\{
+    \begin{array}{ll}
+         \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} = 1 \\ [0.5cm]
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} \nu_{\mathcal{D},g} \cdot g
+         ) = f
+    \end{array}
+    \right.
+\end{array}
+\end{equation*}
+\end{definition}
+
+\begin{remark}
+Without loss of generality we can replace the constraint
+$\sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} = 1$ with
+$\sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} \geq 1$.
+\end{remark}
+
+\begin{definition}
+We define $\func{solve-conestrip2}(\mathcal{R}, f, \Omega_\Gamma, \Omega_\Delta)$ as as an arbitrary solution $(\lambda, \tau, \sigma)$ of the following optimization problem, or $(\bot,\bot,\bot)$ if no solution exists. See also \cite{Quaeghebeur2014}, formula (2).
+\begin{equation} \label{eq:conestrip2}
+\begin{array}{ll}
+    \text{maximize} & \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D}
+    \\ [0.5cm]
+    \text{such that} & 
+    \left\{
+    \begin{array}{ll}
+         \lambda_\mathcal{D} \in [0,1] \text{ and } \tau_\mathcal{D} \in (\mathbb{R}_{\geq 1})^\mathcal{D} \text{ for all } \mathcal{D} \text{ in } \mathcal{R} \text{ and } \sigma \in \mathbb{R}_{\geq 1} \\ [0.2cm]
+
+         \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} \geq 1 \\ [0.5cm]
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} \tau_{\mathcal{D},g} \cdot g(\omega)
+         )
+          \leq \sigma f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Gamma \\ [0.5cm]         
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} \tau_{\mathcal{D},g} \cdot g(\omega)
+         )
+          \geq \sigma f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Delta, \\         
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+where $\tau_\mathcal{D} = \sigma \nu_\mathcal{D}$.
+\end{definition}
+
+\clearpage
+\begin{definition}
+We define $\func{solve-conestrip3}(\mathcal{R}, f, \Omega_\Gamma, \Omega_\Delta)$ 
+as as an arbitrary solution $(\lambda, \mu, \sigma)$ of the following optimization problem, or $(\bot,\bot,\bot)$ if no solution exists.
+See also \cite{Quaeghebeur2014}, formula (3).
+\begin{equation} \label{eq:conestrip3}
+\begin{array}{ll}
+    \text{maximize} & \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D}
+    \\ [0.5cm]
+    \text{such that} & 
+
+    \left\{
+    \begin{array}{ll}
+         \lambda_\mathcal{D} \in [0,1] \text{ and } \mu_\mathcal{D} \in (\mathbb{R}_{\geq 0})^\mathcal{D} \text{ for all } \mathcal{D} \text{ in } \mathcal{R} \text{ and } \sigma \in \mathbb{R}_{\geq 1} \\ [0.2cm]
+
+         \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} \geq 1 \\ [0.5cm]
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \sum\limits_{g \in \mathcal{D}} \mu_{\mathcal{D},g} \cdot g(\omega)
+         )
+          \leq \sigma f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Gamma \\ [0.5cm] 
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \sum\limits_{g \in \mathcal{D}} \mu_{\mathcal{D},g} \cdot g(\omega)
+         )
+          \geq \sigma f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Delta, \\
+         
+         \lambda_\mathcal{D} \leq \mu_{\mathcal{D},g} \leq \lambda_\mathcal{D} \mu_{\mathcal{D},g}
+         \quad \text{for all } \mathcal{D} \in \mathcal{R}, g \in \mathcal{D}. \\
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+Notice that now $\lambda_\mathcal{D} \in \set{0, 1}$ for any solution, functioning as a switch between $\mu_\mathcal{D} = 0, \tau_\mathcal{D} = 0$ and $\mu_\mathcal{D} = 1, \tau_\mathcal{D} \in (\mathbb{R}_{\geq 1} )^\mathcal{D}$ , so that $\mu_\mathcal{D} / \sigma$ effectively behaves as $\lambda_\mathcal{D} \nu_\mathcal{D}.$
+\end{definition}
+
+\begin{definition}
+We define $\func{solve-conestrip4}(\mathcal{R}, f, \Omega_\Gamma, \Omega_\Delta)$ 
+as as an arbitrary solution $(\lambda, \mu, \sigma)$ of the following optimization problem, or $(\bot,\bot,\bot)$ if no solution exists.
+See also \cite{Quaeghebeur2014}, formula (4).
+\begin{equation} \label{eq:conestrip4}
+\begin{array}{ll}
+    \text{maximize} & \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D}
+    \\ [0.5cm]
+    \text{such that} & 
+
+    \left\{
+    \begin{array}{ll}
+         \lambda_\mathcal{D} \in [0,1] \text{ and } \mu_\mathcal{D} \in (\mathbb{R}_{\geq 0})^\mathcal{D} \text{ for all } \mathcal{D} \text{ in } \mathcal{R} \text{ and } \sigma \in \mathbb{R}_{\geq 1} \\ [0.2cm]
+
+         \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} \geq 1 \\ [0.5cm]
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \sum\limits_{g \in \mathcal{D}} \mu_{\mathcal{D},g} \cdot g(\omega)
+         )
+          \leq \sigma f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Gamma \\ [0.5cm] 
+         
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \sum\limits_{g \in \mathcal{D}} \mu_{\mathcal{D},g} \cdot g(\omega)
+         )
+          \geq \sigma f(\omega)
+         \quad \text{for all } \omega \in \Omega_\Delta \\ [0.5cm]
+         
+         \lambda_\mathcal{D} \leq \mu_{\mathcal{D},g}
+         \quad \text{for all } \mathcal{D} \in \mathcal{R}, g \in \mathcal{D}. \\
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+
+\end{definition}
+
+\begin{algorithm}[h]
+\caption{Determining membership of a general cone}
+{\textbf{Input:}} A general cone $\mathcal{R}$, a gamble $f \in \mathcal{G}$ and two sets $\Omega_\Gamma, \Omega_\Delta$ with $\Omega_\Gamma \cup \Omega_\Delta = \Omega$. \\
+{\textbf{Output:} Whether or not $f$ belongs to the general cone $\mathcal{R}$. }
+\label{alg:conestrip}
+\begin{algorithmic}[1]
+\Function{CONEstrip}{$\mathcal{R}, f, \Omega_\Gamma, \Omega_\Delta$}
+\While { \func{true} }
+  \State $(\lambda, \mu, \sigma) := \func{solve-conestrip4}(\mathcal{R}, f, \Omega_\Gamma, \Omega_\Delta)$
+  \If { $(\lambda, \mu, \sigma) = (\bot,\bot,\bot)$ }
+    \State \Return \func{false}
+  \EndIf
+
+  \If {  $\forall_{\mathcal{D} \in \mathcal{R}}: \lambda_\mathcal{D} = 0 \Rightarrow (\forall_{g \in \mathcal{D}}: \mu_{\mathcal{D},g} = 0)$}
+    \State \Return \func{true}
+  \EndIf
+
+  \State $\mathcal{R} := \set{\mathcal{D} \in \mathcal{R} \mid \lambda_\mathcal{D} \neq 0}$
+
+  %\State $\mathcal{Q} := \set{\mathcal{D} \in \mathcal{R} \mid \lambda_\mathcal{D} = 0}$
+  %\If {$\forall \mathcal{D} \in \mathcal{Q}: \mu_\mathcal{D} = 0$}
+    %\State \Return \func{true}
+  %\EndIf
+  %\State $\mathcal{R} := \mathcal{R} \setminus \mathcal{Q}$
+\EndWhile
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+% \begin{definition}
+% Let $\mathcal{R}$ be a general cone, $r$ be cone generators and $g$ a gamble. We define the following functions:
+% \[
+%   \begin{array}{lll}
+%      \func{is-in-cone-generator}(r, g, \Omega) & = & \func{conestrip1-solutions}(\set{r}, g, \Omega, \Omega) \neq \emptyset \\
+%      \func{is-in-cone-generator-with-border}(r, g, \Omega) & = & \func{conestrip1-solutions-with-border}(\set{r}, g, \Omega, \Omega) \neq \emptyset \\
+%      \func{is-in-cone-generator-border}(r, g, \Omega) & = & \neg \func{is-in-cone-generator}(r, g, \Omega) \land \func{is-in-cone-generator-with-border}(r, g, \Omega) \\
+%      \func{is-in-general-cone}(\mathcal{R}, g, \Omega) & = & \func{conestrip1-solutions}(\mathcal{R}, g, \Omega, \Omega) \neq \emptyset \\  \end{array}
+% \]
+% \end{definition}
+
+\clearpage
+\subsection{Generating test cases}
+Let $\mathcal{R}$ be a set of finite subsets of $\mathcal{G}$. To generate test cases for the CONEstrip algorithm, we will iteratively do the following.
+\begin{enumerate}
+    \item Randomly choose a finite subset $\mathcal{A} \in \mathcal{R}$ of at least dimension two.
+    \item Generate a lower dimensional cone $\mathcal{A}'$ that is contained in the border of the cone generated by $\mathcal{A}$.
+    \item Add $\mathcal{A}'$ to $\mathcal{R}$.
+\end{enumerate}
+
+\vspace{0.5cm}
+\noindent
+For step 2, we do the following:
+\begin{enumerate}
+    \item Let $\mathcal{B}$ be obtained from $\mathcal{A}$ by removing all interior points from $\mathcal{A}$.
+    \item Randomly choose $|\mathcal{B}| - 1$ elements from the set 
+    $\set{\sum\limits_{g \in \mathcal{B}} \lambda^\mathcal{B} \cdot g \mid \lambda^\mathcal{B} \geq 0 \land \exists g \in \mathcal{B}: \lambda^\mathcal{B}_g = 0}$. They generate a lower dimensional cone that is contained in the border of
+    $\mathcal{A}$.
+\end{enumerate}
+
+% \clearpage
+% \section{An Algorithm for Proposition-Based Gambles}
+
+% \begin{question}
+% How is such a basis $\Phi$ obtained?
+% \end{question}
+
+% \vspace{0.5cm}
+% \noindent
+% If we take (\ref{eq:conestrip4}) as a starting point, we can define
+% \begin{equation} \label{eq:kappa1}
+%   \left(
+%     \sum\limits_{\mathcal{D} \in \mathcal{R}}
+%     \sum\limits_{g \in \mathcal{D}}
+%     \mu_{\mathcal{D},g} g 
+%   \right)
+%   - \sigma f =
+%   \sum\limits_{\phi \in \Phi} \kappa_\phi \phi.
+% \end{equation}
+% The constraints (\ref{eq:kappa1}) that link $\kappa$ to $\mu$ and $\sigma$ can be added to the problem, which results in constraints of the shape
+% \begin{equation} \label{eq:kappa2}
+%   \begin{array}{l}
+%     \sum\limits_{\phi \in \Phi} \kappa_\phi \phi \leq 0 \\ [\medskipamount]
+%     \sum\limits_{\phi \in \Phi} \kappa_\phi \phi \geq 0
+%   \end{array}
+% \end{equation}
+
+% \subsection{Row generation}
+% To deal with the large number of constraints, the problem can be relaxed by first removing the constraints (\ref{eq:kappa2}), and then in an iterative procedure add them back. This is called row generation.
+
+% \begin{question}
+% Is row generation useful when an SMT solver is applied? It could be the case that these solvers already apply similar techniques.
+% \end{question}
+
+\clearpage
+\section{The Propositional Context}
+In practice the possibility space $\Omega$ can be very large. To deal with this, we will now define a symbolic representation of $\Omega$ by means of propositional formulas. To this end we assume that the possibility space $\Omega$ is a subset of $\set{0,1}^m$ for some $m > 0$. 
+
+\begin{definition}[Propositional sentences]
+Let $B$ be an ordered set of boolean variables. The set $P_B$ of \emph{propositional sentences over $B$} is inductively defined using
+\begin{enumerate}
+    \item if $b \in B$ then $b \in P_B$
+    \item if $\phi \in P_B$ then $\neg \phi \in P_B$
+    \item if $\phi_1, \phi_2 \in P_B$ then $\phi_1 \lor \phi_2 \in P_B$
+    \item if $\phi_1, \phi_2 \in P_B$ then $\phi_1 \land \phi_2 \in P_B.$
+\end{enumerate}
+\end{definition}
+
+\begin{definition}[Propositional sentence function] \label{def:propositional-sentence-function}
+A propositional sentence $\psi$ over boolean variables $B = \set{b_1, \ldots, b_m}$ can be interpreted as a function $\psi: \set{0,1}^m \rightarrow \set{0,1}$ using
+\begin{equation} \label{eq:propositional-sentence-function}
+  \psi(\beta) = \psi[b_1 := \beta_1, \ldots, b_m := \beta_m]
+\end{equation}
+for $\beta \in \set{0,1}^m.$
+\end{definition}
+
+\begin{example} \label{ex:propositional-sentence-function}
+Let $\mathcal{G} = \mathbb{R}^4$, let $\Omega = \set{00, 01, 10, 11}$ and let $B = \set{b_1, b_2}$ be a set of two boolean variables. Now take $\phi \in \mathcal{G}$ be the gamble that is defined as
+\begin{align*}
+\phi(00) &= 1 \\
+\phi(01) &= 0 \\
+\phi(10) &= 1 \\
+\phi(11) &= 1.
+\end{align*}
+Then the propositional sentence $\hat{\phi} = b_1 \lor \neg b_2$ defines exactly the same function as $\phi$ using the interpretation in definition \ref{def:propositional-sentence-function}.
+\end{example}
+
+% \begin{definition}[Literals]
+% For a propositional sentence $\phi$ over $B$ the set of literals $\func{lit}(\phi)$ is inductively defined using
+% \begin{enumerate}
+%     \item $\func{lit}(\beta) = \set{\beta}$ for $\beta \in B$
+%     \item $\func{lit}(\neg \phi) = \func{lit}(\phi)$
+%     \item $\func{lit}(\phi_1 \lor \phi_2) = \func{lit}(\phi_1) \cup \func{lit}(\phi_2)$
+%     \item $\func{lit}(\phi_1 \land \phi_2) = \func{lit}(\phi_1) \cup \func{lit}(\phi_2).$
+% \end{enumerate}
+% We extend this definition to a set of propositional sentences $\Phi$ using
+% \[
+%   \func{lit}(\Phi) = \bigcup\limits_{\phi \in \Phi} \func{lit}(\phi)
+% \]
+% \end{definition}
+
+% \begin{lemma}
+% Let $\Omega$ be the possibility space defined by the propositional sentence $\psi$ over $B)$ as given in definition \ref{def:possibility_space}. Let $\Phi \subset \mathcal{G}$ be a set of basic functions.
+% Then there exists a propositional sentence $\psi'$ over $B'$ that defines a possibility space $\Omega'$.
+
+% $(\Phi',\psi',B')$ such that $\Omega$ is a possibility space defined over $(\Phi',\psi',B')$ with $\Phi' \subseteq B'$. \\
+% \textbf{Proof:}
+% We introduce a new boolean variable $\beta_\phi$ for each $\phi \in \Phi$. We define $\Phi' = \set{ \beta_\phi \mid \phi \in \Phi}$, $B' = B \cup \set{ \beta_\phi \mid \phi \in \Phi}$ and
+% \[
+%   \psi' = \psi \land \bigwedge_{\phi \in \Phi} 
+%   \left( 
+%     \beta_\phi \leftrightarrow \phi
+%   \right).
+% \]
+% Then $\Phi'$ and $\psi'$ are propositional sentences over $B'$, and they define a possibility space $\Omega'$ using (\ref{eq:propositional_space}). Clearly we have $\Omega' = \Omega$, and moreover we have that $\Phi' \subseteq B'$. $\qedsymbol$
+% \end{lemma}
+
+\subsection{Basic functions}
+We assume that a finite set of so called basic functions $\Phi \subset \mathcal{G}$ is given that forms a basis of $\mathcal{G}$. By this we mean that any gamble $g \in \mathcal{G}$ can be written as a linear combination of these basic functions (a.k.a. indicator functions):
+\begin{equation} \label{eq:basic-functions}
+  g = \sum\limits_{\phi \in \Phi} g_\phi \phi
+\end{equation}
+with $g_\phi \in \mathbb{R}$ for $\phi \in \Phi$.
+We restrict the basic functions to be boolean valued, i.e.
+\[
+  \phi \in \Omega \rightarrow \set{0,1} \quad \text{for } \phi \in \Phi.
+\]
+This makes it possible to define the basic functions $\phi \in \Phi$ as propositional sentences over a set of boolean variables $B = \set{b_1, \ldots, b_m}$, as is demonstrated in example \ref{ex:propositional-sentence-function}.
+The possibility space $\Omega$ and the sets $\Omega_\Gamma$ and $\Omega_\Delta$ can also be defined by means of propositional sentences $\psi$, $\psi_\Gamma$ and $\psi_\Delta$ over $B$ using
+\begin{align}
+\Omega &= \set{ \beta \in \set{0,1}^m \mid \psi(\beta) = 1 } \\
+\Omega_\Gamma &= \set{\beta \in \Omega \mid \psi_\Gamma(\beta) = 1} \\
+\Omega_\Delta &= \set{\beta \in \Omega \mid \psi_\Delta(\beta) = 1}
+\end{align}
+
+\subsection{Propositional gambles}
+Let $\Phi$ be a set of basic functions of the gambles $\mathcal{G}$.
+% Let $B = \set{b_1, \ldots, b_m}$ be an ordered set of boolean variables. Let $\Phi = \set{\phi_1, \ldots, \phi_k}$ be a set of basic functions and let $\hat{\Phi} = \set{\hat{\phi}_1, \ldots, \hat{\phi}_k}$ be a set of propositional sentences over $B$ such that $\phi_i$ and $\hat{\phi}_i$ define the same functions.
+
+\begin{definition}[Propositional gamble]
+Let $g \in \mathcal{G}$ be a gamble. The corresponding \emph{propositional gamble} over $\Phi$ is the vector of coordinates $(g_{\phi_1}, \ldots, g_{\phi_k}) \in \mathbb{R}^k$ with respect to the basis $\Phi$, as defined in equation (\ref{eq:basic-functions}).
+\end{definition}
+
+\begin{definition}[Propositional cone generator]
+A \emph{propositional cone generator} over $\Phi$ is a finite set of propositional gambles  over $\Phi$.
+\end{definition}
+
+\begin{definition}[Propositional general cone]
+A \emph{propositional general cone} over $\Phi$ is a finite set of propositional cone generators over $\Phi$.
+\end{definition}
+
+\begin{definition}[Propositional basis]
+A \emph{propositional basis} of the set of gambles $\mathcal{G}$ is a finite set $\Phi$ of propositional sentences such that the gambles associated with $\Phi$ according to the interpretation in definition (\ref{def:propositional-sentence-function}) form a basis of $\mathcal{G}$.
+\end{definition}
+
+\subsection{The subproblems of the propositional CONEstrip algorithm}
+The propositional CONEstrip algorithm depends on three subproblems that we will define in this section. Let $B = \set{b_1, \ldots, b_m}$ and $C = \set{c_1, \ldots, c_k}$ be sets of boolean variables, let $\psi$ be a propositional sentence over $B$ and let $\Phi = \set{\phi_1, \ldots, \phi_k}$ be a propositional basis over $B$.
+
+\begin{definition}
+We define $\func{solve-propositional-conestrip1}(\psi, B, C, \Phi)$ as an arbitrary solution $(\beta, \gamma)$ of the following satisfiability problem, or $(\bot, \bot)$ if no solution exists:
+\begin{equation} \label{eq:propositional_conestrip1}
+    \text{find } (\beta, \gamma)
+    \qquad \text{such that} \quad
+         \psi(\beta) \land 
+         \left( \forall_{1 \leq i \leq k}: \phi_i(\beta) \leftrightarrow \gamma_i \right)
+\end{equation}
+\end{definition}
+
+% The sets $\Omega_\Gamma$ and $\Omega_\Delta$ are potentially very large, leading to an excessive amount of constraints in equation (\ref{eq:conestrip-reformulated}). However, in practice only a small amount of elements in both sets need to be considered in order to solve the propositional CONEstrip problem. So in each iteration of the propositional CONEstrip algorithm we solve the problem (\ref{eq:propositional_conestrip1}) for (small) subsets of $\Omega_\Gamma$ and $\Omega_\Delta$.
+
+\begin{definition}
+Let $\Gamma$ and $\Delta$ be subsets of $\set{0,1}^k$. We define $\func{solve-propositional-conestrip2}(\mathcal{R}, f, \Gamma, \Delta, \Phi)$ as an arbitrary solution $(\lambda, \mu, \sigma, \kappa)$ of the following optimization problem, or $(\bot,\bot,\bot,\bot)$ if no solution exists.
+
+\begin{equation} \label{eq:propositional_conestrip2}
+\begin{array}{ll}
+    \text{maximize} & \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D}
+    \\ [0.5cm]
+
+    \text{for} & \lambda_\mathcal{D} \in [0,1] \text{ and } \mu_\mathcal{D} \in (\mathbb{R}_{\geq 0})^\mathcal{D} \text{ for all } \mathcal{D} \text{ in } \mathcal{R} \text{ and } \sigma \in \mathbb{R}_{\geq 1} \text{ and } \kappa_\phi \in \mathbb{R} \text{ for all } \phi \in \Phi
+    \\ [\medskipamount]
+
+    \text{such that} & 
+    \left\{
+    \begin{array}{ll}
+         \sum\limits_{\mathcal{D} \in \mathcal{R}} \lambda_\mathcal{D} \geq 1 \\ [0.5cm]
+
+         \lambda_\mathcal{D} \leq \mu_{\mathcal{D},g}
+         \quad \text{for all } \mathcal{D} \in \mathcal{R}, g \in \mathcal{D} \\ [0.5cm] 
+
+         \kappa_\phi =
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \sum\limits_{g \in \mathcal{D}} \mu_{\mathcal{D},g} \cdot g_\phi
+         )
+         - \sigma f_\phi \quad \text{for all } \phi \in \Phi \\ [0.5cm]
+         
+         \sum\limits_{i = 1}^k
+         \kappa_i \gamma_i \leq 0
+         \quad \text{for all } \gamma \in \Gamma \\ [0.5cm] 
+         
+         \sum\limits_{i = 1}^k
+         \kappa_i \delta_i \geq 0
+         \quad \text{for all } \delta \in \Delta.
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+
+\end{definition}
+
+% \subsubsection{An additional property of the basic functions}
+% It turns out that it is beneficial if the basic functions $\phi \in \Phi$ have the CPA property:
+% \begin{equation} \label{eq:cpa}
+%   \text{for all } \beta \in \Omega: \phi(\beta) \leftrightarrow \beta_\phi
+% \end{equation}
+% We now describe how this can always be achieved, by slightly reformulating the problem.
+% For each basic function $\phi \in \Phi$ we introduce a
+% boolean variable $b_\phi$. Let $B_\Phi = \set{b_\phi \mid \phi \in \Phi}$, and let
+% $B' = B \cup B_\Phi$. We extend every $\beta \in \Omega$ with $|\Phi|$ boolean values
+% $\set{\beta_\phi \mid \phi \in \Phi}$, such that (\ref{eq:cpa}) holds.
+
+% let
+% \[
+%   \psi' = \psi \land \bigwedge_{\phi \in \Phi} 
+%   \left( 
+%     \beta_\phi \leftrightarrow \phi(\beta)
+%   \right),
+% \]
+
+% \subsubsection*{Two more linear programming problems}
+% The propositional CONEstrip algorithm uses two more linear programming problems.
+% Let $B = \set{b_1, \ldots, b_m}$ and 
+% $C = \set{c_1, \ldots, c_k}$ be sets of boolean variables.
+% Let $\Phi = \set{\phi_1, \ldots, \phi_k}$ be a set of propositional sentences over $B$ that define basic functions of the gambles $\mathcal{G}$. 
+% Let $\psi_\Gamma$ and $\psi_\Delta$ be propositional sentences over $B$.
+% Let $\kappa \in \mathbb{R}^k$.
+
+\clearpage
+\begin{definition}
+Let $\kappa \in \mathbb{R}^k$. We define $\func{solve-propositional-conestrip3-max}(\psi, \kappa, B, C, \Phi)$ as an arbitrary solution $(\beta, \gamma)$ of the optimization problem
+\begin{equation} \label{eq:propositional_conestrip3max}
+    \text{maximize } \sum\limits_{i = 1}^k \kappa_i \gamma_i
+    \qquad \text{such that} \quad
+         \psi(\beta) \land 
+         \left( \forall_{1 \leq i \leq k}: \phi_i(\beta) \leftrightarrow \gamma_i \right)
+\end{equation}
+and
+$\func{solve-propositional-conestrip3-min}(\psi, \kappa, B, C, \Phi)$ as an arbitrary solution $(\beta, \gamma)$ of the linear programming problem
+\begin{equation} \label{eq:propositional_conestrip3min}
+    \text{minimize } \sum\limits_{i = 1}^k \kappa_i \gamma_i
+    \qquad \text{such that} \quad
+         \psi(\beta) \land 
+         \left( \forall_{1 \leq i \leq k}: \phi_i(\beta) \leftrightarrow \gamma_i \right)
+\end{equation}
+\end{definition}
+
+\begin{algorithm}[h]
+\caption{Determining membership of a general cone}
+{\textbf{Input:}} A propositional general cone $\mathcal{R}$, a propositional gamble $f$, a finite set of boolean variables $B$, a propositional basis $\Phi = \set{\phi_1, \ldots, \phi_k}$ over $B$, and propositional sentences $\psi$, $\psi_\Gamma$ and $\psi_\Delta$ over $B$ such that $\psi_\Gamma \land \psi_\Delta \rightarrow \psi$.
+\\
+{\textbf{Output:} Whether or not $f$ belongs to the general cone $\mathcal{R}$. }
+\label{alg:propositional-conestrip}
+\begin{algorithmic}[1]
+\Function{PropositionalCONEstrip}{$\mathcal{R}, f, B, \Phi, \psi, \psi_\Gamma, \psi_\Delta$}
+\State $C := \set{c_1, \ldots, c_k}$ \Comment{$C$ is a set of fresh boolean variables}
+\State $\Gamma := \emptyset$
+\State $(\beta, \gamma) := \func{solve-propositional-conestrip1}(\psi \land \psi_\Gamma, B, C, \Phi)$
+\If {$\gamma \neq \bot$}
+  \State $\Gamma := \set{\gamma}$
+\EndIf
+\State $\Delta := \emptyset$
+\State $(\beta, \delta) := \func{solve-propositional-conestrip1}(\psi \land \psi_\Delta, B, C, \Phi)$
+\If {$\delta \neq \bot$}
+  \State $\Delta := \set{\delta}$
+\EndIf
+\While { \func{true} }
+  \State $(\lambda, \mu, \sigma, \kappa) := \func{solve-propositional-conestrip2}(\mathcal{R}, f, \Gamma, \Delta, \Phi)$
+  \If { $(\lambda, \mu, \sigma, \kappa) = (\bot,\bot,\bot,\bot)$ }
+    \State \Return \func{false}
+  \EndIf
+  \State $\mathcal{R} := \set{\mathcal{D} \in \mathcal{R} \mid \lambda_\mathcal{D} \neq 0}$
+  \State $\gamma := 0^k$
+  \State $\delta := 0^k$
+  \If {$\Gamma \neq \emptyset$}
+    \State $(\beta, \gamma) := \func{solve-propositional-conestrip3-max}(\psi \land \psi_\Gamma, \kappa, B, C, \Phi)$
+    \State $\Gamma := \Gamma \cup \set{\gamma}$
+  \EndIf
+
+  \If {$\Delta \neq \emptyset$}
+    \State $(\beta, \delta) := \func{solve-propositional-conestrip3-min}(\psi \land \psi_\Delta, \kappa, B, C, \Phi)$
+    \State $\Delta := \Delta \cup \set{\delta}$
+  \EndIf
+  
+  \If { 
+        $\sum\limits_{i=1}^k \kappa_i \gamma_i 
+         \leq 0
+         \leq \sum\limits_{i=1}^k \kappa_i \delta_i
+        $ 
+        and
+        $\forall_{\mathcal{D} \in \mathcal{R}}: \lambda_\mathcal{D} = 0 \Rightarrow (\mu_{\mathcal{D},g} = 0 \text{ for all } g \in \mathcal{D})$
+      }
+    \State \Return \func{true}
+  \EndIf
+\EndWhile
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+
+
+% \vspace{0.5cm}
+% \noindent
+% Given a set of propositional sentences $\Phi$, the used literals are given by $\mathcal{L}_\Phi = \cup_{\phi \in \Phi} \func{lit}(\phi).$ Using $\mathcal{L}_\Phi$ we can create a binary representation of $\Omega$ using
+% \[
+%   \Omega := \set{}
+% \]
+
+% \begin{algorithm}[h]
+% \caption{A propositional CONEstrip algorithm}
+% {\textbf{Input:} A finite set $\mathcal{R}_0$ of finite subsets of $\mathcal{G}$}, a gamble $f \in \mathcal{G}$ and a partition $\set{\Omega_\Gamma, \Omega_\Delta}$ of $\Omega$. \\
+% {\textbf{Output:} $f$ belongs to the general cone $\underline{\mathcal{R}_0}$. }
+% \label{alg:conestrip}
+% \begin{algorithmic}[1]
+% \Function{CONEstrip}{$\mathcal{R}_0, f, \Omega_\Gamma, \Omega_\Delta$}
+% \State $i := 0$
+% \While { \func{true} }
+%   \State $\Lambda := \func{conestrip-solutions}(f, \mathcal{R}_i, \Omega_\Gamma, \Omega_\Delta)$
+%   \If { $\Lambda = \emptyset$ }
+%     \State \Return \func{false}
+%   \EndIf
+%   \State \textbf{choose } $(\lambda, \mu, \sigma) \in \Lambda$
+%   \State $\mathcal{Q} := \set{\mathcal{D} \in \mathcal{R}_i \mid \lambda_\mathcal{D} = 0}$
+%   \If {$\forall \mathcal{D} \in \mathcal{Q}: \mu_\mathcal{D} = 0$}
+%     \State \Return \func{true} \Comment{In this case we have $f \in \mathcal{R}_{i+1} \subseteq \mathcal{R}_0 $}
+%   \EndIf
+%   \State $\mathcal{R}_{i+1} := \mathcal{R}_i \setminus \mathcal{Q}$
+%   \State $i := i + 1$
+% \EndWhile
+% \EndFunction
+% \end{algorithmic}
+% \end{algorithm}
+
+\clearpage
+\section{Optimization problems}
+Let $\mathcal{R}$ be a general cone and $f$ a gamble. Let $\Omega = \set{\omega_1, \ldots, \omega_N}$ be the set of elementary events. Without loss of generality we will assume that $\Omega = \set{1, \ldots, N}$. We define
+\[
+  1_\omega(x) =
+  \begin{cases*}
+    1 & if $x = \omega$ \\
+    0 & otherwise
+  \end{cases*}
+\]
+and
+\[
+  1_\Omega(x) =
+  \begin{cases*}
+    1 & if $x \in \Omega$ \\
+    0 & otherwise.
+  \end{cases*}
+\]
+In our implementation we represent a gamble $f$ by the vector $(f(\omega_1), \ldots, f(\omega_N))$. Hence $1_{\omega_i}$ is represented by the $i$-th unit vector $e_i \in \mathbb{R}^N$, and $1_\Omega$ is represented by $1_N$, the vector containing $N$ ones.
+The zero gamble 0 is represented by $0_N$, the vector containing $N$ zeroes.
+
+\vspace{0.5cm}
+\noindent
+For vectors $x, y \in \mathbb{R}^n$ we define
+\[
+  \begin{array}{lll}
+     x \gtrdot y & \equiv & x_i > y_i \quad (1 \leq i \leq n) \\
+     x \geq y & \equiv & x_i \geq y_i \quad (1 \leq i \leq n) \\
+     x > y & \equiv & x \geq y \land x \neq y \\
+  \end{array}
+\]
+The operators $\geq$ and $\gtrdot$ can be easily generalized to higher dimensional variables.
+
+\begin{definition}
+We define $\func{optimize-find}(\mathcal{R}, f, \set{b^i, c^i}_{i \in I}, \Omega)$ as a solution $\mu$ of problem (\ref{eq:optimization-find2}) or $\bot$ if no solution exists.
+The default formulation of \func{optimize-find} is in terms of variables $\lambda$ and $\nu$.
+\begin{equation} \label{eq:optimization-find1}
+\begin{array}{ll}
+    \text{find} & (\lambda, \nu)
+    \text{ with } \lambda \in \mathbb{R}^\mathcal{R} \text{ and } 
+    \nu_\mathcal{D} \in \mathbb{R}^\mathcal{D}
+    \text{ for all } \mathcal{D} \text{ in } \mathcal{R} 
+    \\ [0.5cm]
+    \text{such that} & 
+    \left\{
+    \begin{array}{ll}
+         \lambda > 0 \text{ and } \nu \gtrdot 0
+         \\ [0.2cm]
+    
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} 
+           \nu_{\mathcal{D},g} \cdot g 
+         )
+         = f
+         \\ [0.5cm]         
+
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} 
+           \nu_{\mathcal{D},g} \cdot b^i_{\mathcal{D},g}
+         )
+         = c^i
+         \quad \text{for all } i \in I
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+The variables $\lambda$ and $\nu$ can be combined using $\mu_{\mathcal{D},g} = \lambda_\mathcal{D} \nu_{\mathcal{D},g}$, which gives us the following system:
+\begin{equation} \label{eq:optimization-find2}
+\begin{array}{ll}
+    \text{find} & \mu
+    \text{ with } \mu_\mathcal{D} \in \mathbb{R}^\mathcal{D}
+    \text{ for all } \mathcal{D} \text{ in } \mathcal{R} 
+    \\ [0.5cm]
+    \text{such that} & 
+    \left\{
+    \begin{array}{ll}
+         \mu \geq 0 \text{ and }
+         \exists \mathcal{D} \in \mathcal{R}: \mu_\mathcal{D} \gtrdot 0
+         \\ [0.2cm]
+    
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+           \sum\limits_{g \in \mathcal{D}} 
+             \mu_{\mathcal{D},g} \cdot g 
+         = f
+         \\ [0.5cm]         
+
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+           \sum\limits_{g \in \mathcal{D}} 
+             \mu_{\mathcal{D},g} \cdot b^i_{\mathcal{D},g}
+         = c^i
+         \quad \text{for all } i \in I
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+\end{definition}
+
+\begin{definition}
+We define $\func{optimize-maximize}(\mathcal{R}, f, a, \set{b^i, c^i}_{i \in I}, \Omega)$ as a solution $\mu$ of problem (\ref{eq:optimization-maximize2}) or $\bot$ if no solution exists.
+The default formulation of \func{optimize-maximize} is in terms of variables $\lambda$ and $\nu$, with
+$\lambda \in \mathbb{R}^\mathcal{R}$ and 
+$\nu_\mathcal{D} \in \mathbb{R}^\mathcal{D}$
+for all $\mathcal{D} \text{ in } \mathcal{R}$.
+
+\begin{equation} \label{eq:optimization-maximize1}
+\begin{array}{ll}
+    \text{maximize} & 
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} 
+           \nu_{\mathcal{D},g} \cdot a_{\mathcal{D},g}
+         )
+    \\ [0.5cm]
+    \text{such that} & 
+    \left\{
+    \begin{array}{ll}
+         \lambda > 0 \text{ and } \nu \gtrdot 0
+         \\ [0.2cm]
+    
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} 
+           \nu_{\mathcal{D},g} \cdot g 
+         )
+         = f
+         \\ [0.5cm]         
+
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         (
+         \lambda_\mathcal{D} \sum\limits_{g \in \mathcal{D}} 
+           \nu_{\mathcal{D},g} \cdot b^i_{\mathcal{D},g}
+         )
+         = c^i
+         \quad \text{for all } i \in I
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+The variables $\lambda$ and $\nu$ can be combined using $\mu_{\mathcal{D},g} = \lambda_\mathcal{D} \nu_{\mathcal{D},g}$, which gives us the following system:
+\begin{equation} \label{eq:optimization-maximize2}
+\begin{array}{ll}
+    \text{maximize} & 
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+           \sum\limits_{g \in \mathcal{D}} 
+             \mu_{\mathcal{D},g} \cdot a_{\mathcal{D},g}
+    \\ [0.5cm]
+    \text{such that} & 
+    \left\{
+    \begin{array}{ll}
+         \mu \geq 0 \text{ and }
+         \exists \mathcal{D} \in \mathcal{R}: \mu_\mathcal{D} \gtrdot 0
+         \\ [0.2cm]
+    
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+           \sum\limits_{g \in \mathcal{D}} 
+             \mu_{\mathcal{D},g} \cdot g 
+         = f
+         \\ [0.5cm]         
+
+         \sum\limits_{\mathcal{D} \in \mathcal{R}}
+           \sum\limits_{g \in \mathcal{D}} 
+             \mu_{\mathcal{D},g} \cdot b^i_{\mathcal{D},g}
+         = c^i
+         \quad \text{for all } i \in I
+    \end{array}
+    \right.
+\end{array}
+\end{equation}
+We define
+\[
+\func{optimize-maximize-value}(\mathcal{R}, f, a, \set{b^i, c^i}_{i \in I}, \Omega) =
+\begin{cases*}
+  \infty & if $\mu = \bot$ \\[0.2cm]
+  \sum\limits_{\mathcal{D} \in \mathcal{R}}
+         \sum\limits_{g \in \mathcal{D}} 
+           \mu_{\mathcal{D},g} \cdot a_{\mathcal{D},g}
+         & otherwise,
+\end{cases*}
+\]
+where $\mu = \func{optimize-maximize}(\mathcal{R}, f, a, \set{b^i, c^i}_{i \in I}, \Omega)$. In other words, \func{optimize-maximize-value} returns the value of the goal function for a solution $\mu$.
+\end{definition}
+
+\subsection{Lower prevision functions} \label{sec:lower-prevision-functions}
+In our use case lower prevision functions are simply real-valued functions defined on a set of gambles.
+
+\begin{definition}
+Let $\underline{P}$ be a lower prevision function defined on the finite set of gambles $\mathcal{K} \subseteq \mathcal{G}$.
+Then we define
+\[
+  \func{lower-prevision-assessment}(\underline{P}) = \set{ h - \underline{P}(h) \mid h \in \mathcal{K}}
+\]
+\end{definition}
+
+\begin{definition}
+Let $\underline{P}$ be a conditional lower prevision function defined on the finite set $\mathcal{N} \subseteq \mathcal{G} \times \Omega^\ast$. Then we define
+\[
+  \func{conditional-lower-prevision-assessment}(\underline{P}, \Omega) = 
+  \set{ ((h - \underline{P}(h|B))\odot 1_B, B) \mid (h, B) \in \mathcal{N} }
+\]
+\end{definition}
+
+\begin{example}[Lower prevision functions]
+Let $p$ be a mass function on $\Omega$ i.e.
+\[
+   p(\omega) \geq 0 \text{ for } \omega \in \Omega \quad \text{and} \quad \sum_{\omega \in \Omega} p(\omega) = 1,
+\]
+Let $m$ be a mass function on $2^\Omega$ (i.e. the set of subsets of $\Omega$), with the constraint that $m(\emptyset)=0$.
+Let $\varepsilon$ be a given positive value. The following functions are practical examples of lower prevision functions defined on a set of gambles $\mathcal{K} \subseteq \mathcal{G}$.
+\begin{align}
+  \func{linear-lower-prevision-function}(p,\mathcal{K}) = \underline{P}, & \quad \text{ with } \underline{P}(f) = \sum_{\omega \in \Omega} p(\omega) f(\omega)
+  \label{eq:linear-lower-prevision-function}
+  \\
+  \func{linear-vacuous-lower-prevision-function}(p,\delta,\mathcal{K}) = \underline{P},
+  & \quad \text{ with } \underline{P}(f) = 
+  (1 - \delta) \sum_{\omega \in \Omega} p(\omega) f(\omega)
+  + \delta \min_{\omega \in \Omega} f(\omega),
+  \label{eq:linear-vacuous-lower-prevision-function}
+  \\
+  \func{belief-lower-prevision-function}(m,\mathcal{K}) = \underline{P},
+  & \quad \text{ with } \underline{P}(f) = 
+    \sum_{S \subseteq \Omega} m(S) \min_{\omega \in S} f(\omega)
+  \label{eq:belief-lower-prevision-function}
+\end{align}
+\end{example}
+
+\subsection{Optimization problems}
+
+\begin{definition}[Incurring sure loss]
+Let $\mathcal{R}$ be a general cone.
+Then we define
+\[
+  \func{incurs-sure-loss-cone}(\mathcal{R}, \Omega) \equiv \func{optimize-find}(\mathcal{R}, 0, \emptyset, \Omega) \neq (\bot, \bot)
+\]
+Let $\underline{P}$ be a lower prevision function with $\mathcal{A} = \func{lower-prevision-assessment}(\underline{P})$.
+Then we define
+\[
+  \func{incurs-sure-loss}(\underline{P}, \Omega) \equiv 
+  \func{incurs-sure-loss-cone}(\mathcal{R}, \Omega),
+\]
+with
+\[
+  \mathcal{R} = \func{sure-loss-cone}(\mathcal{A}, \Omega)
+\]
+and
+\[
+  \func{sure-loss-cone}(\mathcal{A}, \Omega) = \set{ \set{1_\omega \mid \omega \in \Omega } ~\cup~ \mathcal{A} \setminus \set{0} }.
+\]
+% N.B. In both cases the argument $\Omega$ is used to determine the length of the zero gamble.
+\end{definition}
+
+\begin{definition}[Unconditional natural extension]
+Let $\underline{P}$ be a lower prevision function, let $f$ be a gamble and let $\mathcal{A} = \func{lower-prevision-assessment}(\underline{P})$.
+We define
+\[
+  \func{natural-extension}(\mathcal{A}, f, \Omega) \equiv \func{optimize-maximize-value}(\mathcal{R}, f, a, \emptyset, \Omega),
+\]
+where
+\[
+  \left\{
+  \begin{array}{ll}
+    \mathcal{R} &= \func{natural-extension-cone}(\mathcal{A}, \Omega) \\[0.1cm]
+    a &= \func{natural-extension-objective}(\mathcal{R}, \Omega)
+  \end{array}
+  \right.
+\]
+with
+\[
+    \func{natural-extension-cone}(\mathcal{A}, \Omega) =
+        \set{ \set{g} \mid g \in \mathcal{A} }
+        ~\cup~ \set{ \set{1_\Omega}, \set{-1_\Omega}, \set{0} }
+        ~\cup~ \set{ \set{1_\omega } \mid \omega \in \Omega }
+\]
+and $\func{natural-extension-objective}(\mathcal{R}, \Omega)$ is the function $a$ defined for all $\mathcal{D} \in \mathcal{R}$ and $g \in \mathcal{D}$ as
+\begin{equation} \label{eq:natural-extension-objective}
+  a_{\mathcal{D},g} =
+  \begin{cases*}
+    1 & if $\mathcal{D},g = \set{1_\Omega}, 1_\Omega$ \\
+    -1 & if $\mathcal{D},g = \set{-1_\Omega}, -1_\Omega$ \\
+    0 & otherwise.
+  \end{cases*}
+\end{equation}
+\end{definition}
+
+\begin{definition}[Coherence]
+Let $\underline{P}$ be a lower prevision function defined on the finite set of gambles $\mathcal{K} \subseteq \mathcal{G}$ with $\mathcal{A} = \func{lower-prevision-assessment}(\underline{P})$. We define
+\[
+  \func{is-coherent}(\underline{P}, \Omega) \equiv
+  \forall f \in \mathcal{K}: \underline{P}(f) = \func{natural-extension}(\mathcal{A}, f, \Omega)
+\]
+\end{definition}
+
+\begin{definition}[Incurring partial loss]
+Let $\underline{P}$ be a conditional lower prevision function defined on the finite set $\mathcal{N} \subseteq \mathcal{G} \times \Omega^\ast$ with
+\[\mathcal{B} = \func{conditional-lower-prevision-assessment}(\underline{P}, \Omega).
+\]
+Then we define
+\[
+  \func{incurs-partial-loss}(\underline{P}, \Omega) =
+  \func{optimize-find}(\mathcal{R}, 0, \emptyset, \Omega) \neq (\bot, \bot)
+\]
+where
+\[
+  \mathcal{R} = \func{partial-loss-cone}(\mathcal{B}, \Omega)
+\]
+with
+\[
+    \func{partial-loss-cone}(\mathcal{B}, \Omega) =
+        \set{ \set{g, 1_B} \mid (g, B) \in \mathcal{N} \land g \neq 0 }
+        ~\cup~ \set{ \set{1_\omega } \mid \omega \in \Omega }.
+\]
+\end{definition}
+
+\begin{definition}[Conditional natural extension]
+Let $\underline{P}$ be a conditional lower prevision function defined on the finite set $\mathcal{N} \subseteq \mathcal{G} \times \Omega^\ast$, let $f$ be a gamble, let $C$ be an event, and let $\mathcal{B} = \func{conditional-lower-prevision-assessment}(\underline{P}, \Omega)$.
+Then we define
+\[
+  \func{conditional-natural-extension}(\mathcal{B}, f, C, \Omega) \equiv \func{optimize-maximize-value}(\mathcal{R}, f \odot 1_C, a, \emptyset, \Omega),
+\]
+where
+\[
+  \left\{
+  \begin{array}{ll}
+    \mathcal{R} &= \func{conditional-natural-extension-cone}(\mathcal{B}, C, \Omega) \\[0.1cm]
+    a &= \func{natural-extension-objective}(\mathcal{R}, \Omega)
+  \end{array}
+  \right.
+\]
+with
+\[
+    \func{conditional-natural-extension-cone}(\mathcal{B}, C, \Omega) =
+        \set{ \set{g, 1_B} \mid (g, B) \in \mathcal{N} }
+        ~\cup~ \set{ \set{1_C}, \set{-1_C}, \set{0} }
+        ~\cup~ \set{ \set{1_\omega \mid \omega \in \Omega } }.
+\]
+\end{definition}
+
+\subsection{Test case 1}
+Let $\Omega$ be a set of elementary events and let $\mathcal{K} \subseteq \mathcal{G}$ be an arbitrary, finite set of gambles.  Let $\delta$ be a given error magnitude.
+
+% Let $\underline{P}: \mathcal{G} \rightarrow \mathbb{R}$ be a lower prevision function as defined in equation (\ref{eq:linear-lower-prevision-function}) or (\ref{eq:linear-vacuous-lower-prevision-function}).
+% Let $\underline{P}|_\mathcal{K}$ denote the restriction of $\underline{P}$ to $\mathcal{K}$.
+% Then we have
+% \[
+%   \neg \func{incurs-sure-loss}(\underline{P}|_\mathcal{K}, \Omega).
+% \]
+
+\vspace{0.5cm}
+\noindent
+This test consists of the following steps:
+\begin{enumerate}
+    \item Randomly generate a mass function $p$ on $\Omega$.
+    \item Let $\underline{P}_p = \func{linear-vacuous-lower-prevision-function}(p, \delta, \mathcal{K})$.
+    \item Calculate $b := \func{incurs-sure-loss}(\underline{P}_\varepsilon, \Omega)$.
+    \item Check $\neg b$.
+\end{enumerate}
+Note that if $\delta=0$, we replace step 2 by $\underline{P}_p = \func{linear-lower-prevision-function}(p, \mathcal{K})$.
+
+\begin{definition}[Perturbations] \label{def:perturbation}
+Let $0 < \varepsilon \leq 1$ be an error magnitude and $\mathcal{K}$ a finite set of gambles. Then we define a class of randomly generated perturbations in $\mathcal{K} \rightarrow \mathbb{R}$ as follows:
+\begin{equation} \label{eq:lower-prevision-perturbation}
+  \func{generate-lower-prevision-perturbation}(\mathcal{K}, \varepsilon) = \mathcal{Q}, \quad \text{ with } \mathcal{Q}(f) = \pm ~ \varepsilon \; (\max_{\omega \in \Omega} f(\omega) - \min_{\omega \in \Omega} f(\omega)) \cdot \delta,
+\end{equation}
+where $\delta \sim U(0,1)$.
+\end{definition}
+
+\begin{definition}[Clamped sum]
+When applying a perturbation to a lower prevision function, it can make sense to limit the perturbation by taking a clamped sum. Let $P$ and $Q$ be two lower prevision functions,
+then we define
+\begin{equation} \label{eq:lower-prevision-clamped-sum}
+  \func{lower-prevision-clamped-sum}(P,Q) = R, \quad \text{ with } 
+     R(f) = \func{clamp}(P(f) + Q(f), \min(f), \max(f)),
+\end{equation}
+where 
+\[
+\func{clamp}(x, \var{min-value}, \var{max-value}) = \max(\min(x, \var{max-value}), \var{min-value}).
+\]
+\end{definition}
+
+\subsection{Test case 2}
+Let $\Omega$ be a set of elementary events and let $\mathcal{K} \subseteq \mathcal{G}$ be an arbitrary, finite set of gambles. Let $\delta$ be a given error magnitude. Let $E = [\varepsilon_1, \ldots, \varepsilon_q]$ be a range of 
+small positive values.
+
+% Let $\underline{P}'$ be a lower prevision function on $\mathcal{K}$ as defined in equation (\ref{eq:linear-lower-prevision-function}) or (\ref{eq:linear-vacuous-lower-prevision-function}).
+% Now consider a lower prevision function generated using
+% \[
+% \underline{P} = 
+%   \func{lower-prevision-clamped-sum}(
+%     \underline{P}',
+%     \func{generate-lower-prevision-perturbation}(\mathcal{K},\varepsilon)
+%   ).
+% \]
+% For small values of $\varepsilon$ we expect that
+% \[
+% \neg \func{incurs-sure-loss}(\underline{P}, \Omega). 
+% \]
+
+\vspace{0.5cm}
+\noindent
+This test consists of the following steps:
+\begin{enumerate}
+    \item Randomly generate a mass function $p$ on $\Omega$.
+    \item Let $\underline{P}_p = \func{linear-vacuous-lower-prevision-function}(p, \delta, \mathcal{K})$.
+    \item For $\varepsilon \in E$ do
+    \begin{enumerate}
+        \item Generate a perturbation $\mathcal{Q}_\varepsilon := \func{generate-lower-prevision-perturbation}(\mathcal{K}, \varepsilon)$.
+        \item Let $\underline{P}_\varepsilon = \func{lower-prevision-clamped-sum}(\underline{P}_p, \mathcal{Q}_\varepsilon)$.
+        \item Calculate $\func{incurs-sure-loss}(\underline{P}_\varepsilon, \Omega)$.
+    \end{enumerate}    
+\end{enumerate}
+Note that if $\delta=0$, we replace step 2 by $\underline{P}_p = \func{linear-lower-prevision-function}(p, \mathcal{K})$.
+
+\vspace{0.5cm}
+\noindent
+The result of this test is checked manually. For small values of $\varepsilon$ we expect that $\func{incurs-sure-loss}(\underline{P}_\varepsilon, \Omega)$ has the value false.
+
+\clearpage
+\subsection{Test case 3}
+Let $\Omega$ be a set of elementary events, and let $\mathcal{K} \subseteq \mathcal{G}$ be an arbitrary, finite set of gambles.
+This test case is about generating 4-dimensional data sets that can be studied later on.
+The inputs of a test case are
+\[
+\begin{cases*}
+    M & the number of probability mass functions \\
+    I & the number of imprecision values (default: 10) \\
+    E & the number of error magnitudes (default: 10) \\
+    N & the number of repetitions
+\end{cases*}
+\]
+These four dimensions are identified as "pmf", "imprecision", "errmag" and "repetitions".
+The output is a set of values 
+\[
+\set{Q_{m,i,e,n} \mid 
+  1 \leq m \leq M \land
+  1 \leq i \leq I \land 
+  1 \leq e \leq E \land
+  1 \leq n \leq N
+},
+\]
+where each value $Q_{m,i,e,n}$ is a tuple of two boolean values representing sure loss and coherence.
+
+\vspace{0.5cm}
+\noindent
+This test case consists of the following steps:
+\begin{enumerate}
+    \item Randomly generate mass functions $p_1, \ldots, p_M$ on $\Omega$.
+    \item Choose imprecision values $\delta_1, \ldots, \delta_I$ in the interval [0, 1].
+    \item Choose error magnitudes $\varepsilon_1, \ldots, \varepsilon_E$ in $\mathbb{R}^{+}$.
+    \item For each $m,i,e,n$ generate a lower prevision function
+    \[
+      \underline{P}_{m,i,e,n} = \func{lower-prevision-clamped-sum}(P, Q),
+    \]
+    where
+    \begin{align*}
+      P &= \func{linear-vacuous-lower-prevision-function}(p_m,\delta_i,\mathcal{K}) \\
+      Q &= \func{generate-lower-prevision-perturbation}(\mathcal{K},\varepsilon_e)
+    \end{align*}
+    \item Set $Q_{m,i,e,n} = (
+      \func{incurs-sure-loss}(\underline{P}_{m,i,e,n}, \Omega),
+      \func{is-coherent}(\underline{P}_{m,i,e,n}, \Omega)
+    )$
+\end{enumerate}
+N.B. this test case only generates a dataset. The results are checked manually.
+
+\clearpage
+\subsection{Test case 4}
+Let $\Omega$ be a finite set of elementary events, and let $\mathcal{K} \subseteq \mathcal{G}$ be a finite set of gambles. 
+
+\vspace{0.5cm}
+\noindent
+This test consists of the following steps:
+\begin{enumerate}
+    \item Randomly generate a mass function $p$ on $\Omega$.
+    \item Let $\underline{P}_\func{lower} = \func{linear-lower-prevision-function}(p, \mathcal{K})$.
+    \item For $\varepsilon \in \set{0, \frac{1}{16}, \frac{1}{8}, \frac{1}{4}}$ do
+    \begin{enumerate}    
+        \item Generate a perturbation $\mathcal{Q}_\varepsilon := \func{generate-lower-prevision-perturbation}(\mathcal{K}, \varepsilon)$.
+        \item Let $\underline{P} = \func{lower-prevision-clamped-sum}(\underline{P}_\func{lower}, \mathcal{Q}_\varepsilon)$.
+        \item Calculate $b := \func{incurs-sure-loss}(\underline{P}, \Omega)$.
+        \item Calculate $c := \func{is-coherent}(\underline{P}, \Omega)$.
+        \item Check that $\neg b \lor \neg c$.
+    \end{enumerate}    
+\end{enumerate}
+
+\clearpage
+\bibliographystyle{plain}
+\bibliography{main}
+
+\end{document}
